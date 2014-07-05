@@ -1,0 +1,9 @@
+{
+    "app": {
+      "name": "InternalApp"
+    },
+    "footer" : {
+    	"messages" : "Messages",
+    	"profiles" : "Profiles"
+    }
+}
