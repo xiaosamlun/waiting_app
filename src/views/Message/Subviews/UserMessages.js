@@ -312,10 +312,11 @@ define(function(require, exports, module) {
 
         });
         UserMessage.on('change', function(){
-            messageView.setContent(template({
+            messageView.Surface.setContent(template({
                 UserMessage: UserMessage.toJSON(),
                 ago: moment(UserMessage.get('created')).format('h:mma - MMM Do')
             }));
+            Utils.dataModelReplaceOnSurface(messageView.Surface);
         });
         // messageView.Surface = new Surface({
         //     content: UserMessage.toJSON(),
