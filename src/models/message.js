@@ -45,6 +45,111 @@ define(function (require) {
               url: function(){return this.url}
             },
 
+            // var oldBackboneSync = Backbone.sync;
+            sync: function( method, model, options ) {
+                var that = this;
+                if ( method === 'read'){
+                  var def = $.Deferred();
+                  var opts = that.createQueryOptions(method, model, options);
+                  opts.success = function(response){
+                    // Handling a paginated object?
+                    if(response instanceof Array){
+                      // normal array, not paginated
+                      that.parseIdsVersion(response).then(function(results){
+                        response.results = results;
+                        def.resolve(response);
+                      });
+
+                    } else if(response.results) {
+                      that.parseIdsVersion(response.results).then(function(results){
+                        response.results = results;
+                        // console.log(results);
+                        // debugger;
+                        def.resolve(response);
+                      });
+                      
+                    } else {
+                      // uh oh
+                      debugger;
+                    }
+                  };
+                  $.ajax(opts);
+
+
+                  def.promise().then(function(response_final){
+                    // console.log('promise');
+                    // debugger;
+                    options.success(response_final);
+                  });
+
+                  // return our promise
+                  return def.promise();
+                }
+
+                return this._super(method, model, options);
+            },
+
+            parseIdsVersion: function(results){
+              var that = this;
+
+              var d = $.Deferred();
+
+              var promises = [];
+
+              results.forEach(function(ModelSimple, index){
+
+                var tmpD = $.Deferred();
+                promises.push(tmpD.promise());
+
+                // ModelSimple: _id and _version
+                var newModel = new that.model({
+                  _id: ModelSimple._id
+                });
+                // "hasFetched" doesn't matter, just if the version numbers match!
+                if(newModel.hasFetched){
+
+                  if(newModel.get('__v') == ModelSimple.__v){
+                    // equal!
+                    // - resolve promise
+                    results[index] = newModel.toJSON();
+                    tmpD.resolve();
+
+                  } else {
+
+                    // Not equal, need to update the model to current version!
+                    newModel.fetch({
+                      success: function(resp){
+                        // resolve, finally, for collection
+                        results[index] = resp;
+                        tmpD.resolve();
+                      }
+                    });
+                  }
+                } else {
+
+                    // Fetch
+                    newModel.populated().then(function(){
+                      // resolve promise for this model
+                      results[index] = newModel.toJSON();
+                      tmpD.resolve();
+                    });
+                    newModel.fetch({prefill: true});
+                }
+
+              });
+
+              $.when.apply(this, promises).then(function(schemas) {
+                console.log('results');
+                console.log(results);
+                d.resolve(results);
+              }, function(e) {
+                console.log("My ajax failed");
+              });
+                
+              return d.promise();
+
+            },
+
             // Paginator User Interface (UI)
             paginator_ui: {
               // the lowest page index your API allows to be accessed
@@ -94,11 +199,7 @@ define(function (require) {
                 this.totalPages = Math.ceil(response.total / this.perPage);
                 this.totalResults = response.total;
                 this.summary = response.summary;
-
-                // console.log('SUMMARY', this.summary);
-                // console.log(JSON.stringify(this.summary));
                 
-                // debugger;
                 return response.results;
             },
 

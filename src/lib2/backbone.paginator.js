@@ -796,7 +796,7 @@ Backbone.Paginator = (function ( Backbone, _, $ ) {
   //
   Paginator.requestPager = Backbone.Collection.extend({
 
-    sync: function ( method, model, options ) {
+    createQueryOptions: function(method, model, options){
 
       var self = this;
 
@@ -843,6 +843,14 @@ Backbone.Paginator = (function ( Backbone, _, $ ) {
         processData: false,
         url: _.result(queryOptions, 'url')
       }, options);
+
+      return queryOptions;
+
+    }, 
+
+    sync: function ( method, model, options ) {
+
+      var queryOptions = this.createQueryOptions(method, model, options);
 
       var promiseSuccessFormat = !(bbVer[0] === 0 &&
                                    bbVer[1] === 9 &&

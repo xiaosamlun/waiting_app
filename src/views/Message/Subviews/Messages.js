@@ -248,19 +248,34 @@ define(function(require, exports, module) {
             console.info('from', Message.get('from_user_id'), App.Data.User.get('_id'));
             other_person_id = Message.get('from_user_id');
         }
-        
-        messageView.Surface = new Surface({
-            content: template({
+
+        var surfaceData = function(){
+            
+            var content = template({
                 message: Message.toJSON(),
                 other_person_id: other_person_id,
                 show_other_person: that.options.show_other_person,
                 ago: moment(Message.get('created')).format('h:mma - MMM Do'),
                 // image_src: imageSrc
-            }),
+            })
+
+            return {
+                content: content
+            };
+        };
+        
+        messageView.Surface = new Surface({
+            content: surfaceData().content,
             size: [undefined, true],
             classes: ['message-text-default']
         });
         Utils.dataModelReplaceOnSurface(messageView.Surface);
+
+        Message.on('change', function(){
+            messageView.Surface.setContent(surfaceData().content);
+            Utils.dataModelReplaceOnSurface(messageView.Surface);
+        });
+
         messageView.Surface.pipe(this._eventOutput);
         messageView.Surface.pipe(this.contentLayout);
         messageView.Surface.Model = Message;

@@ -83,7 +83,7 @@ define(function (require) {
                     if(App.Cache['QuickModel_' + ModelName + '_' + id] !== true){
                         // Need to initiate a fetch
                         // console.log(newModel.isFetching, newModel.hasFetched, newModel.toJSON());
-                        App.Cache[ModelName + id] = true;
+                        App.Cache['QuickModel_' + ModelName + '_' + id] = true;
                         newModel.fetch({prefill: true});
                     }
                 }

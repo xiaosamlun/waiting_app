@@ -329,6 +329,7 @@ define(function(require, exports, module) {
 
                 case 'all':
                     that.TopTabs.Content.show(that.TopTabs.Content.AllMessages);
+                    that.TopTabs.Content.AllMessages.View.collection.pager();
                     break;
 
                 case 'sent':
