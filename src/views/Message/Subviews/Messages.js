@@ -55,13 +55,6 @@ define(function(require, exports, module) {
         this.lightboxButtons = new RenderController({
             size: [undefined, true]
         });
-        // this.lightboxButtons.getSize = function(){
-        //     // console.log(this._node.getSize());
-        //     console.log(this);
-        //     console.log(this.options.size);
-        //     debugger;
-        //     return [undefined, undefined];
-        // };
 
         // Create Loading Renderable
         // Create "No Results" Renderable

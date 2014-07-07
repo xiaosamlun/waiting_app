@@ -146,8 +146,12 @@ define(function(require, exports, module) {
         // Need to wait for at least 1 item before showing the result?
         // - otherwise, there is a Render error
 
-
-        this.add(this.contentLayout); // ADDING TO LAYOUT
+        this.contentLayout.ZMod = new Modifier({
+            transform: function(){
+                return Transform.identity;
+            }
+        });
+        this.add(this.contentLayout.ZMod).add(this.contentLayout); // ADDING TO LAYOUT
 
 
         // Now add our Dragged-over view
@@ -155,7 +159,10 @@ define(function(require, exports, module) {
         this.DraggedOverView = new View();
         this.DraggedOverView._position = window.innerWidth;
         this.DraggedOverView.position = new Transitionable(this.DraggedOverView._position);
-        this.DraggedOverView.Controller = new RenderController();
+        this.DraggedOverView.Controller = new RenderController({
+            inTransition: false,
+            outTransition: false
+        });
         this.DraggedOverView.PositionMod = new Modifier({
             transform: function(){
                 // console.log(that.DraggedOverView.position);
@@ -168,7 +175,15 @@ define(function(require, exports, module) {
                 // });
             }
         });
-        this.DraggedOverView.add(this.DraggedOverView.PositionMod).add(this.DraggedOverView.Controller);
+        this.DraggedOverView.ZMod = new Modifier({
+            transform: function(){
+                // this.contentLayout.ZMod
+                // console.log(this.contentLayout.ZMod);
+                // debugger;
+                return Transform.translate(0,0,0.0001);
+            }
+        });
+        this.DraggedOverView.add(this.DraggedOverView.ZMod).add(this.DraggedOverView.PositionMod).add(this.DraggedOverView.Controller);
 
 
         // this.DraggedOverView.Controller.show(this.blankRenderable); // nothing shown by default
@@ -290,7 +305,10 @@ define(function(require, exports, module) {
                 ago: moment(UserMessage.get('created')).format('h:mma - MMM Do')
             }),
             size: [undefined, true],
-            classes: ['message-text-default']
+            classes: ['message-text-default'],
+            properties: {
+                // backgroundColor: "red"
+            }
 
         });
         // messageView.Surface = new Surface({
@@ -319,7 +337,7 @@ define(function(require, exports, module) {
                 that._cachedViews[id].Bg = new Surface({
                     size: [undefined, undefined],
                     properties: {
-                        backgroundColor: "white",
+                        backgroundColor: "#f8f8f8",
                         borderLeft: "1px solid #ddd"
                     }
                 });
@@ -332,10 +350,16 @@ define(function(require, exports, module) {
                         }]
                     }
                 });
-                that._cachedViews[id].add(that._cachedViews[id].Bg);
-                that._cachedViews[id].add(that._cachedViews[id].MessagesView);
-                
 
+
+                var ZMod = new Modifier({
+                    transform: function(){
+                        return Transform.translate(0,0,0.0001);
+                    }
+                });
+                that._cachedViews[id].add(that._cachedViews[id].Bg);
+                that._cachedViews[id].add(ZMod).add(that._cachedViews[id].MessagesView);
+                
                 // blank renderable, for now
                 that._cachedViews[id].sync = new GenericSync(['mouse', 'touch']);
                 that._cachedViews[id].sync.on('update', function(e){
@@ -363,7 +387,8 @@ define(function(require, exports, module) {
                 });
                 that._cachedViews[id].Bg.pipe(that._cachedViews[id].sync);
                 that._cachedViews[id].MessagesView.pipe(that._cachedViews[id].sync);
-
+            } else {
+                console.log(that._cachedViews[id]);
             }
 
             that.DraggedOverView.Controller.show(that._cachedViews[id]);

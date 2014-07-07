@@ -105,7 +105,7 @@ define(function(require, exports, module) {
 
                 'inbox' : function(){
                     App.Views.MainFooter.route_show = true;
-                    App.Views.MainFooter.Tabs.select('profiles', false);
+                    App.Views.MainFooter.Tabs.select('messages', false);
                     defaultRoute('Inbox', 'Message/Inbox', arguments);
                 },
 
