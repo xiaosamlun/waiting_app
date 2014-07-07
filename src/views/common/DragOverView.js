@@ -5,7 +5,7 @@ define(function(require, exports, module) {
     var Transform = require('famous/core/Transform');
     var Utility = require('famous/utilities/Utility');
     var StateModifier = require('famous/modifiers/StateModifier');
-    var ScrollView = require('famous/views/ScrollView');
+    var ScrollView = require('famous/views/Scrollview');
     var Group = require('famous/core/Group');
     var OptionsManager = require('famous/core/OptionsManager');
     var TransitionableTransform = require('famous/transitions/TransitionableTransform');
