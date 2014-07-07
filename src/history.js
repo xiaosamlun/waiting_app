@@ -139,7 +139,7 @@ define(function(require, exports, module) {
             historyObj.eraseUntilTag(tag, false);
 
             var lastArgs = historyObj.data.pop(); // get last
-            historyObj.navigate.apply(RouterContext, lastArgs);
+            historyObj.navigate.apply(HistoryContext, lastArgs);
 
             // historyObj.data.reverse();
 

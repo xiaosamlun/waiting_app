@@ -109,6 +109,19 @@ define(function(require, exports, module) {
                     defaultRoute('Inbox', 'Message/Inbox', arguments);
                 },
 
+                'message/add/media(/:hash)' : function(){
+                    defaultRoute('MessageAddMedia', 'Message/AddMedia', arguments, {cache: true});
+                },
+                'message/add/text(/:hash)' : function(){
+                    defaultRoute('MessageAddText', 'Message/AddText', arguments, {cache: true});
+                },
+                'message/add/username(/:hash)' : function(){
+                    defaultRoute('MessageAddUsername', 'Message/AddUsername', arguments, {cache: true});
+                },
+                'message/add' : function(){
+                    defaultRoute('MessageAdd', 'Message/Add', arguments, {cache: false});
+                },
+
                 'dash(/:id)' : function(){
                     console.error("DASH");
                     App.history.modifyLast({
@@ -379,7 +392,7 @@ define(function(require, exports, module) {
                     // Only a pass-through?
                     // - don't even bother showing it!
                     if(PageView.doNotShow){
-                        // debugger;
+                        // useful for Wizards
                         console.info('Do Not Show - Page (passthrough)');
                         return;
                     }

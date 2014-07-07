@@ -311,6 +311,12 @@ define(function(require, exports, module) {
             }
 
         });
+        UserMessage.on('change', function(){
+            messageView.setContent(template({
+                UserMessage: UserMessage.toJSON(),
+                ago: moment(UserMessage.get('created')).format('h:mma - MMM Do')
+            }));
+        });
         // messageView.Surface = new Surface({
         //     content: UserMessage.toJSON(),
         //     size: [undefined, true],

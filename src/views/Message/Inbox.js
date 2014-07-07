@@ -178,24 +178,11 @@ define(function(require, exports, module) {
             // }
             // that.menuToggle();
 
-            var p = prompt('text?');
-            if(p){
-
-                var tmp = new MessageModel.Message({
-                    to_username: 'nick',
-                    text: p
-                });
-                tmp.save()
-                .then(function(response){
-                    console.info('success2!');
-                    console.log(response);
-                })
-                .fail(function(response){
-                    console.error('error!');
-                    console.log(response);
-                });
-
-            }
+            // Modify Last
+            App.history.modifyLast({
+                tag: 'StartMessageAdd'
+            });
+            App.history.navigate('message/add',{history: false});
 
         });
         this._eventOutput.on('inOutTransition', function(args){
@@ -342,6 +329,7 @@ define(function(require, exports, module) {
 
                 case 'by_user':
                     that.TopTabs.Content.show(that.TopTabs.Content.ByUserMessages);
+                    that.TopTabs.Content.ByUserMessages.View.collection.fetch();
                     break;
 
                 default:
