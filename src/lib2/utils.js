@@ -56,70 +56,107 @@ define(function (require) {
             });
         },
 
-        QuickModel: {
-            Player: function(id){
-
-                var defer = $.Deferred();
-
-                require(['models/player'], function(Model){
-
-                    if(!id || id.length < 1){
-                        defer.reject();
-                        return;
-                    }
-
-                    var newModel = new Model.Player({
-                        _id: id
-                    });
-                    if(newModel.hasFetched){
-                        // Already fetched?
-                        // console.log(1);
-                        defer.resolve(newModel);
-                    } else {
-                        // console.log(2);
-                        newModel.fetch({prefill: true});
-                        newModel.populated().then(function(){
-                            // console.log(newModel.toJSON());
-                            defer.resolve(newModel);
-                        });
-                    }
-                });
-
-                return defer.promise();
-            },
-            Sport: function(id){
-                var defer = $.Deferred();
-
-                require(['models/sport'], function(Model){
-
-                    if(!id || id.length < 1){
-                        defer.reject();
-                        return;
-                    }
-
-                    var newModel = new Model.Sport({
-                        _id: id
-                    });
-
-                    if(newModel.hasFetched){
-                        // Already fetched?
-                        defer.resolve(newModel);
-                    } else {
-                        newModel.fetch({prefill: true});
-                        // console.log(newModel);
-                        // debugger;
-                        newModel.populated().done(function(){
-                            // console.log('USING RESOLVED');
-                            // console.dir(newModel.toJSON());
-                            // debugger;
-                            defer.resolve(newModel);
-                        });
-                    }
-                });
-
-                return defer.promise();
+        QuickModel: function(ModelName, id, model_file){
+            if(model_file == undefined){
+                model_file = ModelName.toLowerCase();
             }
+
+            var defer = $.Deferred();
+
+            require(['models/' + model_file], function(Model){
+
+                if(!id || id.length < 1){
+                    defer.reject();
+                    return;
+                }
+
+                var newModel = new Model[ModelName]({
+                    _id: id
+                });
+                if(newModel.hasFetched){
+                    // Already fetched
+                    defer.resolve(newModel);
+                } else {
+                    newModel.populated().then(function(){
+                        defer.resolve(newModel);
+                    });
+                    if(App.Cache['QuickModel_' + ModelName + '_' + id] !== true){
+                        // Need to initiate a fetch
+                        // console.log(newModel.isFetching, newModel.hasFetched, newModel.toJSON());
+                        App.Cache[ModelName + id] = true;
+                        newModel.fetch({prefill: true});
+                    }
+                }
+            });
+
+            return defer.promise();
+
         },
+
+        // QuickModel: {
+        //     Player: function(id){
+
+        //         var defer = $.Deferred();
+
+        //         require(['models/player'], function(Model){
+
+        //             if(!id || id.length < 1){
+        //                 defer.reject();
+        //                 return;
+        //             }
+
+        //             var newModel = new Model.Player({
+        //                 _id: id
+        //             });
+        //             if(newModel.hasFetched){
+        //                 // Already fetched?
+        //                 // console.log(1);
+        //                 defer.resolve(newModel);
+        //             } else {
+        //                 // console.log(2);
+        //                 newModel.fetch({prefill: true});
+        //                 newModel.populated().then(function(){
+        //                     // console.log(newModel.toJSON());
+        //                     defer.resolve(newModel);
+        //                 });
+        //             }
+        //         });
+
+        //         return defer.promise();
+        //     },
+        //     Sport: function(id){
+        //         var defer = $.Deferred();
+
+        //         require(['models/sport'], function(Model){
+
+        //             if(!id || id.length < 1){
+        //                 defer.reject();
+        //                 return;
+        //             }
+
+        //             var newModel = new Model.Sport({
+        //                 _id: id
+        //             });
+
+        //             if(newModel.hasFetched){
+        //                 // Already fetched?
+        //                 defer.resolve(newModel);
+        //             } else {
+        //                 newModel.fetch({prefill: true});
+        //                 // console.log(newModel);
+        //                 // debugger;
+        //                 newModel.populated().done(function(){
+        //                     // console.log('USING RESOLVED');
+        //                     // console.dir(newModel.toJSON());
+        //                     // debugger;
+        //                     defer.resolve(newModel);
+        //                 });
+        //             }
+        //         });
+
+        //         return defer.promise();
+        //     }
+        // },
 
         Locale: {
 
@@ -513,7 +550,7 @@ define(function (require) {
                 // App.Data.Cache.ModelReplacers[cachestring] = $.Deferred();
 
 
-                Utils.QuickModel[Utils.slugToCamel(model)](id).then(function(Model){
+                Utils.QuickModel(Utils.slugToCamel(model), id).then(function(Model){
 
                     var value = Model.get(field);
 

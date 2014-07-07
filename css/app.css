@@ -143,6 +143,27 @@ body {
 }
 
 
+
+/* Messages */
+
+.message-text-default {
+  padding: 4px 8px;
+}
+
+.message-text-default span[data-replace-model="Profile"]{
+  font-weight: bold;
+}
+
+.message-text-default span.ago {
+  color: #999;
+}
+
+.message-text-default div.message-other-person {
+  font-size: 11px;
+}
+
+
+
 /* Misc colors */
 .bg-win {
   background: #71d398;

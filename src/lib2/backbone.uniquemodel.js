@@ -100,7 +100,6 @@
 
     newModel: function (attrs, options) {
       var instance = new this.Model(attrs, options);
-      instance.fuck = "fuck2";
       // var that2 = this;
       instance.hasFetched = false;
       instance.populatedPromise = $.Deferred();
@@ -119,6 +118,7 @@
           }
           // console.log(instance.toJSON());
           // debugger;
+          instance.hasFetched = true;
           newDef.resolve();
         });
         // return this.populatedPromise.promise();
@@ -189,7 +189,6 @@
           this.modelConstructor.trigger('uniquemodel.add', instance);
       } else {
         // Otherwise update the attributes of the cached instance
-        // console.info('updating cached instance');
         instance.set(attrs);
         if (!options.fromStorage)
           this.instanceSync(instance);

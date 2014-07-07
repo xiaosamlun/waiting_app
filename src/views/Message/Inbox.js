@@ -40,19 +40,19 @@ define(function(require, exports, module) {
 
     // Notifications SubView
     var NotificationsView      = require('./Notifications');
-    var CertifyView      = require('./Certify');
+    var MessagesView      = require('./Subviews/Messages');
+    var UserMessagesView      = require('./Subviews/UserMessages');
 
     // Models
-    var GameModel = require('models/game');
-    var PlayerModel = require('models/player');
+    // var GameModel = require('models/game');
+    // var PlayerModel = require('models/player');
     var MediaModel = require('models/media');
+    var MessageModel = require('models/message');
 
     function PageView(params) {
         var that = this;
         View.apply(this, arguments);
         this.params = params;
-
-
 
         // create the layout
         this.layout = new HeaderFooterLayout({
@@ -60,11 +60,10 @@ define(function(require, exports, module) {
             footerSize: 0
         });
 
-
         this.createHeader();
 
         // Wait for User to be resolved
-        App.Data.Players.populated().then((function(){
+        App.Data.User.populated().then((function(){
             this.createContent();
         }).bind(this));
 
@@ -162,21 +161,42 @@ define(function(require, exports, module) {
         this.header = new StandardHeader({
             content: "Inbox",
             classes: ["normal-header"],
-            backClasses: ["normal-header"],
+            // backClasses: ["normal-header"],
+            backContent: false,
             moreClasses: ["normal-header"],
-            moreContent: false, //'<span class="icon ion-navicon-round"></span>'
+            moreContent: "New", //'<span class="icon ion-navicon-round"></span>'
         }); 
-        this.header._eventOutput.on('back',function(){
-            App.history.back();//.history.go(-1);
-        });
-        this.header.navBar.title.on('click', function(){
-            App.history.back();
-        });
+        // this.header._eventOutput.on('back',function(){
+        //     App.history.back();//.history.go(-1);
+        // });
+        // this.header.navBar.title.on('click', function(){
+        //     App.history.back();
+        // });
         this.header._eventOutput.on('more',function(){
             // if(that.model.get('CarPermission.coowner')){
             //     App.history.navigate('car/permission/' + that.model.get('_id'), {trigger: true});
             // }
-            that.menuToggle();
+            // that.menuToggle();
+
+            var p = prompt('text?');
+            if(p){
+
+                var tmp = new MessageModel.Message({
+                    to_username: 'nick',
+                    text: p
+                });
+                tmp.save()
+                .then(function(response){
+                    console.info('success2!');
+                    console.log(response);
+                })
+                .fail(function(response){
+                    console.error('error!');
+                    console.log(response);
+                });
+
+            }
+
         });
         this._eventOutput.on('inOutTransition', function(args){
             this.header.inOutTransition.apply(this.header, args);
@@ -226,13 +246,24 @@ define(function(require, exports, module) {
         //     onClasses: ['inbox-tabbar-default', 'on'],
         //     offClasses: ['inbox-tabbar-default', 'off']
         // });
-        this.TopTabs.Bar.defineSection('certify', {
-            content: '<i class="icon ion-ios7-checkmark-outline"></i><div>Certify</div>',
+
+        this.TopTabs.Bar.defineSection('by_user', {
+            content: '<i class="icon ion-ios7-checkmark-outline"></i><div>By User</div>',
             onClasses: ['inbox-tabbar-default', 'on'],
             offClasses: ['inbox-tabbar-default', 'off']
         });
-        this.TopTabs.Bar.defineSection('challenges', {
-            content: '<i class="icon ion-play"></i><div>Challenges</div>',
+        this.TopTabs.Bar.defineSection('all', {
+            content: '<i class="icon ion-ios7-checkmark-outline"></i><div>All</div>',
+            onClasses: ['inbox-tabbar-default', 'on'],
+            offClasses: ['inbox-tabbar-default', 'off']
+        });
+        this.TopTabs.Bar.defineSection('sent', {
+            content: '<i class="icon ion-ios7-checkmark-outline"></i><div>Sent</div>',
+            onClasses: ['inbox-tabbar-default', 'on'],
+            offClasses: ['inbox-tabbar-default', 'off']
+        });
+        this.TopTabs.Bar.defineSection('received', {
+            content: '<i class="icon ion-ios7-checkmark-outline"></i><div>Received</div>',
             onClasses: ['inbox-tabbar-default', 'on'],
             offClasses: ['inbox-tabbar-default', 'off']
         });
@@ -244,58 +275,38 @@ define(function(require, exports, module) {
         // this.TopTabs = new View();
         this.TopTabs.Content = new RenderController();
 
-        // Actions
-        this.TopTabs.Content.Actions = new View();
-        this.TopTabs.Content.Actions.Surface = new Surface({
-            content: 'No new actions',
-            size: [undefined, 50],
-            properties: {
-                textAlign: "center",
-                backgroundColor: "white",
-                color: "#222",
-                lineHeight: "50px",
-                borderTop: "1px solid #ddd"
-            }
+        // All Messages
+        this.TopTabs.Content.AllMessages = new View();
+        this.TopTabs.Content.AllMessages.View = new MessagesView({
+            show_other_person: true
         });
-        this.TopTabs.Content.Actions.add(this.TopTabs.Content.Actions.Surface);
+        this.TopTabs.Content.AllMessages.add(this.TopTabs.Content.AllMessages.View);
 
-        // Notifications
-        this.TopTabs.Content.Notifications = new View();
-        this.TopTabs.Content.Notifications.View = new NotificationsView();
-        this.TopTabs.Content.Notifications.add(this.TopTabs.Content.Notifications.View);
-
-        // this.TopTabs.Content.Notifications.pipe(this.contentScrollView);
-        // this.TopTabs.Content.Notifications.Surface = new Surface({
-        //     content: 'No new notifications',
-        //     size: [undefined, 50],
-        //     properties: {
-        //         textAlign: "center",
-        //         backgroundColor: "white",
-        //         color: "#222",
-        //         lineHeight: "50px",
-        //         borderTop: "1px solid #ddd"
-        //     }
-        // });
-        // this.TopTabs.Content.Notifications.add(this.TopTabs.Content.Notifications.Surface);
-
-        // Challenges
-        this.TopTabs.Content.Challenges = new View();
-        this.TopTabs.Content.Challenges.Surface = new Surface({
-            content: 'No new Challenges',
-            size: [undefined, 50],
-            properties: {
-                textAlign: "center",
-                backgroundColor: "white",
-                color: "#222",
-                lineHeight: "50px",
-                borderTop: "1px solid #ddd"
-            }
+        // Sent Messages
+        this.TopTabs.Content.SentMessages = new View();
+        this.TopTabs.Content.SentMessages.View = new MessagesView({
+            filter: {
+                from_user_id: App.Data.User.get('_id')
+            },
+            show_other_person: true
         });
-        this.TopTabs.Content.Challenges.add(this.TopTabs.Content.Challenges.Surface);
-        // Certify
-        this.TopTabs.Content.Certify = new View();
-        this.TopTabs.Content.Certify.View = new CertifyView();
-        this.TopTabs.Content.Certify.add(this.TopTabs.Content.Certify.View);
+        this.TopTabs.Content.SentMessages.add(this.TopTabs.Content.SentMessages.View);
+
+        // Received Messages
+        this.TopTabs.Content.RecMessages = new View();
+        this.TopTabs.Content.RecMessages.View = new MessagesView({
+            filter: {
+                to_user_id: App.Data.User.get('_id')
+            },
+            show_other_person: true
+        });
+        this.TopTabs.Content.RecMessages.add(this.TopTabs.Content.RecMessages.View);
+
+        // By Users
+        this.TopTabs.Content.ByUserMessages = new View();
+        this.TopTabs.Content.ByUserMessages.View = new UserMessagesView();
+        this.TopTabs.Content.ByUserMessages.add(this.TopTabs.Content.ByUserMessages.View);
+
         // this.TopTabs.Content.Certify.Surface = new Surface({
         //     content: 'No games to certify',
         //     size: [undefined, 50],
@@ -307,7 +318,7 @@ define(function(require, exports, module) {
         //         borderTop: "1px solid #ddd"
         //     }
         // });
-        this.TopTabs.Content.Certify.add(this.TopTabs.Content.Certify.View);
+        // this.TopTabs.Content.Messages.add(this.TopTabs.Content.Messages.View);
 
         // Add Lightbox to sequence
         this.contentScrollView.Views.push(this.TopTabs.Content);
@@ -315,20 +326,21 @@ define(function(require, exports, module) {
         // Listeners for Tabs
         this.TopTabs.Bar.on('select', function(result){
             switch(result.id){
-                // case 'actions':
-                //     that.TopTabs.Content.show(that.TopTabs.Content.Actions);
-                //     break;
 
-                case 'notifications':
-                    that.TopTabs.Content.show(that.TopTabs.Content.Notifications);
+                case 'all':
+                    that.TopTabs.Content.show(that.TopTabs.Content.AllMessages);
                     break;
 
-                case 'challenges':
-                    that.TopTabs.Content.show(that.TopTabs.Content.Challenges);
+                case 'sent':
+                    that.TopTabs.Content.show(that.TopTabs.Content.SentMessages);
                     break;
 
-                case 'certify':
-                    that.TopTabs.Content.show(that.TopTabs.Content.Certify);
+                case 'received':
+                    that.TopTabs.Content.show(that.TopTabs.Content.RecMessages);
+                    break;
+
+                case 'by_user':
+                    that.TopTabs.Content.show(that.TopTabs.Content.ByUserMessages);
                     break;
 
                 default:
@@ -336,7 +348,7 @@ define(function(require, exports, module) {
                     break;
             }
         });
-        this.TopTabs.Bar.select('certify'); // notifications
+        this.TopTabs.Bar.select('by_user');
 
         this.layout.content.add(this.ContentStateModifier).add(this.contentScrollView);
 
@@ -347,7 +359,7 @@ define(function(require, exports, module) {
 
     PageView.prototype.refreshData = function() {
         try {
-            this.model.fetch();
+            // this.model.fetch();
             // this.media_collection.fetch();
             // this.errorList.fetch();
             // this.alert_collection.fetch();
