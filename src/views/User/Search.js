@@ -33,15 +33,9 @@ define(function(require, exports, module) {
     var StandardHeader = require('views/common/StandardHeader');
 
     // Models
-    var PlayerModel = require('models/player');
-    var GameModel = require('models/game');
+    var ProfileModel = require('models/profile');
 
     // Subviews
-
-    // Side menu of list of cars
-    var PlayerMenuView = require('views/Player/PlayerMenu');
-    // Game List
-    var PlayerGameListView = require('views/Player/PlayerGameList');
 
     function PageView(options) {
         var that = this;
@@ -186,7 +180,7 @@ define(function(require, exports, module) {
         this.player_id = that.options.args[0];
 
         // Player list
-        this.collection = new PlayerModel.PlayerCollection([],{
+        this.collection = new ProfileModel.ProfileCollection([],{
             type: 'username',
             username: ''
             // should include player_id to get "friends" for a player
@@ -215,12 +209,24 @@ define(function(require, exports, module) {
         var that = this;
 
         // Get the username to search against
-
+        var val = this.SearchHeader.getValue();
+        // re-initialize
         this.collection.initialize([],{
             type: 'username',
-            username: this.SearchHeader.getValue() // .Surface...
+            username:  val // .Surface...
         });
-        this.collection.fetch({reset: true});
+        if(val == ''){
+            this.collection.set([]);
+            this.collection.trigger('reset');
+        } else {
+            this.collection.fetch()
+                .then(function(){
+                    if(val == that.SearchHeader.getValue()){
+                        that.collection.trigger('reset');
+                    }
+                });
+        }
+
 
     };
 
@@ -303,12 +309,12 @@ define(function(require, exports, module) {
                 return;
             }
             var userView = new View(),
-                name = tmpPlayerModel.get('Profile.name'),
-                username = tmpPlayerModel.get('Profile.username');
+                name = tmpPlayerModel.get('profile.name') || '&nbsp;',
+                username = tmpPlayerModel.get('username');
 
             userView.Model = tmpPlayerModel;
             userView.Surface = new Surface({
-                 content: '<div>' + name + '</div><div>@' +username+'</div>',
+                 content: '<div>@' +username+'</div><div>' + name + '</div>',
                  size: [undefined, 60],
                  classes: ['player-list-item-default']
             });
@@ -322,7 +328,7 @@ define(function(require, exports, module) {
 
         // sort existing
         this.contentScrollView.Views = _.sortBy(this.contentScrollView.Views, function(tmpPlayerView){
-            return tmpPlayerView.Model.get('Profile.username').toLowerCase();
+            return tmpPlayerView.Model.get('username').toLowerCase();
         });
 
         // resequence? (happens automatically?)
@@ -341,17 +347,14 @@ define(function(require, exports, module) {
         // console.log(ModelIndex);
 
         var ModelIndex = this.collection.indexOf(Model);
-        var name = Model.get('Profile.name');
-        if(!name){
-            name = Model.get('name');
-        }
-        var username = Model.get('Profile.username');
+        var username = Model.get('username');
+        var name = Model.get('profile.name');
 
         // console.log(Model.toJSON());
         var temp = new Surface({
-             content: '<div>' + name + '</div><div>@' +username+'</div>',
+             content: '<div>@' +username+'</div>' + '<div>' + name + '</div>',
              size: [undefined, 60],
-             classes: ['player-list-item-default']
+             classes: ['user-search-list-item-default']
         });
 
         // Events

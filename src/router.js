@@ -140,6 +140,11 @@ define(function(require, exports, module) {
                     defaultRoute('UserView', 'User/View', arguments);
                 },
 
+
+                'users/search' : function(){
+                    defaultRoute('UsersSearch', 'User/Search', arguments, { cache: true });
+                },
+
                 'ranking/:summary_type/:player_filter/:player_id/:timeframe' : function(){
                     defaultRoute('Ranking', 'Player/Ranking', arguments);
                 }, 

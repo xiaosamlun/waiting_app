@@ -30,7 +30,6 @@ define(function (require) {
 
             model: Profile,
 
-            url: Credentials.server_root + "users",
             urlRoot: Credentials.server_root + "users",
 
             // Paginator Core
@@ -95,6 +94,10 @@ define(function (require) {
             initialize: function(models, options){
                 options = options || {};
                 this.options = options;
+                this.url = this.urlRoot + '';
+                if(options.type == 'username'){
+                    this.url = this.urlRoot + '/' + 'search/username/' + options.username;
+                }
 
             }
 

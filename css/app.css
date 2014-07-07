@@ -546,6 +546,31 @@ body {
 }
 
 
+/* Seraching Usernames / Users */
+
+.user-search-list-item-default {
+  line-height: 44px;
+  background: white;
+
+  padding: 0px 8px;
+
+  border-bottom: 1px dashed #ddd;
+}
+
+.user-search-list-item-default > div:nth-child(1) {
+  font-size: 18px;
+  line-height: 20px;
+  color: #333;
+
+  padding-top: 10px;
+}
+
+.user-search-list-item-default > div:nth-child(2) {
+  font-size: 14px;
+  line-height: 20px;
+  color: #333;
+}
+
 /* Player List (list of nemeses or nemesissies) */
   
 .player-list-item-default {
