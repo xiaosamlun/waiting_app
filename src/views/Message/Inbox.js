@@ -218,6 +218,9 @@ define(function(require, exports, module) {
         this.TopTabs.BarSizeMod = new StateModifier({
             size: [undefined, 50]
         });
+        this.TopTabs.getSize = function(){
+            return [undefined, 50];
+        };
         this.TopTabs.add(this.TopTabs.BarSizeMod).add(this.TopTabs.Bar);
 
         // combine the following 2 into "events" ? ("Stories" would be the default view, with a link inside the "Actions" (because they are a subset, really)

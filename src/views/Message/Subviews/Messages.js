@@ -52,9 +52,14 @@ define(function(require, exports, module) {
         // Lightboxes/RenderControllers
         this.lightboxContent = new RenderController();
         // Create LightboxButtons for Render Infinity Buttons (refreshing, etc.)
-        this.lightboxButtons = new RenderController({
-            size: [undefined, true]
-        });
+        this.lightboxButtons = new RenderController();
+        this.lightboxButtons.getSize = function(){
+            var s = this._renderables[this._showing].getSize(true);
+            if(!s){
+                return [undefined, true];
+            }
+            return [undefined, s[1]];
+        };
 
         // Create Loading Renderable
         // Create "No Results" Renderable
