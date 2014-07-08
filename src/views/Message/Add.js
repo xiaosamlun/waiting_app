@@ -41,6 +41,10 @@ define(function(require, exports, module) {
         this.options = options;
 
         this.doNotShow = true;
+        
+        // Create Model
+        this.model = new MessageModel.Message();
+        
 
         // // create the layout
         // this.layout = new HeaderFooterLayout({
@@ -68,9 +72,6 @@ define(function(require, exports, module) {
 
         // Choose the User
         this.choose_username();
-
-        // Create Model
-        this.model = new MessageModel.Message();
 
     }
 
