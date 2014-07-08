@@ -37,7 +37,7 @@ define(function(require, exports, module) {
     function PageView(options) {
         var that = this;
         View.apply(this, arguments);
-        this.params = options;
+        this.options = options;
 
         // Models
 
@@ -50,16 +50,14 @@ define(function(require, exports, module) {
             footerSize: 0
         });
 
-        if(!this.params.App.Cache.TextOptions){
+        if(!this.options.App.Cache.TextOptions){
             window.location = '';
             // App.history.back();//.history.go(-1);
             return;
         }
 
-        // Add to new ".passed" params, separate from this.params.App and other root-level arguments/objects
-        this.params.passed = _.extend({
-            title: 'Add Text'
-        }, App.Cache.TextOptions || {});
+        // Add to new ".passed" params, separate from this.options.App and other root-level arguments/objects
+        this.options.passed = _.extend({}, App.Cache.TextOptions || {});
         
         this.createHeader();
         this.createContent();
@@ -74,18 +72,18 @@ define(function(require, exports, module) {
         var that = this;
 
         this.header = new StandardHeader({
-            content: this.params.passed.title,
+            content: this.options.passed.title,
             classes: ["normal-header"],
             backClasses: ["normal-header"],
             moreContent: false
         }); 
         this.header._eventOutput.on('back',function(){
             // App.history.back();
-            that.params.passed.on_cancel();
+            that.options.passed.on_cancel();
         });
         this.header.navBar.title.on('click',function(){
             // App.history.back();
-            that.params.passed.on_cancel();
+            that.options.passed.on_cancel();
         });
         this._eventOutput.on('inOutTransition', function(args){
             this.header.inOutTransition.apply(that.header, args);
@@ -170,7 +168,7 @@ define(function(require, exports, module) {
 
         // Events for surfaces
         this.submitButtonSurface.on('click', function(){
-            that.params.passed.on_choose(that.inputTextSurface.getValue());
+            that.options.passed.on_choose(that.inputTextSurface.getValue());
         });
 
     };

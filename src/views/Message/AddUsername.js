@@ -37,7 +37,7 @@ define(function(require, exports, module) {
     function PageView(options) {
         var that = this;
         View.apply(this, arguments);
-        this.params = options;
+        this.options = options;
 
         // Models
 
@@ -50,19 +50,17 @@ define(function(require, exports, module) {
             footerSize: 0
         });
 
-        if(!this.params.App.Cache.UsernameOptions){
+        if(!this.options.App.Cache.UsernameOptions){
             window.location = '';
             // App.history.back();//.history.go(-1);
             return;
         }
 
-        // Add to new ".passed" params, separate from this.params.App and other root-level arguments/objects
-        this.params.passed = _.extend({
-            title: 'Add Username'
-        }, App.Cache.UsernameOptions || {});
+        // Add to new ".passed" options, separate from this.options.App and other root-level arguments/objects
+        this.options.passed = _.extend({}, App.Cache.UsernameOptions || {});
 
-        this.createHeader();
         this.createContent();
+        this.createHeader();
 
         this.add(this.layout);
     }
@@ -74,18 +72,18 @@ define(function(require, exports, module) {
         var that = this;
 
         this.header = new StandardHeader({
-            content: this.params.passed.title,
+            content: this.options.passed.title,
             classes: ["normal-header"],
             backClasses: ["normal-header"],
             moreContent: false
         }); 
         this.header._eventOutput.on('back',function(){
-            // App.history.back();
-            App.history.backTo('StartMessageAdd');//.history.go(-1);
+            that.options.passed.on_cancel();
         });
         this.header.navBar.title.on('click',function(){
             // App.history.back();
-            App.history.backTo('StartMessageAdd');//.history.go(-1);
+            // App.history.backTo('StartMessageAdd');//.history.go(-1);
+            that.options.passed.on_cancel();
         });
         this._eventOutput.on('inOutTransition', function(args){
             this.header.inOutTransition.apply(that.header, args);
@@ -170,8 +168,8 @@ define(function(require, exports, module) {
 
         // Events for surfaces
         this.submitButtonSurface.on('click', function(){
-            console.log(that.params);
-            that.params.passed.on_choose(that.inputUsernameSurface.getValue());
+            console.log(that.options);
+            that.options.passed.on_choose(that.inputUsernameSurface.getValue());
         });
 
     };

@@ -45,33 +45,65 @@ define(function(require, exports, module) {
         // Create Model
         this.model = new MessageModel.Message();
         
-
-        // // create the layout
-        // this.layout = new HeaderFooterLayout({
-        //     headerSize: 50,
-        //     footerSize: 0
-        // });
-
-        // this.createHeader();
-
-        // // create the scrollView of content
-        // this.contentScrollView = new ScrollView(App.Defaults.ScrollView);
-        // this.scrollSurfaces = [];
-        // this.contentScrollView.sequenceFrom(this.scrollSurfaces);
-
-        // // link endpoints of layout to widgets
-
-        // // Header/navigation
-        // this.layout.header.add(this.header);
-
-        // // Content
-        // this.layout.content.StateModifier = new StateModifier();
-        // this.layout.content.add(this.layout.content.StateModifier).add(Transform.behind).add(this.contentScrollView);
+        this.summary = {};
 
         this.wizard_hash = CryptoJS.SHA3(new Date().toString());
+        this.wizard_startTag = 'StartMessageAdd';
 
-        // Choose the User
-        this.choose_username();
+        // All the possible paths to use
+        this.wizardPaths = {
+
+            'username': {
+                    cacheOptions: 'UsernameOptions',
+                    title: 'Username',
+                    route: 'message/add/username',
+                    summaryPath: 'username'
+                },
+            'text' : {
+                    cacheOptions: 'TextOptions',
+                    title: 'Text',
+                    route: 'message/add/text',
+                    summaryPath: 'text',
+                    post: function(){
+                        // handle after-save (for changing the route)
+
+                        if(this.summary.text == ''){
+                            // show Media
+                            if(this.wizardRoute.indexOf('media') == -1){
+                                // add after myself
+                                this.wizardRoute.splice(this.wizard_current_route_index+1,0,'media');
+                            }
+                        } else {
+                            // don't show media, just skip and save
+                            this.wizardRoute = _.without(this.wizardRoute,'media');
+                        }
+
+                        console.log(this.summary);
+                        console.log(this.wizardRoute);
+                        console.log(this.wizard_current_route_index);
+
+
+
+                    }
+                },
+            'media' : {
+                    cacheOptions: 'MediaOptions',
+                    title: 'Media',
+                    route: 'message/add/media',
+                    summaryPath: 'media'
+                }
+        };
+
+        // Routing of the paths
+        this.wizardRoute = [
+            'username',
+            'text',
+            // 'media'
+        ];
+        this.wizard_current_route_index = 0;
+
+        // Start the Wizard
+        this.run_wizard();
 
     }
 
@@ -79,115 +111,69 @@ define(function(require, exports, module) {
     PageView.prototype.constructor = PageView;
 
 
-    // Username
-    PageView.prototype.choose_username = function(){
-        var that = this;
+    PageView.prototype.run_wizard = function(){
 
-        // Slide to the change screen for the player
-        that.previousPage = window.location.hash;
+        // Route exists?
+        if(this.wizard_current_route_index >= this.wizardRoute.length){
+            // finished
+            this.save();
+            return;
+        }
 
-        // Slide page
-        App.Cache.UsernameOptions = {
-            on_choose: that.username_changed.bind(this),
-            on_cancel: that.username_canceled.bind(this),
-            title: 'Username',
-            back_to_default_hint: false
+        // What route are we on? 
+        this.currentRouteName = this.wizardRoute[this.wizard_current_route_index];
+        this.currentRoute = this.wizardPaths[this.currentRouteName];
+
+        App.Cache[this.currentRoute.cacheOptions] = {
+            on_choose: this.on_choose.bind(this),
+            on_cancel: this.on_cancel.bind(this),
+            title: this.currentRoute.title
         };
 
-        // Navigate to next PageView
-        App.history.navigate('message/add/username/' + this.wizard_hash);
+        // Navigate
+        App.history.navigate(this.currentRoute.route + '/' + this.wizard_hash);
+        
 
-        return false;
     };
-    PageView.prototype.username_canceled = function(ev){
-        var that = this;
-        App.history.navigate(that.previousPage);
+
+    PageView.prototype.on_cancel = function(){
+        // Go backwards
+
+        // first one, need to reset
+        if(this.wizard_current_route_index == 0){
+            App.history.backTo(this.wizard_startTag);
+            return;
+        }
+
+        // Go back a page, don't really save anything
+        this.wizard_current_route_index -= 1;
+
+        // Run the wizard again
+        this.run_wizard();
+
     };
-    PageView.prototype.username_changed = function(selected){
-        var that = this;
+
+    PageView.prototype.on_choose = function(data){
+        // OK, moving forward (or saving)
 
         // Save to .summary
-        this.summary = {};
-        this.summary.username = selected;
+        this.summary[this.currentRoute.summaryPath] = data;
 
-        // Next
-        this.add_text();
+        // What do we do next?
+        // - ask the "post" function, it may modify the routes
+        if(this.currentRoute.post){
+            this.currentRoute.post.apply(this);
+        }
 
-    };
+        // Increment our index
+        this.wizard_current_route_index += 1;
 
-    // Text
-    PageView.prototype.add_text = function(){
-        var that = this;
-
-        // Slide to the change screen for the player
-        that.previousPage = window.location.hash;
-
-        // Slide page
-        App.Cache.TextOptions = {
-            on_choose: that.text_changed.bind(this),
-            on_cancel: that.text_canceled.bind(this),
-            title: 'Add Text',
-            summary: this.summary
-        };
-
-        // Navigate to next PageView
-        App.history.navigate('message/add/text/' + this.wizard_hash);
-
-        return false;
-    };
-    PageView.prototype.text_canceled = function(ev){
-        var that = this;
-        // App.slider.slidePage(App.slider.lastPage);
-        App.history.navigate(that.previousPage);
-    };
-    PageView.prototype.text_changed = function(selected){
-        var that = this;
-
-        // Save to .summary
-        this.summary.text = selected;
-
-        // Next
-        this.add_media();
+        // continue running
+        this.run_wizard();
 
     };
 
-    // Media
-    PageView.prototype.add_media = function(){
-        var that = this;
-
-        // Slide to the change screen for the player
-        that.previousPage = window.location.hash;
-
-        // Slide page
-        App.Cache.MediaOptions = {
-            on_choose: that.media_changed.bind(this),
-            on_cancel: that.media_canceled.bind(this),
-            title: 'Add Media',
-            summary: this.summary
-        };
-
-        // Navigate to next PageView
-        App.history.navigate('message/add/media/' + this.wizard_hash);
-
-        return false;
-    };
-    PageView.prototype.media_canceled = function(ev){
-        var that = this;
-        // App.slider.slidePage(App.slider.lastPage);
-        App.history.navigate(that.previousPage);
-    };
-    PageView.prototype.media_changed = function(selected){
-        var that = this;
-
-        // Save to .summary
-        this.summary.media = selected;
-
-        // Next
-        this.save_message();
-
-    };
-
-    PageView.prototype.save_message = function(ev){
+    PageView.prototype.save = function(ev){
         var that = this;
 
         Utils.Notification.Toast('Saving...');
