@@ -41,6 +41,9 @@ define(function(require, exports, module) {
         View.apply(this, arguments);
         this.options = options;
 
+        // Load models
+        this.loadModels();
+
         // Should switch to a RenderController or Lightbox for displaying this content?
         // - it would make it easy to switch between Loading / No Results / RealResults
 
@@ -142,9 +145,6 @@ define(function(require, exports, module) {
         // });
         // this.add(this.bgSurface);
 
-        // Load models
-        this.loadModels();
-
         // // Show the Loading page
         // this.lightboxContent.show(this.loadingSurface);
 
@@ -187,6 +187,14 @@ define(function(require, exports, module) {
         });
 
         this.collection.pager({prefill: true});
+
+        // Listen for 'showing' events
+        this._eventInput.on('inOutTransition', function(args){
+            // 0 = direction
+            if(args[0] == 'showing'){
+                that.collection.pager();
+            }
+        });
 
     }
 
@@ -317,12 +325,24 @@ define(function(require, exports, module) {
             this.lightboxContent.show(nextRenderable);
         }
 
+        // // Splice out the lightboxButtons before sorting
+        // this.contentLayout.Views.pop();
 
-        // // Resort the contentLayout.Views
-        // this.contentLayout.Views = _.sortBy(this.contentLayout.Views, function(surface){
-        //     var m = moment(surface.Model.get('start_time'));
-        //     return m.format('X') * -1;
-        // });
+        // Resort the contentLayout.Views
+        this.contentLayout.Views = _.sortBy(this.contentLayout.Views, function(v){
+            try {
+                var m = moment(v.Surface.Model.get('created'));
+                return m.format('X') * -1;
+            }catch(err){
+                // normal view?
+                if(v.Surface){
+                    console.error('====', v);
+                }
+                return 1000000;
+            }
+        });
+
+        // this.contentLayout.Views.push();
 
         // Re-sequence?
         if(this.contentLayout.Views.length > 0){

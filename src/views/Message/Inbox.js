@@ -62,6 +62,7 @@ define(function(require, exports, module) {
 
         this.createHeader();
 
+        this._subviews = [];
         // Wait for User to be resolved
         App.Data.User.populated().then((function(){
             this.createContent();
@@ -271,6 +272,7 @@ define(function(require, exports, module) {
             show_other_person: true
         });
         this.TopTabs.Content.AllMessages.add(this.TopTabs.Content.AllMessages.View);
+        this._subviews.push(this.TopTabs.Content.AllMessages.View);
 
         // Sent Messages
         this.TopTabs.Content.SentMessages = new View();
@@ -281,6 +283,7 @@ define(function(require, exports, module) {
             show_other_person: true
         });
         this.TopTabs.Content.SentMessages.add(this.TopTabs.Content.SentMessages.View);
+        this._subviews.push(this.TopTabs.Content.SentMessages.View);
 
         // Received Messages
         this.TopTabs.Content.RecMessages = new View();
@@ -291,11 +294,13 @@ define(function(require, exports, module) {
             show_other_person: true
         });
         this.TopTabs.Content.RecMessages.add(this.TopTabs.Content.RecMessages.View);
+        this._subviews.push(this.TopTabs.Content.RecMessages.View);
 
         // By Users
         this.TopTabs.Content.ByUserMessages = new View();
         this.TopTabs.Content.ByUserMessages.View = new UserMessagesView();
         this.TopTabs.Content.ByUserMessages.add(this.TopTabs.Content.ByUserMessages.View);
+        this._subviews.push(this.TopTabs.Content.ByUserMessages.View);
 
         // this.TopTabs.Content.Certify.Surface = new Surface({
         //     content: 'No games to certify',
@@ -324,10 +329,12 @@ define(function(require, exports, module) {
 
                 case 'sent':
                     that.TopTabs.Content.show(that.TopTabs.Content.SentMessages);
+                    that.TopTabs.Content.SentMessages.View.collection.pager();
                     break;
 
                 case 'received':
                     that.TopTabs.Content.show(that.TopTabs.Content.RecMessages);
+                    that.TopTabs.Content.RecMessages.View.collection.pager();
                     break;
 
                 case 'by_user':
@@ -362,7 +369,14 @@ define(function(require, exports, module) {
     PageView.prototype.inOutTransition = function(direction, otherViewName, transitionOptions, delayShowing, otherView, goingBack){
         var that = this;
 
+        var args = arguments;
+
         this._eventOutput.emit('inOutTransition', arguments);
+
+        // emit on subviews
+        _.each(this._subviews, function(obj, index){
+            obj._eventInput.emit('inOutTransition', args);
+        });
 
         switch(direction){
             case 'hiding':

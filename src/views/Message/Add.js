@@ -78,12 +78,6 @@ define(function(require, exports, module) {
                             this.wizardRoute = _.without(this.wizardRoute,'media');
                         }
 
-                        console.log(this.summary);
-                        console.log(this.wizardRoute);
-                        console.log(this.wizard_current_route_index);
-
-
-
                     }
                 },
             'media' : {
@@ -98,7 +92,7 @@ define(function(require, exports, module) {
         this.wizardRoute = [
             'username',
             'text',
-            // 'media'
+            'media' // may be skipped! (see above)
         ];
         this.wizard_current_route_index = 0;
 
@@ -116,7 +110,7 @@ define(function(require, exports, module) {
         // Route exists?
         if(this.wizard_current_route_index >= this.wizardRoute.length){
             // finished
-            this.save();
+            this.complete();
             return;
         }
 
@@ -173,7 +167,7 @@ define(function(require, exports, module) {
 
     };
 
-    PageView.prototype.save = function(ev){
+    PageView.prototype.complete = function(ev){
         var that = this;
 
         Utils.Notification.Toast('Saving...');
@@ -189,6 +183,16 @@ define(function(require, exports, module) {
 
         this.model.save()
             .then(function(newModel){
+
+                // console.log('----');
+                // console.log(newModel);
+                // console.log(that.model.toJSON());
+                // debugger;
+
+                that.model.set(newModel);
+                // console.log(that.model.toJSON());
+                // debugger;
+
 
                 // Created OK
                 Utils.Notification.Toast('Message Created!');
