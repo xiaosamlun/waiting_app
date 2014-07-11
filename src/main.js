@@ -307,6 +307,11 @@ define(function(require, exports, module) {
                 App.Views.MainFooter.Tabs = new StandardTabBar();  
                 var tmpTabs = App.Views.MainFooter.Tabs;
 
+                tmpTabs.defineSection('home', {
+                    content: '<i class="icon ion-home"></i><div><span class="ellipsis-all">'+App.t('footer.waiting')+'</span></div>',
+                    onClasses: ['footer-tabbar-default', 'on'],
+                    offClasses: ['footer-tabbar-default', 'off']
+                });
                 tmpTabs.defineSection('messages', {
                     content: '<i class="icon ion-android-inbox"></i><div><span class="ellipsis-all">'+App.t('footer.messages')+'</span></div>',
                     onClasses: ['footer-tabbar-default', 'on'],
@@ -324,6 +329,10 @@ define(function(require, exports, module) {
                     console.error(result);
                     switch(result.id){
                         
+                        case 'home':
+                            App.history.navigate('user/waiting');
+                            break;
+
                         case 'profiles':
                             App.history.navigate('dash');
                             break;

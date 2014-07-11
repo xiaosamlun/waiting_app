@@ -99,6 +99,9 @@ define(function(require, exports, module) {
             classes: ['header-tab-icon-text']
         });
         this.headerContent.Add.on('click', function(){
+            App.history.modifyLast({
+                tag: 'StartPlayerAdd'
+            });
             App.history.navigate('player/add');
         });
 

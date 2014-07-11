@@ -96,7 +96,7 @@ define(function(require, exports, module) {
             App.history.back();
         });
         this.header._eventOutput.on('more',function(){
-            App.history.navigate('player/add/nolink', {trigger: true});
+            App.history.navigate('player/add/nolink');
         });
 
 

@@ -20,22 +20,29 @@ define(function(require, exports, module) {
     var NavigationBar = require('famous/widgets/NavigationBar');
     var GridLayout = require("famous/views/GridLayout");
 
+    // Extras
     var Credentials         = JSON.parse(require('text!credentials.json'));
     var $ = require('jquery');
-
-    var EventHandler = require('famous/core/EventHandler');
+    var Utils = require('utils');
 
     // Views
     var StandardHeader = require('views/common/StandardHeader');
 
+    var EventHandler = require('famous/core/EventHandler');
+
     // Models
-    var PlayerModel = require('models/player');
+    var UserModel = require('models/user');
 
 
     function PageView(options) {
         var that = this;
         View.apply(this, arguments);
         this.options = options;
+
+        // Models
+
+        // User
+        this.model = new UserModel.User();
 
         // create the layout
         this.layout = new HeaderFooterLayout({
@@ -44,34 +51,9 @@ define(function(require, exports, module) {
         });
 
         this.createHeader();
+        this.createContent();
 
-        // create the scrollView of content
-        this.contentScrollView = new ScrollView(App.Defaults.ScrollView);
-        this.scrollSurfaces = [];
-        this.contentScrollView.sequenceFrom(this.scrollSurfaces);
-
-        // link endpoints of layout to widgets
-
-        // Header/navigation
-        this.layout.header.add(this.header);
-
-        // Content
-        this.layout.content.StateModifier = new StateModifier();
-        this.layout.content.add(this.layout.content.StateModifier).add(Transform.behind).add(this.contentScrollView);
-
-        // Add surfaces
-        this.addSurfaces();
-
-        // // Footer
-        // // - bring it up
-        // this.layout.footer.add(quick_stats_grid);
-        
-        // Attach the main transform and the comboNode to the renderTree
         this.add(this.layout);
-
-        // Create Model
-        this.model = new PlayerModel.Player();
-
     }
 
     PageView.prototype = Object.create(View.prototype);
@@ -79,10 +61,9 @@ define(function(require, exports, module) {
 
     PageView.prototype.createHeader = function(){
         var that = this;
-        
-        // create the header
+
         this.header = new StandardHeader({
-            content: "New Nemesis",
+            content: "Signup",
             classes: ["normal-header"],
             backClasses: ["normal-header"],
             moreContent: false
@@ -90,13 +71,45 @@ define(function(require, exports, module) {
         this.header._eventOutput.on('back',function(){
             App.history.back();//.history.go(-1);
         });
-        this.header.pipe(this._eventInput);
+        this.header.navBar.title.on('click',function(){
+            App.history.back();//.history.go(-1);
+        });
         this._eventOutput.on('inOutTransition', function(args){
-            this.header.inOutTransition.apply(this.header, args);
+            this.header.inOutTransition.apply(that.header, args);
         })
 
-        // Attach header to the layout        
         this.layout.header.add(this.header);
+    };
+
+    PageView.prototype.createContent = function(){
+        var that = this;
+
+        // create the scrollView of content
+        this.contentScrollView = new SequentialLayout(); //(App.Defaults.ScrollView);
+        this.contentScrollView.Views = [];
+        this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
+
+        // Add surfaces
+        this.addSurfaces();
+        
+        // Content
+        this.layout.content.StateModifier = new StateModifier();
+        this.contentView = new View();
+        this.contentView.SizeMod = new Modifier({
+            size: //[window.innerWidth - 50, true]
+                function(){
+                    var tmpSize = that.contentScrollView.getSize(true);
+                    if(!tmpSize){
+                        return [window.innerWidth, undefined];
+                    }
+                    return [window.innerWidth - 16, tmpSize[1]];
+                }
+        });
+        this.contentView.OriginMod = new StateModifier({
+            origin: [0.5, 0.5]
+        });
+        this.contentView.add(this.contentView.OriginMod).add(this.contentView.SizeMod).add(this.contentScrollView);
+        this.layout.content.add(this.layout.content.StateModifier).add(this.contentView);
 
     };
 
@@ -105,33 +118,42 @@ define(function(require, exports, module) {
 
         // Build Surfaces
         // - add to scrollView
+
+        // Name
         this.inputNameSurface = new InputSurface({
             name: 'name',
-            placeholder: 'Name',
+            placeholder: 'Your Name',
             type: 'text',
-            size: [200, 50],
+            size: [undefined, 50],
             value: ''
         });
-        this.scrollSurfaces.push(this.inputNameSurface);
+        this.contentScrollView.Views.push(this.inputNameSurface);
 
+        // Spacer
+        this.contentScrollView.Views.push(new Surface({
+            size: [undefined, 4]
+        }));
+
+        // Submit button
         this.submitButtonSurface = new Surface({
-            size: [undefined,40],
-            classes: ['button-surface'],
-            content: 'Save Player',
-            properties: {
-                lineHeight : "20px"
-            }
+            size: [undefined,60],
+            classes: ['form-button-submit-default'],
+            content: 'Create Offline Nemesis'
         });
-        this.scrollSurfaces.push(this.submitButtonSurface);
+        this.contentScrollView.Views.push(this.submitButtonSurface);
 
         // Events for surfaces
         this.submitButtonSurface.on('click', this.save_player.bind(this));
-
 
     };
 
     PageView.prototype.save_player = function(ev){
         var that = this;
+
+        if(this.checking === true){
+            return;
+        }
+        this.checking = true;
 
         // validate name
         var name = $.trim(this.inputNameSurface.getValue().toString());
@@ -139,8 +161,8 @@ define(function(require, exports, module) {
             return;
         }
 
-        // Disable submit
-        this.submitButtonSurface.setSize([0,0]);
+        // Disable submit button
+        this.submitButtonSurface.setContent('Please wait...');
 
         // Get elements to save
         this.model.set({
@@ -150,15 +172,16 @@ define(function(require, exports, module) {
         this.model.save()
             .then(function(newModel){
                 
-                // Enable submit
-                that.submitButtonSurface.setSize([undefined, 40]);
+                // Disable submit button
+                this.submitButtonSurface.setContent('Create Offline Nemesis');
 
                 // Clear player cache
                 // - todo...
 
                 // Redirect to the new user
                 // that.$('.back-button').trigger('click');
-                App.history.navigate('player/' + newModel._id, {trigger: true});
+                App.history.eraseUntilTag('StartPlayerAdd');
+                App.history.navigate('player/' + newModel._id);
                 
 
             });
@@ -182,8 +205,8 @@ define(function(require, exports, module) {
                         // Content
                         window.setTimeout(function(){
 
-                            // Bring content back
-                            that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth,0,0), transitionOptions.inTransition);
+                            // // Bring content back
+                            // that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth,0,0), transitionOptions.inTransition);
 
                         }, delayShowing);
 
@@ -193,7 +216,7 @@ define(function(require, exports, module) {
                 break;
             case 'showing':
                 if(this._refreshData){
-                    window.setTimeout(this.refreshData.bind(this), 1000);
+                    // window.setTimeout(this.refreshData.bind(this), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
@@ -204,21 +227,15 @@ define(function(require, exports, module) {
                         transitionOptions.inTransform = Transform.identity;
 
                         // // Default position
-                        // if(goingBack){
-                        //     that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth * -1,0,0));
-                        // } else {
-                        //     that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth + 100,0,0));
-                        // }
-                        that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth, 0, 0));
+                        that.layout.content.StateModifier.setOpacity(0);
 
                         // Content
-                        // - extra delay for content to be gone
                         window.setTimeout(function(){
 
                             // Bring content back
-                            that.layout.content.StateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);
+                            that.layout.content.StateModifier.setOpacity(1, transitionOptions.inTransition);
 
-                        }, delayShowing);
+                        }, delayShowing +transitionOptions.outTransition.duration);
 
 
                         break;
@@ -231,23 +248,16 @@ define(function(require, exports, module) {
 
 
 
+
     PageView.DEFAULT_OPTIONS = {
         header: {
-            size: [undefined, 50],
-            // inTransition: true,
-            // outTransition: true,
-            // look: {
-            //     size: [undefined, 50]
-            // }
+            size: [undefined, 50]
         },
         footer: {
             size: [undefined, 0]
         },
         content: {
-            size: [undefined, undefined],
-            inTransition: true,
-            outTransition: true,
-            overlap: true
+            size: [undefined, undefined]
         }
     };
 

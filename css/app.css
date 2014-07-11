@@ -74,6 +74,23 @@ body {
 
 
 
+/* Waiting list */
+
+.waiting-list-top-default {
+  text-align: center;
+
+  font-size: 32px;
+  line-height: 200px;
+
+}
+
+.waiting-list-position-default {
+  text-align: center;
+  line-height: 40px;
+  font-size: 72px;
+}
+
+
 
 /* Certify Games */
 .certify-game-default {

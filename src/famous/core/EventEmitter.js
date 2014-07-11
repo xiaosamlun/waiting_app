@@ -49,9 +49,16 @@ define(function(require, exports, module) {
      * @return {EventHandler} this
      */
    EventEmitter.prototype.on = function on(type, handler) {
-        if(typeof type === typeof []){
-            var that = this;
+        var that = this;
+        if(type instanceof Array){
             type.forEach(function(tmpType){
+                that.on(tmpType, handler);
+            });
+            return this;
+        }
+        var split = type.split(' ');
+        if(split.length > 1){
+            split.forEach(function(tmpType){
                 that.on(tmpType, handler);
             });
             return this;

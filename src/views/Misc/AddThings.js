@@ -173,7 +173,7 @@ define(function(require, exports, module) {
                 title: '+ Nemesis',
                 desc: 'Connect with another player by sharing a special code.',
                 href: 'player/add',
-                tag: 'StartAddPlayer'
+                tag: 'StartPlayerAdd'
             }
         ];
 

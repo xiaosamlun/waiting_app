@@ -3,6 +3,7 @@
       "name": "InternalApp"
     },
     "footer" : {
+    	"waiting" : "Home",
     	"messages" : "Messages",
     	"profiles" : "Profiles"
     }

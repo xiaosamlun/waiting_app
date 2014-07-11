@@ -45,36 +45,17 @@ define(function(require, exports, module) {
         // Models
         this.loadModels();
 
-        // // Create the CarList menu that swings out
-        // this.sideView = new PlayerMenuView();
-        // this.sideView.OpacityModifier = new StateModifier();
-
         // create the layout
         this.layout = new HeaderFooterLayout({
             headerSize: 50,
             footerSize: 0
         });
 
-        this.createHeader();
         this.createContent();
-
-        // // content
-        // this.model.populated().then(function(){
-        //     that.update_content();
-        //     that.model.on('change', that.update_content.bind(that)); // could put it inside the: .populated().then(function(){....
-        // });
+        this.createHeader();
         
         // Attach the main transform and the comboNode to the renderTree
         this.add(this.layout);
-
-        // Events
-
-        // this._eventInput.on('menuToggle', this.menuToggle.bind(this))
-
-
-        // window.setTimeout(function(){
-        //     KnowPlayerId.resolve("529c02f00705435badb1dff5");
-        // },3000);
 
     }
 
@@ -86,19 +67,15 @@ define(function(require, exports, module) {
 
         // create the header
         this.header = new StandardHeader({
-            content: 'Search Nemesis Users',
+            content: 'Search Usernames',
             classes: ["normal-header"],
             backClasses: ["normal-header"],
             moreContent: false
         }); 
         this.header._eventOutput.on('back',function(){
-            App.history.back();//.history.go(-1);
-            // App.history.navigate('game/add',{trigger: true});
-            // App.history.navigate('dash');
+            App.history.back();
         });
         this.header.navBar.title.on('click',function(){
-            // rewrite the event
-            // that.PlayerGameListView.collection.requestNextPage();
             App.history.back();
 
         });
@@ -108,16 +85,6 @@ define(function(require, exports, module) {
         this._eventOutput.on('inOutTransition', function(args){
             this.header.inOutTransition.apply(this.header, args);
         })
-
-        // // Change title on change
-        // this.model.on('change', function(Model){
-        //     that.header.setContent(Model.get('name'));
-        // });
-
-        // // Node for Modifier and background
-        // this.HeaderNode = new RenderNode();
-        // this.HeaderNode.add(this.headerBg);
-        // this.HeaderNode.add(this.header.StateModifier).add(this.header);
 
         // Attach header to the layout        
         this.layout.header.add(this.header);
@@ -148,12 +115,42 @@ define(function(require, exports, module) {
             // Trigger search
             that.search_username();
         });
-        this.ContentLayout.header.add(this.SearchHeader);
+        var SlightlyInFrontMod = new Modifier({
+            transform: Transform.translate(0,0,0.0001)
+        });
+        this.ContentLayout.header.add(SlightlyInFrontMod).add(this.SearchHeader);
 
         // create the content
         this.contentScrollView = new ModifiedScrollView(App.Defaults.ScrollView);
         this.contentScrollView.Views = [];
         this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
+
+
+        // Create default surfaces we'll re-use
+        this.InstructionsSurface = new Surface({
+            content: '<i class="icon ion-arrow-up-a"></i> Search by typing above!',
+            size: [undefined, 200],
+            properties: {
+                color: '#444',
+                textAlign: 'left',
+                fontWeight: 'bold',
+                padding: '0px 8px',
+                fontSize: '18px',
+                lineHeight: '60px'
+            }
+        });
+
+        this.NoResultsSurface = new Surface({
+            content: 'No Usernames Matched',
+            size: [undefined, 200],
+            properties: {
+                color: '#444',
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontSize: '18px',
+                lineHeight: '60px'
+            }
+        });
 
         // Show initial surfaces
         this.rebuild_username_list();
@@ -210,7 +207,6 @@ define(function(require, exports, module) {
 
         // Get the username to search against
         var val = this.SearchHeader.getValue();
-        // re-initialize
         this.collection.initialize([],{
             type: 'username',
             username:  val // .Surface...
@@ -242,31 +238,10 @@ define(function(require, exports, module) {
             this.contentScrollView.Views = [];
             if(this.SearchHeader.getValue().toString().trim() == ''){
                 // Tell them how to search!
-                this.contentScrollView.Views.push(new Surface({
-                    content: '<i class="icon ion-arrow-up-a"></i> Search by typing above!',
-                    size: [undefined, 200],
-                    properties: {
-                        color: '#444',
-                        textAlign: 'left',
-                        fontWeight: 'bold',
-                        padding: '0px 8px',
-                        fontSize: '18px',
-                        lineHeight: '60px'
-                    }
-                }));
+                this.contentScrollView.Views.push(this.InstructionsSurface);
             } else {
                 // no results
-                this.contentScrollView.Views.push(new Surface({
-                    content: 'No Usernames Matched',
-                    size: [undefined, 200],
-                    properties: {
-                        color: '#444',
-                        textAlign: 'center',
-                        fontWeight: 'bold',
-                        fontSize: '18px',
-                        lineHeight: '60px'
-                    }
-                }));
+                this.contentScrollView.Views.push(this.NoResultsSurface);
             }
             this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
             return;
@@ -284,7 +259,6 @@ define(function(require, exports, module) {
         // Figure out which surfaces to remove/keep, re-order, etc.
         var player_ids_to_keep = _.pluck(this.collection.toJSON(), '_id'),
             views_to_add = [];
-        // console.log('player_ids_to_keep', player_ids_to_keep);
 
         // Remove unneeded views
         this.contentScrollView.Views = _.filter(this.contentScrollView.Views, function(tmpPlayerView){
@@ -298,32 +272,32 @@ define(function(require, exports, module) {
         var existing_view_player_ids = _.map(this.contentScrollView.Views, function(tmpPlayerView){
             return tmpPlayerView.Model.get('_id');
         });
-        // console.log('existing_view_player_ids', existing_view_player_ids);
 
         // create new surfaces
         var to_create_ids = _.difference(player_ids_to_keep, existing_view_player_ids);
-        // console.log('to_create_ids', to_create_ids);
         this.collection.forEach(function(tmpPlayerModel){
             if(to_create_ids.indexOf(tmpPlayerModel.get('_id')) === -1){
                 // already added!
                 return;
             }
-            var userView = new View(),
-                name = tmpPlayerModel.get('profile.name') || '&nbsp;',
-                username = tmpPlayerModel.get('username');
 
-            userView.Model = tmpPlayerModel;
-            userView.Surface = new Surface({
-                 content: '<div>@' +username+'</div><div>' + name + '</div>',
-                 size: [undefined, 60],
-                 classes: ['player-list-item-default']
-            });
-            userView.Surface.on('click', function(){
-                App.history.navigate('player/' + tmpPlayerModel.get('_id'));
-            });
-            userView.add(userView.Surface);
+            that.addOne(tmpPlayerModel);
+            // var userView = new View(),
+            //     name = tmpPlayerModel.get('profile.name') || '&nbsp;',
+            //     username = tmpPlayerModel.get('username');
 
-            that.contentScrollView.Views.push(userView);
+            // userView.Model = tmpPlayerModel;
+            // userView.Surface = new Surface({
+            //      content: '<div>@' +username+'</div><div>' + name + '</div>',
+            //      size: [undefined, 60],
+            //      classes: ['player-list-item-default']
+            // });
+            // userView.Surface.on('click', function(){
+            //     App.history.navigate('player/' + tmpPlayerModel.get('_id'));
+            // });
+            // userView.add(userView.Surface);
+
+            // that.contentScrollView.Views.push(userView);
         });
 
         // sort existing
@@ -336,7 +310,30 @@ define(function(require, exports, module) {
 
     };
 
-    PageView.prototype.addOne = function(Model) { 
+    PageView.prototype.addOne = function(Model){
+        var that = this;
+
+        var userView = new View(),
+            name = Model.get('profile.name') || '&nbsp;',
+            username = Model.get('username');
+
+        userView.Model = Model;
+        userView.Surface = new Surface({
+             content: '<div>@' +username+'</div><div>' + name + '</div>',
+             size: [undefined, 60],
+             classes: ['player-list-item-default']
+        });
+        userView.Surface.pipe(that.contentScrollView);
+        userView.Surface.on('click', function(){
+            App.history.navigate('player/' + Model.get('_id'));
+        });
+        userView.add(userView.Surface);
+
+        that.contentScrollView.Views.push(userView);
+
+    };
+
+    PageView.prototype.addOne2 = function(Model) { 
         var that = this;
 
         if(Model.get('_id') == that.player_id || Model.get('is_me') === true){
@@ -360,12 +357,11 @@ define(function(require, exports, module) {
         // Events
         temp.pipe(this.contentScrollView);
         temp.on('click', (function(){
-            this._eventOutput.emit("menuToggle");
-            App.history.navigate('player/' + Model.get('_id'), {trigger: true});
+            App.history.navigate('profile/' + Model.get('_id'), {trigger: true});
         }).bind(this));
-        temp.on('swipe', (function(){
-            this._eventOutput.emit("menuToggle");
-        }).bind(this));
+        // temp.on('swipe', (function(){
+        //     this._eventOutput.emit("menuToggle");
+        // }).bind(this));
 
         // // Model change
         // Model.on('change:name', function(ModelTmp){

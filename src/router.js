@@ -133,6 +133,10 @@ define(function(require, exports, module) {
                     defaultRoute('Dash', 'User/View', arguments); // used to be Player/Dash
                 },
 
+                'user/waiting' : function(){
+                    defaultRoute('UserWaiting', 'User/Waiting', arguments, {cache: true});
+                },
+
                 'user/:id' : function(){
                     console.log('User/:id');
                     App.Views.MainFooter.route_show = true;
@@ -143,104 +147,6 @@ define(function(require, exports, module) {
 
                 'users/search' : function(){
                     defaultRoute('UsersSearch', 'User/Search', arguments, { cache: true });
-                },
-
-                'ranking/:summary_type/:player_filter/:player_id/:timeframe' : function(){
-                    defaultRoute('Ranking', 'Player/Ranking', arguments);
-                }, 
-
-                'story/all' : function(){
-                    App.Views.MainFooter.route_show = true;
-                    App.Views.MainFooter.Tabs.select('story', false);
-                    defaultRoute('Story', 'Story/Stories', arguments);
-                }, 
-                'story/add/detail' : function(){
-                    defaultRoute('StoryAddDetail', 'Story/AddDetail', arguments, {cache: false});
-                },
-                'story/add/game/:game_id' : function(){
-                    defaultRoute('StoryAdd', 'Story/Add', arguments, {cache: false});
-                },
-
-
-                'actions/all' : function(){
-                    App.Views.MainFooter.route_show = true;
-                    App.Views.MainFooter.Tabs.select('news', false);
-                    defaultRoute('Action', 'Action/Actions', arguments);
-                },
-
-                'explore/home' : function(){
-                    App.Views.MainFooter.route_show = true;
-                    App.Views.MainFooter.Tabs.select('explore', false);
-                    defaultRoute('Explore', 'Explore/Explore', arguments);
-                },
-
-
-                'game/add/sport' : function(){
-                    defaultRoute('GameAddSport', 'Game/GameAddSport', arguments, {cache: false});
-                },
-                'game/add/player' : function(){
-                    defaultRoute('GameAddPlayer', 'Game/GameAddPlayer', arguments, {cache: false});
-                },
-                'game/add/result' : function(){
-                    defaultRoute('GameAddResult', 'Game/GameAddResult', arguments, {cache: false});
-                },
-                'game/add/detail' : function(){
-                    defaultRoute('GameAddDetail', 'Game/GameAddDetail', arguments, {cache: false});
-                },
-                'game/add' : function(){
-                    defaultRoute('GameAdd', 'Game/GameAdd', arguments, {cache: false});
-                },
-                'game/:id' : function(){
-                    defaultRoute('Game', 'Game/Game', arguments);
-                },
-
-
-                'player/comparison/:hash' : function(){
-                    defaultRoute('PlayerComparison', 'Player/Comparison', arguments, {cache: true});
-                },
-
-                'players/search' : function(){
-                    defaultRoute('PlayerSearch', 'Player/PlayerSearch', arguments, { cache: true });
-                },
-
-                // List friends/nemeses of a player
-                'player/list/:player_id' : function(){
-                    defaultRoute('PlayerList', 'Player/PlayerList', arguments, { cache: false });
-                },
-
-                'player/add/nolink' : function(){
-                    defaultRoute('PlayerAddNoLink', 'Player/PlayerAdd', arguments, {cache: false});
-                },
-                'player/add' : function(){
-                    defaultRoute('PlayerAdd', 'Player/PlayerAddLink', arguments, {cache: false});
-                },
-                'player/edit/:id' : function(){
-                    defaultRoute('PlayerEdit', 'Player/PlayerEdit', arguments, {cache: false});
-                },
-                'player/relationship_code/:id' : function(){
-                    defaultRoute('Player', 'Player/PlayerRelationshipCode', arguments);
-                },
-                'player/:id' : function(){
-                    console.log('Player/:id');
-                    App.Views.MainFooter.route_show = true;
-                    App.Views.MainFooter.Tabs.select('profiles', false);
-                    defaultRoute('Player', 'Player/Player', arguments);
-                },
-
-                'sport/add/parent_sport(/:hash)' : function(){
-                    defaultRoute('SportAddParentSport', 'Sport/AddParentSport', arguments, {cache: true});
-                },
-                'sport/add/details(/:hash)' : function(){
-                    defaultRoute('SportAddDetail', 'Sport/AddDetail', arguments, {cache: true});
-                },
-                'sport/add' : function(){
-                    defaultRoute('SportAdd', 'Sport/Add', arguments, {cache: false});
-                },
-                'sport/edit/:id' : function(){
-                    defaultRoute('SportEdit', 'Sport/Edit', arguments, {cache: false});
-                },
-                'sport/:id' : function(){
-                    defaultRoute('Sport', 'Sport/Sport', arguments);
                 },
 
                 
