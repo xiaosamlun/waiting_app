@@ -527,16 +527,20 @@ body {
 
 .profile-tabbar-default {
   /*border-top: 2px solid #444;*/
-  background: #7FAAFF;
+
+  color: #353940;
+  background: white; /*#7FAAFF;*/
+  border-bottom: 2px solid #353940;
   text-align: center;
   line-height: 15px;
   font-size: 12px;
-  color: #CBDDFF;
+  
 
   text-transform: uppercase;
 }
 .profile-tabbar-default.on {
   color: white;
+  background: #353940;
 }
 .profile-tabbar-default i {
   font-size: 24px;

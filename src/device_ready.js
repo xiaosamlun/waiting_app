@@ -76,6 +76,13 @@ define(function(require, exports, module) {
 
             // alert('onReady!');
 
+            // Android or iOS stylesheet?
+            var devicePlatform = 'android';
+            try {
+                devicePlatform = device.platform.toLowerCase();
+            }catch(err){}
+            $('head').append('<link rel="stylesheet" href="css/'+ devicePlatform +'.css" type="text/css" />');
+            
             // Resolve deferred
             this.readyDeferred.resolve();
 
