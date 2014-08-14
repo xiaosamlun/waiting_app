@@ -95,7 +95,7 @@ define(function(require, exports, module) {
                 console.log(err);
                 Utils.Notification.Toast('Failed status bar');
             }
-            
+
             // Track.js
             // - only using in production
             if(App.Data.usePg && App.Prod){
@@ -488,64 +488,9 @@ function onNotificationGCM(e){
         case 'message':
             // if this flag is set, this notification happened while we were in the foreground.
             // you might want to play a sound to get the user's attention, throw up a dialog, etc.
+            Utils.process_push_notification_message(e.payload.payload);
 
-            // alert('message received');
-            // alert(JSON.stringify(e.payload));
-
-            // Capture and then wait for a half-second to see if any other messages are incoming
-            // - don't want to overload the person
-
-            // alert('Message!');
-            console.log(e);
-            console.log(JSON.stringify(e));
-
-            if (e.foreground){
-                // We were in the foreground when it was incoming
-                // - process right away
-                console.log('In FOREground');
-
-                // alert('Alert Triggered');
-
-                var payload = e.payload.payload;
-                var alert_trigger_id = payload.alert_trigger_id;
-
-                // Go to alert_trigger
-                Backbone.history.navigate('alert_trigger/' + alert_trigger_id, {trigger: true});
-
-                require(["utils"], function (Utils) {
-                    // Utils.process_push_notification_message(e);
-                });
-
-            } else {
-                // Not in the foreground
-                // - they clicked the notification
-                // - process all of them at once
-                // alert('in background');
-
-                var payload = e.payload.payload;
-                var alert_trigger_id = payload.alert_trigger_id;
-
-                // Go to alert_trigger
-                Backbone.history.navigate('alert_trigger/' + alert_trigger_id, {trigger: true});
-
-                console.log('In BACKground!');
-                if (e.coldstart){
-                    // App wasn't previously running, so it is starting up
-                    console.log('In COLDstart');
-                } else {
-                    // App is probably already displaying some other page
-                }
-
-                // add to process queue
-                // - the last/latest one gets analyzed
-                console.log('ADDING TO PUSH QUEUE');
-                // App.Data.notifications_queue.push(e);
-
-            }
-
-
-
-        break;
+            break;
 
         case 'error':
             alert('GCM error');
