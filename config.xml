@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget 
-    id="com.ulu.app.pub" 
+    id="com.internal.app.pub" 
     version="0.0.1.63" 
     xmlns="http://www.w3.org/ns/widgets" 
     xmlns:gap="http://phonegap.com/ns/1.0" 
