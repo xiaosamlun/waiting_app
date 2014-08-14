@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.internal.app.pub" version="0.0.1.61" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>InternalApp</name>
+    <name>Waiting App</name>
     <description>
         Sample
     </description>
@@ -11,7 +11,7 @@
 
     <access origin="*" />
 
-    <preference name="phonegap-version" value="3.4.0" />
+    <preference name="phonegap-version" value="3.5.0" />
 
     <!-- Android SDK Version -->
     <preference name="android-minSdkVersion" value="14" />
@@ -30,6 +30,10 @@
     <preference name="StatusBarOverlaysWebView" value="false" />
     <preference name="StatusBarBackgroundColor" value="#182030" />
     <preference name="StatusBarStyle" value="lightcontent" />
+
+    <!-- not yet used, instead triggering using myapp:// protocol -->
+    <preference name="URL_SCHEME" value="http" />
+    <preference name="URL_HOST" value="my_app.com" />
 
     <gap:platform name="ios" />
     <gap:platform name="android" />
