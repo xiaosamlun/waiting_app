@@ -197,7 +197,7 @@ define(function (require) {
                                     given: null,
                                     formatted: 'nick reed'
                                 },
-                                phoneNumbers: ['6502068481']
+                                phoneNumbers: ['4252224444']
                             })];
 
                         that.AllContactsJson = JSON.parse(JSON.stringify(that.AllContacts));
