@@ -14,10 +14,10 @@ define(function (require) {
 
             initialize: function (options) {
                 // ok
-                if(options.modelType == 'player' && options.player_id){
-                    this.url = this.urlRoot + 'player/' + options.player_id;
-                } else if(options.modelType == 'add_player'){
-                    this.url = this.urlRoot + 'add_player'
+                if(options.modelType == 'friend' && options.friend_id){
+                    this.url = this.urlRoot + 'friend/' + options.friend_id;
+                } else if(options.modelType == 'add_friend'){
+                    this.url = this.urlRoot + 'add_friend'
                 } else {
                     this.url = this.urlRoot + this.id;
                 }

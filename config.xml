@@ -26,18 +26,13 @@
     <preference name="webviewbounce" value="false" />
     <preference name="exit-on-suspend" value="false" />
     <preference name="detect-data-types" value="false" />
-    <preference name="StatusBarOverlaysWebview" value="false" />
 
+    <preference name="StatusBarOverlaysWebView" value="false" />
+    <preference name="StatusBarBackgroundColor" value="#182030" />
+    <preference name="StatusBarStyle" value="lightcontent" />
+    
     <gap:platform name="ios" />
     <gap:platform name="android" />
-
-    <!-- Hide Status Bar iOS -->
-    <gap:config-file platform="ios" parent="UIViewControllerBasedStatusBarAppearance" overwrite="true">
-        <false/>
-    </gap:config-file>
-    <gap:config-file platform="ios" parent="UIStatusBarHidden" overwrite="true">
-        <true/>
-    </gap:config-file>
 
     <gap:plugin name="org.apache.cordova.device" />
     <gap:plugin name="org.apache.cordova.console" />
@@ -60,6 +55,18 @@
 
     <gap:plugin name="com.adobe.plugins.gaplugin" />
     
+    <!-- Android SingleInstance LaunchMode -->
+    <gap:config-file platform="android" parent="/manifest/application">
+        <activity android:launchMode="singleInstance" />
+    </gap:config-file>
+
+    <gap:plugin name="nl.x-services.plugins.launchmyapp">
+        <param name="URL_SCHEME" value="myapp" /> <!-- myapp://... -->
+    </gap:plugin>
+    
+    <feature name="StatusBar">
+        <param name="ios-package" value="CDVStatusBar" onload="true" />
+    </feature>
     
     <feature name="BarcodeScanner">
         <param name="ios-package" value="CDVBarcodeScanner" />

@@ -5,6 +5,7 @@
     "footer" : {
     	"waiting" : "Home",
     	"messages" : "Messages",
-    	"profiles" : "Profiles"
+    	"profiles" : "Profiles",
+    	"friends" : "Friends"
     }
 }

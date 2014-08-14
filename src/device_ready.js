@@ -86,6 +86,16 @@ define(function(require, exports, module) {
             // Resolve deferred
             this.readyDeferred.resolve();
 
+            // Status bar colors
+            try {
+                StatusBar.overlaysWebView(false);
+                StatusBar.backgroundColorByHexString(App.ConfigImportant.StatusBarBackgroundColor);
+                Utils.Notification.Toast('OK status bar');
+            }catch(err){
+                console.log(err);
+                Utils.Notification.Toast('Failed status bar');
+            }
+            
             // Track.js
             // - only using in production
             if(App.Data.usePg && App.Prod){

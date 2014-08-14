@@ -40,7 +40,6 @@ define(function(require, exports, module) {
 
     // Models
     var PlayerModel = require('models/player');
-    var GameModel = require('models/game');
 
     // Subviews
 
@@ -162,17 +161,6 @@ define(function(require, exports, module) {
             that.model.populated().then(function(){
                 that.update_content();
                 that.model.on('change', that.update_content.bind(that));
-            });
-
-            // Get my stats
-            that.stats_collection = new GameModel.GameCollection([],{
-                player_id: player_id
-            });
-            // that.stats_collection.
-            that.stats_collection.fetch({prefill: true, limit: 0});
-            that.stats_collection.populated().then(function(){
-                that.update_content();
-                that.stats_collection.on('sync', that.update_content.bind(that));
             });
 
             // Player list

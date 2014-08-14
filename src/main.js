@@ -199,9 +199,11 @@ define(function(require, exports, module) {
     var ConfigXml = require('text!config.xml');
     // Parse config.xml and set approprate App variables
     App.Config = $($.parseXML(ConfigXml));
+    console.log(App.Config);
     if(App.Config.find("widget").get(0).attributes.id.value.indexOf('.pub') !== -1){
         App.Prod = true;
         App.ConfigImportant.Version = App.Config.find("widget").get(0).attributes.version.value;
+        App.ConfigImportant.StatusBarBackgroundColor = App.Config.find("widget").find('preference[name="StatusBarBackgroundColor"]').get(0).attributes.value.value;
     }
 
     // Run DeviceReady actions
@@ -330,6 +332,12 @@ define(function(require, exports, module) {
                     onClasses: ['footer-tabbar-default', 'on'],
                     offClasses: ['footer-tabbar-default', 'off']
                 });
+                tmpTabs.defineSection('friends', {
+                    content: '<i class="icon ion-android-friends"></i><div><span class="ellipsis-all">'+App.t('footer.friends')+'</span></div>',
+                    onClasses: ['footer-tabbar-default', 'on'],
+                    offClasses: ['footer-tabbar-default', 'off']
+                });
+
 
 
                 tmpTabs.on('select', function(result, eventTriggered){
@@ -347,6 +355,10 @@ define(function(require, exports, module) {
 
                         case 'messages':
                             App.history.navigate('inbox');
+                            break;
+
+                        case 'friends':
+                            App.history.navigate('friend/list');
                             break;
 
                         default:

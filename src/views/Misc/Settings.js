@@ -130,62 +130,78 @@ define(function(require, exports, module) {
         var that = this;
 
         var settings = [
+
             // {
-            //     title: 'Edit My Profile',
-            //     desc: 'Name, etc.',
-            //     href: 'profile/edit'
-            // },
-            // {
-            //     title: 'New Sport',
-            //     desc: 'Add new ones, edit existing',
-            //     href: 'sport/add',
-            //     hrefOptions: {
-            //         history: false
-            //     }
-            // },
-            {
-                title: 'Welcome',
-                desc: 'Relive the magic',
-                href: 'welcome'
-            },
-            // {
-            //     title: 'Feedback',
-            //     desc: 'Tell us how to improve!' + ' v' + App.ConfigImportant.Version,
-            //     href: 'feedback/settings'
-            // },
-            
-            // {
-            //     title: 'My Cars',
-            //     desc: 'Model and related details',
-            //     href: 'settings/cars'
-            // },
-            // {
-            //     title: 'Drivers',
-            //     desc: 'View and edit',
-            //     href: 'drivers'
+            //     title: 'Welcome',
+            //     desc: 'run it back',
+            //     href: 'welcome'
             // },
 
             // {
-            //     title: 'Account and Perks',
-            //     desc: '$$ in your pocket',
-            //     href: 'perks'
+            //     title: '<i class="ion-android-friends"></i> Friends', // (' + friend_count + ')',
+            //     desc: 'Invite new people',
+            //     href: 'friend/list'
             // },
             
+            // {
+            //     title: '<i class="ion-ios7-plus-outline"></i> Add Friend', // (' + friend_count + ')',
+            //     desc: 'Choose from contacts',
+            //     href: 'friend/add'
+            // },
+
+            // {
+            //     title: '<i class="ion-edit"></i> Edit Your Profile',
+            //     desc: 'Change your display name',
+            //     href: 'profile/edit'
+            // },
+
             {
-                title: 'Logout and Exit',
+                title: '<i class="ion-ios7-help-outline"></i> How does it work?',
+                desc: 'Shoot, we hoped it was clear. our fault.',
+                href: 'misc/help'
+            },
+
+            {
+                title: '<i class="ion-alert"></i> Push Notifications',
+                desc: 'Finer control',
+                href: 'settings/push'
+            },
+
+            {
+                title: '<i class="ion-ios7-email-outline"></i> Feedback / Contact',
+                desc: 'Please tell us how to improve!' + ' v' + App.ConfigImportant.Version,
+                href: 'feedback/settings'
+            },
+            
+            {
+                title: '<i class="ion-log-out"></i> Logout',
                 desc: 'Buh-bye',
-                href: 'logout'
+                href: 'logout',
+                hrefOptions: {
+                    history: false
+                }
             }
         ];
 
+        var friend_count = 0;
+
+        // settings.unshift({
+        //     title: 'Friends', // (' + friend_count + ')',
+        //     desc: 'Invite new people',
+        //     href: 'friend/list'
+        // });
+
+        // Get "Friends" count that are waiting on you
+
         settings.forEach(function(setting){
             var surface = new Surface({
-                content: '<div>'+setting.title+'</div><div>'+setting.desc+'</div>',
-                size: [undefined, 50],
+                content: '<div>'+setting.title+'</div>', //<div>'+setting.desc+'</div>',
+                size: [undefined, 60],
                 classes: ["settings-list-item"],
                 properties: {
                     lineHeight: '20px',
                     padding: '5px',
+                    paddingTop: '20px',
                     borderBottom: '1px solid #ddd',
                     backgroundColor: "white"
                 }

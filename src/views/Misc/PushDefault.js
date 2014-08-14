@@ -169,58 +169,14 @@ define(function(require, exports, module) {
                 text: 'General'
             },
             {
-                title: 'New Nemesis',
-                desc: 'Every time you connect with a Nemesis',
-                scheme_key: 'new_nemesis'
-            },
-
-
-            {
-                type: 'header',
-                text: 'Events'
+                title: 'New Message',
+                desc: 'Every time you receive a message',
+                scheme_key: 'new_message'
             },
             {
-                title: 'Nemesis Joins Event',
-                desc: 'A Nemesis joins an event you are at',
-                scheme_key: 'event_nemesis_joins_me'
-            },
-            {
-                title: 'Anybody Joins Event',
-                desc: 'Anybody joins an event you are at',
-                scheme_key: 'event_anybody_joins_me'
-            },
-            {
-                title: 'Invited to Join Event',
-                desc: 'Somebody invites me to join an event',
-                scheme_key: 'event_invited_to_join'
-            },
-
-
-
-            {
-                type: 'header',
-                text: 'Game Results'
-            },
-            {
-                title: 'Game Result Involving Me',
-                desc: 'Every time your name is used in a Game Result',
-                scheme_key: 'game_result_involving_me'
-            },
-            {
-                title: 'Game Result Involving Nemesis',
-                desc: 'Every time a Nemesis has a Result',
-                scheme_key: 'game_result_involving_nemesis'
-            },
-
-
-            {
-                type: 'header',
-                text: 'Mentions'
-            },
-            {
-                title: "Mentioned Anywhere",
-                desc: "My username is used in a chat or comment",
-                scheme_key: 'mention_me_in_chat_or_comments'
+                title: 'New Friend',
+                desc: 'Every time a friend accepts a request',
+                scheme_key: 'new_friend'
             },
 
 

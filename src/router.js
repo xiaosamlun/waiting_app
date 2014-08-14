@@ -73,6 +73,10 @@ define(function(require, exports, module) {
                     // eh, I should be able to cache this route before login, then destroy after login
                     defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
                 },
+                
+                'misc/help' : function(){
+                    defaultRoute('MiscHelp', 'Misc/HelpStatic', arguments, {cache: false});
+                },
 
                 'login' : function(){
                     // eh, I should be able to cache this route before login, then destroy after login
@@ -99,6 +103,14 @@ define(function(require, exports, module) {
                 },
                 'feedback(/:indicator)': function(){
                     defaultRoute('Feedback', 'Misc/Feedback', arguments);
+                },
+
+                'friend/list' : function(){
+                    defaultRoute('FriendList', 'Friend/List', arguments, {cache: true});
+
+                },
+                'friend/add' : function(){
+                    defaultRoute('FriendInvite', 'Friend/LocalInvite', arguments, {cache: true});
                 },
 
                 'add/things' : function(){
