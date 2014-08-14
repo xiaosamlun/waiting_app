@@ -1,15 +1,25 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.internal.app.pub" version="0.0.1.62" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget 
+    id="com.ulu.app.pub" 
+    version="0.0.1.63" 
+    xmlns="http://www.w3.org/ns/widgets" 
+    xmlns:gap="http://phonegap.com/ns/1.0" 
+    xmlns:android="http://schemas.android.com/apk/res/android" 
+    xmlns:cdv="http://cordova.apache.org/ns/1.0">
+
     <name>Waiting App</name>
     <description>
-        Sample
+        PracticalGuideToMobileApps.com
     </description>
-    <author email="nick@getemailbox.com" href="http://cordova.io">
+    <author email="nick@PracticalGuideToMobileApps.com" href="http://cordova.io">
         Nick Reed
     </author>
     <content src="index.html" />
 
     <access origin="*" />
+    
+    <gap:platform name="ios" />
+    <gap:platform name="android" />
 
     <preference name="phonegap-version" value="3.5.0" />
 
@@ -28,46 +38,47 @@
     <preference name="detect-data-types" value="false" />
 
     <preference name="StatusBarOverlaysWebView" value="false" />
-    <preference name="StatusBarBackgroundColor" value="#182030" />
+    <preference name="StatusBarBackgroundColor" value="#000000" />
     <preference name="StatusBarStyle" value="lightcontent" />
 
-    <!-- not yet used, instead triggering using myapp:// protocol -->
     <preference name="URL_SCHEME" value="http" />
-    <preference name="URL_HOST" value="myapp.com" />
+    <preference name="URL_HOST" value="practicalguidetomobileapps.com" />
 
-    <gap:platform name="ios" />
-    <gap:platform name="android" />
 
     <gap:plugin name="org.apache.cordova.device" />
     <gap:plugin name="org.apache.cordova.console" />
+    <gap:plugin name="org.apache.cordova.contacts" version="0.2.9" />
     <gap:plugin name="org.apache.cordova.file" />
     <gap:plugin name="org.apache.cordova.file-transfer" />
     <gap:plugin name="org.apache.cordova.camera" />
     <gap:plugin name="org.apache.cordova.inappbrowser" />
     <gap:plugin name="org.apache.cordova.geolocation" />
     <gap:plugin name="org.apache.cordova.globalization" />
+    <gap:plugin name="org.apache.cordova.statusbar" />
     <gap:plugin name="com.phonegap.plugins.pushplugin" />
     <gap:plugin name="com.phonegap.plugins.barcodescanner" />
-    <gap:plugin name="com.phonegap.plugin.statusbar" />
     <gap:plugin name="com.verso.cordova.clipboard" />
-
 
     <gap:plugin name="com.plugin.datepicker" />
     <gap:plugin name="nl.x-services.plugins.socialsharing" />
-    <gap:plugin name="nl.x-services.plugins.toast" version="1.0" />
+    <gap:plugin name="info.asankan.phonegap.smsplugin" />
+    <gap:plugin name="nl.x-services.plugins.toast" />
     <gap:plugin name="de.appplant.cordova.plugin.local-notification" />
 
     <gap:plugin name="com.adobe.plugins.gaplugin" />
-    
+
+
     <!-- Android SingleInstance LaunchMode -->
     <gap:config-file platform="android" parent="/manifest/application">
         <activity android:launchMode="singleInstance" />
     </gap:config-file>
 
-    <gap:plugin name="nl.x-services.plugins.launchmyapp">
-        <param name="URL_SCHEME" value="myapp" /> <!-- myapp://... -->
-    </gap:plugin>
     
+    <gap:plugin name="nl.x-services.plugins.launchmyapp">
+        <param name="URL_SCHEME" value="guide" />
+    </gap:plugin>
+
+
     <feature name="StatusBar">
         <param name="ios-package" value="CDVStatusBar" onload="true" />
     </feature>
@@ -89,6 +100,11 @@
 
     <feature name="Device">
         <param name="android-package" value="org.apache.cordova.device.Device" />
+    </feature>
+
+    <feature name="Contacts">
+        <param name="android-package" value="org.apache.cordova.contacts.ContactManager"/>
+        <param name="ios-package" value="CDVContacts"/>
     </feature>
     
     <feature name="File">
@@ -157,7 +173,30 @@
     <icon src="res/icon/ios/icon-50.png" gap:platform="ios" width="50" height="50" />
     <icon src="res/icon/ios/icon-50@2x.png" gap:platform="ios" width="100" height="100" />
 
+
     <gap:splash src="splash.png" />
     <gap:splash src="splash/ios/Default_iphone5.png" gap:platform="ios" width="640" height="1136" />
+
+
+    <!-- <gap:plugin name="com.machenmusik.plugins.launchmyapp" version="3.1.2">
+        <param name="URL_SCHEME" value="ulu" />
+        <param name="HTTP_HOST" value="uluapp.com" />
+        <param name="HTTP_PATHPREFIX" value="/" />
+        <param name="HTTPS_HOST" value="uluapp.com" />
+        <param name="HTTPS_PATHPREFIX" value="/" />
+    </gap:plugin> -->
+
+    <!-- Hide Status Bar iOS -->
+    <!--
+    <gap:config-file platform="ios" parent="UIStatusBarHidden">
+        <true/>
+    </gap:config-file>
+    <gap:config-file platform="ios" parent="UIViewControllerBasedStatusBarAppearance">
+        <false/>
+    </gap:config-file>
+    -->
+
+    <!-- icon image: https://www.flickr.com/photos/guwashi999/6556973511/in/photolist-aZqcMr-2gz7QT-5AdCWG-fw47vw-yMY1p-6CA23d-39Sitz-aSZQiD-5DC2uL-8sSt1m-bd5M6c-eqV9qd-mz5Nq-99dg3U-dnK7UM-8kZoqd-koBNhF-4benw-bDsGwR-cdjPEu-4gskLV-gxcw1i-nXPs47-eYd1dZ-6dVsLa-6YuQhF-9rVMrS-2HHfo-nsnByK-e1AZuE-7q3U8y-oh1xuD-5VVYyK-cazXTh-otmR1Q-nLG3jp-aTWugD-5G9n4L-6236Zk-jm3gZw-dZFjAh-6JQ7fN-iKNFMp-ogz2Xi-e2NcPb-4LUdp8-koCH3t-7fy6Yv-mSL4S-61XBp9/ -->
+
 
 </widget>
