@@ -241,7 +241,11 @@ define(function(require, exports, module) {
             // Init MENU button on Android (not always there?)
             document.addEventListener("menubutton", function(){
                 // - only launches the settings if we're on the main view
-                App.history.navigate('settings');
+                // App.history.navigate('settings');
+                App.Events.emit('menubutton');
+                killa.stopPropagation();
+                killa.preventDefault();
+                return false;
             }, false);
 
             // Init BACK button on Android

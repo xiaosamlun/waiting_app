@@ -297,6 +297,11 @@ define(function(require, exports, module) {
         return transitionOptions;
     };
 
+    PageView.prototype.menuButtonHandler = function(){
+        // grabbng the menu button event, disallow it to go further
+        return false;
+    };
+
 
 
     PageView.DEFAULT_OPTIONS = {

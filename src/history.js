@@ -265,7 +265,7 @@ define(function(require, exports, module) {
             // - otherwise, initiate a "back" on the App.Navigate
             try {
                 if(typeof App.Views.currentPageView.backbuttonHandler == "function"){
-                    console.log('launching backbuttonHanderl');
+                    console.log('launching backbuttonHander1');
                     App.Views.currentPageView.backbuttonHandler.apply(App.Views.currentPageView);
                     return;
                 } else {
@@ -278,6 +278,27 @@ define(function(require, exports, module) {
             console.error('normal .back');
             historyObj.back();
             // RouterContext.currentPageView._eventInput.emit('backbutton');
+        });
+
+
+        // Menu Button
+        // - launches settins, unless a menuButtonHandler is set on the currently displayed View
+        App.Events.on('menubutton', function(){
+            // MenuButton handler?
+            // - otherwise, visit Settings
+            try {
+                if(typeof App.Views.currentPageView.menubuttonHandler == "function"){
+                    console.log('launching menuButtonHandler1');
+                    App.Views.currentPageView.menubuttonHandler.apply(App.Views.currentPageView);
+                    return;
+                } else {
+                    console.log('no menubutton handler in PageView');
+                }
+            } catch(err){
+                console.error(err);
+            }
+            
+            App.history.navigate('settings');
         });
 
         return historyObj;
