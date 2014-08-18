@@ -496,7 +496,9 @@ define(function(require, exports, module) {
                         // alert(403);
                         // 403 -- Access denied
                         // window.location.replace('/#denied');
-                        App.Data.User.clear();
+                        if(App.Data.User){
+                            App.Data.User.clear();
+                        }
                     },
                     404: function() {
                         // alert(404);
