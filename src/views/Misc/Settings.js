@@ -75,7 +75,7 @@ define(function(require, exports, module) {
             this.header.inOutTransition.apply(this.header, args);
         })
 
-        this.layout.header.add(this.header);
+        this.layout.header.add(Utils.usePlane('header')).add(this.header);
 
     };
 
@@ -110,8 +110,8 @@ define(function(require, exports, module) {
         var that = this;
         
         // create the scrollView of content
-        this.contentScrollView = new ScrollView(App.Defaults.ScrollView);
-        this.scrollSurfaces = [];
+        this.contentScrollView = new ScrollView();
+        this.contentScrollView.Views = [];
 
         // link endpoints of layout to widgets
 
@@ -119,16 +119,7 @@ define(function(require, exports, module) {
         this.addSettings();
 
         // Sequence
-        this.contentScrollView.sequenceFrom(this.scrollSurfaces);
-
-
-        // var container = new ContainerSurface({
-        //     size: [undefined, undefined],
-        //     properties:{
-        //         overflow:'hidden'
-        //     }
-        // })
-        // container.add(this.contentScrollView)
+        this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
 
         // Content bg
         // - for handling clicks
@@ -139,7 +130,7 @@ define(function(require, exports, module) {
             }
         });
         this.contentBg.on('click', function(){
-            App.history.back();//.history.go(-1);
+            App.history.back();
         });
 
         // Content
@@ -154,7 +145,7 @@ define(function(require, exports, module) {
 
         // Now add content
         this.layout.content.add(this.contentBg);
-        this.layout.content.add(this.layout.content.SizeModifier).add(this.layout.content.StateModifier).add(this.contentScrollView);
+        this.layout.content.add(this.layout.content.SizeModifier).add(this.layout.content.StateModifier).add(Utils.usePlane('content')).add(this.contentScrollView);
         // this.layout.content.add(this.layout.content.SizeModifier).add(this.layout.content.StateModifier).add(container);
 
 
@@ -164,6 +155,25 @@ define(function(require, exports, module) {
         var that = this;
 
         var settings = [
+
+            {
+                title: 'Edit Profile',
+                desc: 'You, yourself, and...yours?',
+                href: 'profile/edit'
+            },
+
+            {
+                title: 'Payments',
+                desc: 'Manage cards and bank accounts',
+                href: 'payment_source/list'
+            },
+
+            {
+                title: 'Push Notifications',
+                desc: 'Finer control',
+                href: 'settings/push'
+            },
+
             {
                 title: 'Feedback ('+App.ConfigImportant.Version+')',
                 desc: 'Tell us how to improve!' + ' v' + App.ConfigImportant.Version,
@@ -234,7 +244,7 @@ define(function(require, exports, module) {
         if(setting.on_create){
             setting.on_create(surface);
         }
-        that.scrollSurfaces.push(surface);
+        that.contentScrollView.Views.push(surface);
 
     };
 
@@ -331,7 +341,7 @@ define(function(require, exports, module) {
             pushOpt.Toggle.deselect(false) 
         }
 
-        that.scrollSurfaces.push(pushOpt);
+        that.contentScrollView.Views.push(pushOpt);
 
     };
 

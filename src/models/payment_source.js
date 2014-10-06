@@ -6,27 +6,40 @@ define(function (require) {
         Backbone            = require('backbone-adapter'),
         Credentials         = JSON.parse(require('text!credentials.json')),
 
-        PaymentSource = Backbone.Model.extend({
+        PaymentSource = Backbone.DeepModel.extend({
 
             idAttribute: '_id',
+            
+            urlRoot: Credentials.server_root + "payment_source",
 
-            urlRoot: Credentials.server_root + "payment_source/",
-
-            initialize: function () {
-                // ok
-                this.url = this.urlRoot + this.id;
+            initialize: function (opts) {
+                // set ids,etc
+                this.url = this.urlRoot + '';
+                if(this.id){
+                  this.url = this.urlRoot + '/' + this.id;
+                } else {
+                  this.url = this.urlRoot;
+                }
+                // console.log(this.url);
             }
 
-        }),
+        });
 
-        PaymentSourceCollection = Backbone.Collection.extend({
+    PaymentSource = Backbone.UniqueModel(PaymentSource);
+
+    var PaymentSourceCollection = Backbone.Collection.extend({
 
             model: PaymentSource,
 
             urlRoot: Credentials.server_root + "payment_sources",
 
-            initialize: function(models, options){
+            initialize: function(models, options) {
+                options = options || {};
+                // set ids,etc
                 this.url = this.urlRoot + '';
+                if(options.payment_source_id){
+                    this.url = this.urlRoot + '/' + options.payment_source_id;
+                }
             }
 
         });

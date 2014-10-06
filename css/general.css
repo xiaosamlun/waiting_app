@@ -105,7 +105,7 @@ body {
 /* Push Notifications */
 
 .push-list-text-default {
-  border-bottom: 1px dashed #ddd;
+  /*border-bottom: 1px dashed #ddd;*/
   padding: 8px;
 }
 
@@ -122,10 +122,15 @@ body {
   font-size: 16px;
   line-height: 32px;
 
+  text-transform: uppercase;
+  
+  color: #111;
+  opacity: 0.8;
+
   padding: 0px 8px;
-  background: #E0E0E0;
-  border-bottom: 1px solid #777;
-  border-top: 1px solid #777;
+  /*background: #E0E0E0;*/
+  /*border-bottom: 1px solid #777;*/
+  /*border-top: 1px solid #777;*/
 }
 
 .push-toggle {

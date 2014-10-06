@@ -192,8 +192,8 @@ define(function(require, exports, module) {
                         App.Views.SplashLoading.hide();
                     },3000);
                     
-                    // App.Views.MainFooter.route_show = true;
-                    // App.Views.MainFooter.Tabs.select('profiles', false);
+                    App.Views.MainFooter.route_show = true;
+                    App.Views.MainFooter.Tabs.select('profiles', false);
                     defaultRoute('UserDefault', 'User/Default', arguments, { cache: false });
                 },
                 
@@ -268,6 +268,17 @@ define(function(require, exports, module) {
 
                 'users/search' : function(){
                     defaultRoute('UsersSearch', 'User/Search', arguments, { cache: true });
+                },
+                
+
+                'payment_source/list' : function(){
+                    defaultRoute('PaymentSourceList', 'PaymentSource/List', arguments);
+                },
+                'payment_source/add/creditcard' : function(){
+                    defaultRoute('PaymentSourceAddCreditCard', 'PaymentSource/AddCreditCard', arguments, {cache: false});
+                },
+                'payment_source/:id' : function(){
+                    defaultRoute('PaymentSourceView', 'PaymentSource/View', arguments);
                 },
 
                 

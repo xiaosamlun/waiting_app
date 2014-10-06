@@ -51,28 +51,32 @@ define(function(require, exports, module) {
 
         this.user_id = App.Data.User.get('_id');
 
-        // If user_id is set, then use it, otherwise get it
-        if(this.user_id){
-            App.history.navigate('user/' + this.user_id);
-            return;
-        }
-
-        // Determine my user._id
-        App.Data.User.populated().then(function(){
-            that.user_id = App.Data.User.get('_id');
-            App.history.navigate('user/' + that.user_id);
-        });
-
         // create the layout
         this.layout = new HeaderFooterLayout({
-            headerSize: 0,
-            footerSize: 0
+            headerSize: App.Defaults.Header.size,
+            footerSize: App.Defaults.Footer.size
         });
 
         this.createContent();
-        
+
         // Attach the main transform and the comboNode to the renderTree
         this.add(this.layout);
+
+        // If user_id is set, then use it, otherwise get it
+        // if(this.user_id){
+        //     Timer.setTimeout(function(){
+        //         // App.history.navigate('user/' + this.user_id);
+        //         // return;
+        //     },3000);
+        // }
+
+        // Determine my user._id
+        App.Data.User.populated().then(function(){
+            Timer.setTimeout(function(){
+                that.user_id = App.Data.User.get('_id');
+                App.history.navigate('user/' + that.user_id);
+            },1000);
+        });
 
     }
 
@@ -102,13 +106,13 @@ define(function(require, exports, module) {
             properties: {
                 fontSize: "40px",
                 textAlign: "center",
-                color: "white",
+                // color: "white",
                 lineHeight: "50px"
             }
         });
         this.loadingUser.add(this.loadingUser.SizeMod).add(this.loadingUser.OriginMod).add(this.loadingUser.Surface);
-        this.contentLightbox.show(this.loadingUser);
 
+        this.contentLightbox.show(this.loadingUser);
         this.layout.content.add(this.ContentStateModifier).add(Utils.usePlane('content')).add(this.contentLightbox);
 
     };
@@ -153,10 +157,11 @@ define(function(require, exports, module) {
                     // Timer.setTimeout(this.refreshData.bind(this), 1000);
                 }
 
-                // skip us, if going back
-                if(goingBack){
-                    App.history.back();
-                }
+                // // skip us, if going back
+                // if(goingBack){
+                //     App.history.back();
+                //     return;
+                // }
 
                 this._refreshData = true;
                 switch(otherViewName){
@@ -178,7 +183,7 @@ define(function(require, exports, module) {
                         // } else {
                         //     that.ContentStateModifier.setTransform(Transform.translate(window.innerWidth + 100,0,0));
                         // }
-                        that.ContentStateModifier.setOpacity(0);
+                        // that.ContentStateModifier.setOpacity(0);
                         that.ContentStateModifier.setTransform(Transform.translate(0,0,0));
 
                         // // Header
@@ -194,8 +199,8 @@ define(function(require, exports, module) {
                         // - extra delay for content to be gone
                         Timer.setTimeout(function(){
 
-                            // Bring map content back
-                            that.ContentStateModifier.setOpacity(1, transitionOptions.inTransition);
+                            // // Bring map content back
+                            // that.ContentStateModifier.setOpacity(1, transitionOptions.inTransition);
 
                         }, delayShowing + transitionOptions.outTransition.duration);
 

@@ -124,7 +124,7 @@ define(function(require, exports, module) {
 
         // surface 1
         this.surface1 = new Surface({
-            content: 'Current Position',
+            content: 'Position in Line',
             size: [undefined, true],
             classes: ['waiting-list-top-default']
         });

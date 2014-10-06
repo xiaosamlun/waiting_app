@@ -390,7 +390,7 @@ define(function(require, exports, module) {
                 App.Views.MainFooter = new View();
 
                 // create the footer
-                App.Views.MainFooter.Tabs = new StandardTabBar();  
+                App.Views.MainFooter.Tabs = new StandardTabBar();
                 var tmpTabs = App.Views.MainFooter.Tabs;
 
                 tmpTabs.defineSection('home', {

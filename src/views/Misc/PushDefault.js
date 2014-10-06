@@ -17,6 +17,7 @@ define(function(require, exports, module) {
     var RenderNode         = require('famous/core/RenderNode')
 
     var Utility = require('famous/utilities/Utility');
+    var Timer = require('famous/utilities/Timer');
 
     var ToggleButton = require('famous/widgets/ToggleButton');
 
@@ -26,6 +27,8 @@ define(function(require, exports, module) {
     var HeaderFooterLayout = require('famous/views/HeaderFooterLayout');
     var NavigationBar = require('famous/widgets/NavigationBar');
     var GridLayout = require("famous/views/GridLayout");
+
+    var Utils = require('utils');
 
     var EventHandler = require('famous/core/EventHandler');
 
@@ -95,13 +98,13 @@ define(function(require, exports, module) {
             App.history.back();
         });
         this.header.on('back', function(){
-            App.history.back();//.history.go(-1);
+            App.history.back();
         });
         this._eventOutput.on('inOutTransition', function(args){
             this.header.inOutTransition.apply(this.header, args);
         })
 
-        this.layout.header.add(this.header);
+        this.layout.header.add(Utils.usePlane('header')).add(this.header);
 
     };
 
@@ -152,9 +155,8 @@ define(function(require, exports, module) {
         this.ContentController.show(this.loadingSurface);
 
         // Now add content
-        this.layout.content.add(this.contentBg);
-        this.layout.content.add(this.layout.content.SizeModifier).add(this.layout.content.StateModifier).add(this.ContentController);
-        // this.layout.content.add(this.layout.content.SizeModifier).add(this.layout.content.StateModifier).add(container);
+        // this.layout.content.add(this.contentBg);
+        this.layout.content.add(this.layout.content.SizeModifier).add(this.layout.content.StateModifier).add(Utils.usePlane('content')).add(this.ContentController);
 
 
     };
@@ -164,70 +166,16 @@ define(function(require, exports, module) {
 
         var listOptions = [
         
-            // {
-            //     type: 'header',
-            //     text: 'General'
-            // },
+            {
+                type: 'header',
+                text: 'Connections'
+            },
+
             {
                 title: 'New Friend',
                 desc: 'Every time you befriend someone',
                 scheme_key: 'new_friend'
             },
-            // {
-            //     title: 'Friend Matches',
-            //     desc: 'You and a friend match',
-            //     scheme_key: 'friend_hangout_match'
-            // }
-
-
-            // {
-            //     type: 'header',
-            //     text: 'Events'
-            // },
-            // {
-            //     title: 'Nemesis Joins Event',
-            //     desc: 'A Nemesis joins an event you are at',
-            //     scheme_key: 'event_nemesis_joins_me'
-            // },
-            // {
-            //     title: 'Anybody Joins Event',
-            //     desc: 'Anybody joins an event you are at',
-            //     scheme_key: 'event_anybody_joins_me'
-            // },
-            // {
-            //     title: 'Invited to Join Event',
-            //     desc: 'Somebody invites me to join an event',
-            //     scheme_key: 'event_invited_to_join'
-            // },
-
-
-
-            // {
-            //     type: 'header',
-            //     text: 'Game Results'
-            // },
-            // {
-            //     title: 'Game Result Involving Me',
-            //     desc: 'Every time your name is used in a Game Result',
-            //     scheme_key: 'game_result_involving_me'
-            // },
-            // {
-            //     title: 'Game Result Involving Nemesis',
-            //     desc: 'Every time a Nemesis has a Result',
-            //     scheme_key: 'game_result_involving_nemesis'
-            // },
-
-
-            // {
-            //     type: 'header',
-            //     text: 'Mentions'
-            // },
-            // {
-            //     title: "Mentioned Anywhere",
-            //     desc: "My username is used in a chat or comment",
-            //     scheme_key: 'mention_me_in_chat_or_comments'
-            // },
-
 
         ];
 
@@ -264,6 +212,13 @@ define(function(require, exports, module) {
                 content: '<div>' + Info.title + '</div><div>' + Info.desc + '</div>',
                 size: [undefined, true],
                 classes: ['push-list-text-default']
+            });
+            pushOpt.Left.on('click', function(){
+                if(pushOpt.Toggle.isSelected()){
+                    pushOpt.Toggle.deselect();
+                } else {
+                    pushOpt.Toggle.select();
+                }
             });
             pushOpt.Left.pipe(that.contentScrollView);
 
@@ -396,7 +351,7 @@ define(function(require, exports, module) {
                         transitionOptions.outTransform = Transform.identity;
 
                         // Hide/move elements
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
                             
                             // // Fade header
                             // that.header.StateModifier.setOpacity(0, transitionOptions.outTransition);
@@ -412,7 +367,7 @@ define(function(require, exports, module) {
                 break;
             case 'showing':
                 if(this._refreshData){
-                    // window.setTimeout(that.refreshData.bind(that), 1000);
+                    // Timer.setTimeout(that.refreshData.bind(that), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
@@ -424,7 +379,7 @@ define(function(require, exports, module) {
 
                         // Content
                         // - extra delay for content to be gone
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // Bring map content back
                             // that.layout.content.StateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);

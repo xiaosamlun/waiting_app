@@ -192,6 +192,7 @@ define(function(require, exports, module) {
         this.headerContent.Settings.on('click', function(){
             App.history.navigate('settings');
         });
+
         // message
         this.headerContent.Message = new Surface({
             content: '<i class="icon ion-ios7-chatboxes"></i>',
@@ -204,7 +205,6 @@ define(function(require, exports, module) {
         this.headerContent.Message.on('click', function(){
             App.history.navigate('inbox/' + that.profile_id);
         });
-
 
         // - search (always visible)
         this.headerContent.Search = new Surface({
@@ -928,8 +928,8 @@ define(function(require, exports, module) {
             if(that.is_me === true){
                 // no back button
                 // - show settings
-                that.headerContent.Right.Lightbox.show(that.headerContent.Friends);
-                that.headerContent.Middle.Lightbox.show(that.headerContent.Settings);
+                that.headerContent.Right.Lightbox.show(that.headerContent.Settings);
+                // that.headerContent.Middle.Lightbox.show(that.headerContent.Friends);
 
             } else {
 
