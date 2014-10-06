@@ -189,6 +189,11 @@ define(function(require, exports, module) {
         return false;
     };
 
+    PageView.prototype.backbuttonHandler = function(ev){
+        return false;
+    };
+
+
     PageView.prototype.inOutTransition = function(direction, otherViewName, transitionOptions, delayShowing, otherView, goingBack){
         var that = this;
 

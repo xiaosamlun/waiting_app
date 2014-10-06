@@ -359,6 +359,7 @@ define(function(require, exports, module) {
                 // iOS StatusBar (above MainController lightbox, if necessary)
                 App.StatusBarView = new Surface({
                     size: [undefined, 20],
+                    classes: ['status-bar-default'],
                     properties: {
                         // backgroundColor: App.ConfigImportant.StatusBarBackgroundColor
                     }
