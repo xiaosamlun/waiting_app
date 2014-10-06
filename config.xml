@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget 
-    id="com.waiting.app.dev" 
-    version="0.0.1.14" 
+    id="com.waiting.app.pub" 
+    version="0.0.1.15" 
     xmlns="http://www.w3.org/ns/widgets" 
     xmlns:gap="http://phonegap.com/ns/1.0" 
     xmlns:android="http://schemas.android.com/apk/res/android" 
@@ -9,10 +9,10 @@
 
     <name>Waiting</name>
     <description>
-        Let's make an app
+        Let us make an app
     </description>
-    <author email="nicholas.a.reed@gmail.com" href="http://famousmobileapps.com">
-        Famous Mobile Apps (.com)
+    <author email="nicholas.a.reed@gmail.com" href="http://cordova.io">
+        Nicholas Reed
     </author>
     <content src="index.html" />
 
@@ -50,7 +50,7 @@
 
     <gap:plugin name="org.apache.cordova.device" />
     <gap:plugin name="org.apache.cordova.console" />
-    <gap:plugin name="org.apache.cordova.contacts" version="0.2.13" />
+    <gap:plugin name="org.apache.cordova.contacts" version="0.2.9" />
     <gap:plugin name="org.apache.cordova.file" />
     <gap:plugin name="org.apache.cordova.file-transfer" />
     <gap:plugin name="org.apache.cordova.camera" />
@@ -83,7 +83,7 @@
 
     
     <gap:plugin name="nl.x-services.plugins.launchmyapp">
-        <param name="URL_SCHEME" value="waiting" />
+        <param name="URL_SCHEME" value="waitingapp" />
     </gap:plugin>
 
 
@@ -94,7 +94,7 @@
     </feature>
 
     <feature name="StatusBar">
-    	<param name="ios-package" value="CDVStatusBar" onload="true" />
+        <param name="ios-package" value="CDVStatusBar" onload="true" />
     </feature>
 
     <feature name="Keyboard">
