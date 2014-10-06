@@ -1,13 +1,13 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget 
     id="com.waiting.app.dev" 
-    version="0.0.1.13" 
+    version="0.0.1.14" 
     xmlns="http://www.w3.org/ns/widgets" 
     xmlns:gap="http://phonegap.com/ns/1.0" 
     xmlns:android="http://schemas.android.com/apk/res/android" 
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
-    <name>Waiting App</name>
+    <name>Waiting</name>
     <description>
         Let's make an app
     </description>
@@ -50,7 +50,7 @@
 
     <gap:plugin name="org.apache.cordova.device" />
     <gap:plugin name="org.apache.cordova.console" />
-    <gap:plugin name="org.apache.cordova.contacts" version="0.2.9" />
+    <gap:plugin name="org.apache.cordova.contacts" version="0.2.13" />
     <gap:plugin name="org.apache.cordova.file" />
     <gap:plugin name="org.apache.cordova.file-transfer" />
     <gap:plugin name="org.apache.cordova.camera" />
