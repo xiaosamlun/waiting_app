@@ -357,7 +357,7 @@ define(function(require, exports, module) {
         // Events
         temp.pipe(this.contentScrollView);
         temp.on('click', (function(){
-            App.history.navigate('profile/' + Model.get('_id'), {trigger: true});
+            App.history.navigate('profile/' + Model.get('_id'));
         }).bind(this));
         // temp.on('swipe', (function(){
         //     this._eventOutput.emit("menuToggle");

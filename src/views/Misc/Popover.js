@@ -34,8 +34,8 @@ define(function(require, exports, module) {
     var _ = require('underscore');
     var $ = require('jquery');
 
-    // Models
-    var PlayerModel = require('models/player');
+    // // Models
+    // var PlayerModel = require('models/player');
 
     function PageView(params) {
         var that = this;
@@ -105,13 +105,26 @@ define(function(require, exports, module) {
         this.contentScrollView.ScaleMod = new StateModifier({
             transform: Transform.scale(0.001, 0.001, 0.001)
         });
-        this.contentScrollView.SeqLayout = new SequentialLayout(); //App.Defaults.ScrollView);
+
+        // ScrollView or SequentialLayout
+        switch(this.modalOptions.type){
+            case 'scroll':
+                this.contentScrollView.SeqLayout = new ScrollView(); //App.Defaults.ScrollView);
+                this.contentScrollView.SizeMod.setSize([window.innerWidth - 80, window.innerHeight - 40]);
+                break
+            case 'static':
+            default:
+                this.contentScrollView.SeqLayout = new SequentialLayout(); //App.Defaults.ScrollView);
+                break;
+        }
         
         this.contentScrollView.Views = [];
-        this.contentScrollView.SeqLayout.sequenceFrom(this.contentScrollView.Views);
 
         // Add Surfaces
         this.addSurfaces();
+
+        // sequenceFrom
+        this.contentScrollView.SeqLayout.sequenceFrom(this.contentScrollView.Views);
 
         // add sizing and everything
         this.contentScrollView.add(this.contentScrollView.OriginMod).add(this.contentScrollView.PositionMod).add(this.contentScrollView.ScaleMod).add(this.contentScrollView.SizeMod).add(this.contentScrollView.SeqLayout);
@@ -207,19 +220,26 @@ define(function(require, exports, module) {
 
             var optionSurface = new View(); 
             optionSurface.Surface = new Surface({
-                size: [undefined, 60],
+                size: [undefined, true],
                 content: listOption.text,
-                classes: ['modal-option-list-default']
+                classes: listOption.classes || ['modal-option-list-default']
             });
+            optionSurface.getSize = function(){
+                return [undefined, optionSurface.Surface._trueSize ? optionSurface.Surface._trueSize[1] : 60];
+            };
             optionSurface.add(optionSurface.Surface);
-            optionSurface.Surface.pipe(that.contentScrollView);
+            optionSurface.Surface.pipe(that.contentScrollView.SeqLayout);
             optionSurface.Surface.on('click', function(){
                 // debugger;
                 var returnResult = listOption;
                 that.closePopover();
-                // if(that.params.passed.on_choose){
+                if(returnResult.success){
+                    returnResult.success(listOption);
+                    return;
+                }
+                if(that.params.passed.on_choose){
                     that.params.passed.on_choose(returnResult);
-                // }
+                }
             });
             that.contentScrollView.Views.push(optionSurface);
 
@@ -239,7 +259,7 @@ define(function(require, exports, module) {
             case 'hiding':
 
                 // Fade out the background
-                delay = 1000;
+                delay = 350;
 
                 that.contentView.BgOpacityMod.setOpacity(0, {
                     duration: 350,
@@ -269,11 +289,11 @@ define(function(require, exports, module) {
 
 
                 that.contentScrollView.PositionMod.setTransform(Transform.translate(0,0,0),{
-                    duration: 450,
+                    duration: 250,
                     curve: 'easeOut'
                 });
                 that.contentScrollView.ScaleMod.setTransform(Transform.scale(1,1,1),{
-                    duration: 450,
+                    duration: 250,
                     curve: 'easeOut'
                 });
                 // that.contentView.BgOpacityMod.setOpacity(0);

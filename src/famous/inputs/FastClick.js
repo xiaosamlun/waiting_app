@@ -44,7 +44,7 @@ define(function(require, exports, module) {
             if (startTime && currTime - startTime < clickThreshold) {
                 var clickEvt = new window.CustomEvent('click', {
                     'bubbles': true,
-                    'details': touch
+                    'detail': touch
                 });
                 recentlyDispatched[currTime] = event;
                 event.target.dispatchEvent(clickEvt);
@@ -58,6 +58,8 @@ define(function(require, exports, module) {
         for (var i in recentlyDispatched) {
             var previousEvent = recentlyDispatched[i];
             if (currTime - i < clickWindow) {
+                // event.stopPropagation();
+                // if (event.target === previousEvent.target) event.stopPropagation();
                 if (event instanceof window.MouseEvent && event.target === previousEvent.target) event.stopPropagation();
             }
             else delete recentlyDispatched[i];

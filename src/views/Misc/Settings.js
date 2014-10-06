@@ -5,6 +5,7 @@ define(function(require, exports, module) {
     var View = require('famous/core/View');
     var ScrollView = require('famous/views/Scrollview');
     var SequentialLayout = require('famous/views/SequentialLayout');
+    var FlexibleLayout = require('famous/views/FlexibleLayout');
     var Surface = require('famous/core/Surface');
     var ContainerSurface = require('famous/surfaces/ContainerSurface');
     var Modifier = require('famous/core/Modifier');
@@ -15,9 +16,13 @@ define(function(require, exports, module) {
     var RenderNode         = require('famous/core/RenderNode')
 
     var Utility = require('famous/utilities/Utility');
+    var Timer = require('famous/utilities/Timer');
 
     // Views
     var StandardHeader = require('views/common/StandardHeader');
+    var StandardToggleButton = require('views/common/StandardToggleButton');
+
+    var Utils = require('utils');
 
     var HeaderFooterLayout = require('famous/views/HeaderFooterLayout');
     var NavigationBar = require('famous/widgets/NavigationBar');
@@ -56,13 +61,15 @@ define(function(require, exports, module) {
             classes: ["normal-header"],
             backClasses: ["normal-header"],
             // backContent: false,
-            moreContent: false
+            moreContent: false,
+            // moreContent: 'more',
+            // moreClasses: ["normal-header"],
         }); 
         this.header.navBar.title.on('click', function(){
             App.history.back();
         });
         this.header.on('back', function(){
-            App.history.back();//.history.go(-1);
+            App.history.back();
         });
         this._eventOutput.on('inOutTransition', function(args){
             this.header.inOutTransition.apply(this.header, args);
@@ -71,6 +78,33 @@ define(function(require, exports, module) {
         this.layout.header.add(this.header);
 
     };
+
+    // PageView.prototype.createHeader = function(){
+    //     var that = this;
+
+    //     // create the header bar
+    //     this.header = new StandardHeader({
+    //         content: 'Settings',
+    //         classes: ["normal-header"],
+    //         backClasses: ["normal-header"],
+    //         // backContent: false,
+    //         // moreContent: false,
+    //         // moreContent: 'more',
+    //         moreClasses: ["normal-header"],
+    //     }); 
+    //     this.header.navBar.title.on('click', function(){
+    //         App.history.back();
+    //     });
+    //     this.header.on('back', function(){
+    //         App.history.back();//.history.go(-1);
+    //     });
+    //     this._eventOutput.on('inOutTransition', function(args){
+    //         this.header.inOutTransition.apply(this.header, args);
+    //     })
+
+    //     this.layout.header.add(this.header);
+
+    // };
 
     PageView.prototype.createContent = function(){
         var that = this;
@@ -130,93 +164,174 @@ define(function(require, exports, module) {
         var that = this;
 
         var settings = [
-
-            // {
-            //     title: 'Welcome',
-            //     desc: 'run it back',
-            //     href: 'welcome'
-            // },
-
-            // {
-            //     title: '<i class="ion-android-friends"></i> Friends', // (' + friend_count + ')',
-            //     desc: 'Invite new people',
-            //     href: 'friend/list'
-            // },
-            
-            // {
-            //     title: '<i class="ion-ios7-plus-outline"></i> Add Friend', // (' + friend_count + ')',
-            //     desc: 'Choose from contacts',
-            //     href: 'friend/add'
-            // },
-
-            // {
-            //     title: '<i class="ion-edit"></i> Edit Your Profile',
-            //     desc: 'Change your display name',
-            //     href: 'profile/edit'
-            // },
-
             {
-                title: '<i class="ion-ios7-help-outline"></i> How does it work?',
-                desc: 'Shoot, we hoped it was clear. our fault.',
-                href: 'misc/help'
-            },
-
-            {
-                title: '<i class="ion-alert"></i> Push Notifications',
-                desc: 'Finer control',
-                href: 'settings/push'
-            },
-
-            {
-                title: '<i class="ion-ios7-email-outline"></i> Feedback / Contact',
-                desc: 'Please tell us how to improve!' + ' v' + App.ConfigImportant.Version,
+                title: 'Feedback ('+App.ConfigImportant.Version+')',
+                desc: 'Tell us how to improve!' + ' v' + App.ConfigImportant.Version,
                 href: 'feedback/settings'
             },
+
+            // {
+            //     title: 'My Cars',
+            //     desc: 'Model and related details',
+            //     href: 'settings/cars'
+            // },
+            // {
+            //     title: 'Drivers',
+            //     desc: 'View and edit',
+            //     href: 'drivers'
+            // },
+
+            // {
+            //     title: 'Account and Perks',
+            //     desc: '$$ in your pocket',
+            //     href: 'perks'
+            // },
             
             {
-                title: '<i class="ion-log-out"></i> Logout',
+                title: 'Logout and Exit',
                 desc: 'Buh-bye',
-                href: 'logout',
-                hrefOptions: {
-                    history: false
-                }
+                href: 'logout'
             }
         ];
 
-        var friend_count = 0;
-
-        // settings.unshift({
-        //     title: 'Friends', // (' + friend_count + ')',
-        //     desc: 'Invite new people',
-        //     href: 'friend/list'
-        // });
-
-        // Get "Friends" count that are waiting on you
-
         settings.forEach(function(setting){
-            var surface = new Surface({
-                content: '<div>'+setting.title+'</div>', //<div>'+setting.desc+'</div>',
-                size: [undefined, 60],
-                classes: ["settings-list-item"],
-                properties: {
-                    lineHeight: '20px',
-                    padding: '5px',
-                    paddingTop: '20px',
-                    borderBottom: '1px solid #ddd',
-                    backgroundColor: "white"
-                }
-            });
-            surface.Setting = setting;
-            surface.pipe(that.contentScrollView);
-            surface.on('click', function(){
-                // alert('clicked!');
-                // alert(this.Setting.href);
-                App.history.navigate(this.Setting.href, this.Setting.hrefOptions);
-            });
-            that.scrollSurfaces.push(surface);
+
+            switch(setting.type){
+
+                case 'toggle': 
+                    that.createToggleSwitch(setting);
+                    break;
+
+                default:
+                    that.createNormal(setting);
+                    break;
+
+            }
+
         });
 
-        // that.contentScrollView.sequenceFrom(that.scrollSurfaces);
+    };
+
+    PageView.prototype.createNormal = function(setting){
+        var that = this;
+        
+        var classes = ["settings-list-item"];
+        if(setting.classes){
+            classes = setting.classes;
+        }
+        var surface = new Surface({
+            content: '<div>'+setting.title+'</div>', //<div>'+setting.desc+'</div>',
+            size: [undefined, 60],
+            classes: classes
+        });
+        surface.Setting = setting;
+        surface.pipe(that.contentScrollView);
+        surface.on('click', function(){
+            if(this.Setting.href){
+                App.history.navigate(this.Setting.href, this.Setting.hrefOptions);
+            }
+        });
+        if(setting.on_create){
+            setting.on_create(surface);
+        }
+        that.scrollSurfaces.push(surface);
+
+    };
+
+    PageView.prototype.createToggleSwitch = function(setting){
+        var that = this;
+
+        // Normal list item
+        var pushOpt = new View();
+
+        // that.model_views.push({
+        //     scheme_key: Info.scheme_key,
+        //     view: pushOpt
+        // });
+
+        pushOpt.Layout = new FlexibleLayout({
+            ratios: [1, true, true]
+        });
+        // pushOpt.Layout.Views = [];
+
+        pushOpt.Left = new Surface({
+            content: '<div>' + setting.text + '</div>',
+            size: [undefined, true],
+            classes: ['settings-list-item']
+        });
+        pushOpt.Left.on('click', function(){
+            if(pushOpt.Toggle.isSelected()){
+                pushOpt.Toggle.deselect();
+            } else {
+                pushOpt.Toggle.select();
+            }
+        });
+        pushOpt.Left.pipe(that.contentScrollView);
+
+        pushOpt.Toggle = new StandardToggleButton({
+            size: [40, 40],
+            content: '',
+            classes: ['text-center'],
+            onClasses: ['push-toggle', 'circle-toggle', 'toggle-on'],
+            offClasses: ['push-toggle', 'circle-toggle', 'toggle-off'],
+
+            // NOT for setting the default toggle state of the button
+            toggleMode: StandardToggleButton.TOGGLE
+        });
+        pushOpt.Toggle.pipe(that.contentScrollView);
+
+        // Handle toggle button click
+        pushOpt.Toggle.on('select', setting.on_select); 
+
+        // function(m){
+        //     console.log('select, saving');
+        //     if(that.model.get('scheme.' + Info.scheme_key) !== true){
+        //         var data = {};
+        //         data['scheme.' + Info.scheme_key] = true;
+        //         that.model.save(data,{patch: true});
+        //     }
+        // });
+        pushOpt.Toggle.on('deselect', setting.on_deselect); 
+
+        // function(){
+        //     console.log('deselect, saving');
+        //     if(that.model.get('scheme.' + Info.scheme_key) !== false){
+        //         var data = {};
+        //         data['scheme.' + Info.scheme_key] = false;
+        //         that.model.save(data,{patch: true});
+        //     }
+        // });
+
+        pushOpt.getSize = function(){
+            return [undefined, 60]; //pushOpt.Left._size ? pushOpt.Left._size[1]:undefined];
+        };
+
+        pushOpt.Right = new Surface({
+            content: '',
+            size: [10,10]
+        });
+        pushOpt.Right.getSize = function(){
+            return [10, 10];
+        };
+
+        pushOpt.Layout.sequenceFrom([
+            pushOpt.Left,
+            pushOpt.Toggle,
+            pushOpt.Right
+        ]);
+
+        pushOpt.add(pushOpt.Layout);
+
+        // Toggle to the correct state 
+        // - above doesn't work?
+        var val = setting.default; //that.model.get('scheme.' + Info.scheme_key);
+        if(val){
+            pushOpt.Toggle.select(false) 
+        } else {
+            pushOpt.Toggle.deselect(false) 
+        }
+
+        that.scrollSurfaces.push(pushOpt);
 
     };
 
@@ -234,13 +349,13 @@ define(function(require, exports, module) {
                         transitionOptions.outTransform = Transform.identity;
 
                         // Hide/move elements
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
                             
                             // // Fade header
                             // that.header.StateModifier.setOpacity(0, transitionOptions.outTransition);
 
                             // Slide content down
-                            that.layout.content.StateModifier.setTransform(Transform.translate(0,window.innerHeight,0), transitionOptions.outTransition);
+                            that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth * -1,0,0), transitionOptions.outTransition);
 
                         }, delayShowing);
 
@@ -269,20 +384,12 @@ define(function(require, exports, module) {
                         // } else {
                         //     that.ContentStateModifier.setTransform(Transform.translate(window.innerWidth + 100,0,0));
                         // }
-                        that.layout.content.StateModifier.setTransform(Transform.translate(0, window.innerHeight, 0));
+                        that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth * -1, 0, 0));
 
-                        // Header
-                        // - no extra delay
-                        window.setTimeout(function(){
-
-                            // // Change header opacity
-                            // that.header.StateModifier.setOpacity(1, transitionOptions.outTransition);
-
-                        }, delayShowing);
 
                         // Content
                         // - extra delay for content to be gone
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // Bring map content back
                             that.layout.content.StateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);
@@ -295,11 +402,6 @@ define(function(require, exports, module) {
         }
         
         return transitionOptions;
-    };
-
-    PageView.prototype.menubuttonHandler = function(){
-        // grabbng the menu button event, disallow it to go further
-        return false;
     };
 
 

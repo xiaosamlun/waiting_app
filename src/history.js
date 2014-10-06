@@ -1,4 +1,3 @@
-/*globals define*/
 define(function(require, exports, module) {
     
     var Lightbox          = require('famous/views/Lightbox');
@@ -11,11 +10,9 @@ define(function(require, exports, module) {
 
     module.exports = function(App){
 
-        var HistoryContext = this;
-
-        // var historyObj = {};
-
         // Replacing history events
+
+        var HistoryContext = this;
 
         var historyObj = {};
         historyObj.data = [];
@@ -23,7 +20,6 @@ define(function(require, exports, module) {
         historyObj.navigate = function(path, opts, back, reloadCurrent){
 
             console.log('historyObj.navigate: path:', path, arguments);
-            // console.trace();
 
             opts = opts || {};
 
@@ -47,17 +43,16 @@ define(function(require, exports, module) {
 
                 if(lastArgs === undefined || !lastArgs || lastArgs.length < 1 || lastArgs[0] == ''){
                     // No last arguments exist
-                    // alert('Exiting app');
-                    Utils.Notification.Toast('Exiting App');
                     console.error('exiting app');
-                    historyObj.navigate('dash');
+                    historyObj.data = [];
+
+                    // If already displaying the home_route, then don't change the route?
+                    historyObj.navigate(App.Credentials.home_route);
                     return;
                 }
 
-                // debugger;
-
-                historyObj.isGoingBack = true;
                 console.log('isGoingBack==true');
+                historyObj.isGoingBack = true;
                 historyObj.navigate.apply(HistoryContext, lastArgs);
 
                 return;
@@ -69,13 +64,13 @@ define(function(require, exports, module) {
 
                 // pop it out from the array, it'll get popped back in
                 var lastArgs = historyObj.data.pop();
-                console.log('lastArgs', lastArgs);
+                console.log('lastArgs is now', lastArgs);
 
                 if(lastArgs === undefined || !lastArgs || lastArgs.length < 1 || lastArgs[0] == ''){
                     // No last arguments exist
-                    Utils.Notification.Toast('Exiting App');
+                    // Utils.Notification.Toast('Exiting App');
                     console.error('Exiting app, reloadCurrent failed');
-                    historyObj.navigate('dash');
+                    historyObj.navigate('controller/view');
                     return;
                 }
 
@@ -122,7 +117,6 @@ define(function(require, exports, module) {
 
             Backbone.history.navigate(path, {trigger: true, replace: true});
 
-
         };
         historyObj.back = function(opts){
             historyObj.navigate(null, opts, true);
@@ -135,7 +129,6 @@ define(function(require, exports, module) {
         historyObj.backTo = function(tag, opts){
             // erase a bunch of history, until we reach that tag
             // - erase it, then visit it
-            // debugger;
             historyObj.eraseUntilTag(tag, false);
 
             var lastArgs = historyObj.data.pop(); // get last
@@ -162,6 +155,47 @@ define(function(require, exports, module) {
             // historyObj.data.reverse();
 
             // historyObj.navigate.apply(RouterContext, lastArgs);
+        };
+        historyObj.eraseLast = function(numToErase){
+            numToErase = numToErase || 1;
+
+            // // debugger;
+            // historyObj.data.reverse();
+            
+            _.each(_.range(numToErase), function(){
+                historyObj.data.pop();
+            });
+
+            // var continueErasing = true;
+            // historyObj.data = _.filter(historyObj.data, function(args){
+            //     // check options for tag that matches
+            //     if(continueErasing !== true){
+            //         return true;
+            //     }
+            //     if(args.length < 2){
+            //         return false;
+            //     }
+            //     if(!args[1].tag){
+            //         return false;
+            //     }
+            //     if(typeof args[1].tag == "string" && args[1].tag != tag){
+            //         return false
+            //     }
+            //     if(typeof args[1].tag === typeof [] && args[1].tag.indexOf(tag) === -1){
+            //         return false;
+            //     }
+            //     console.log('FOUND tag in eraseUntilTag');
+            //     // debugger;
+            //     continueErasing = false;
+            //     if(eraseLast === true){
+            //         return false;
+            //     } else {
+            //         return true;
+            //     }
+
+            // });
+
+            // historyObj.data.reverse();
         };
         historyObj.eraseUntilTag = function(tag, eraseLast){
             // Erase entries up until the last tag
@@ -265,7 +299,7 @@ define(function(require, exports, module) {
             // - otherwise, initiate a "back" on the App.Navigate
             try {
                 if(typeof App.Views.currentPageView.backbuttonHandler == "function"){
-                    console.log('launching backbuttonHander1');
+                    console.log('launching backbuttonHanderl');
                     App.Views.currentPageView.backbuttonHandler.apply(App.Views.currentPageView);
                     return;
                 } else {
@@ -281,24 +315,59 @@ define(function(require, exports, module) {
         });
 
 
-        // Menu Button
-        // - launches settins, unless a menuButtonHandler is set on the currently displayed View
-        App.Events.on('menubutton', function(){
-            // MenuButton handler?
-            // - otherwise, visit Settings
+        // Resume
+        // - launches history.back, unless a backbuttonHandler is set on the currently displayed View
+        App.Events.on('resume', function(){
+            // Resume handler?
             try {
-                if(typeof App.Views.currentPageView.menubuttonHandler == "function"){
-                    console.log('launching menuButtonHandler1');
-                    App.Views.currentPageView.menubuttonHandler.apply(App.Views.currentPageView);
+                if(typeof App.Views.currentPageView.resumeHandler == "function"){
+                    console.log('launching resumeHandler');
+                    App.Views.currentPageView.resumeHandler.apply(App.Views.currentPageView);
                     return;
                 } else {
-                    console.log('no menubutton handler in PageView');
+                    console.log('no resume handler in PageView');
+                }
+            } catch(err){
+                console.error(err);
+            }
+        });
+
+        // Pause
+        // - this is the same as submit???
+        App.Events.on('pause', function(){
+            // Pause handler?
+            try {
+                if(typeof App.Views.currentPageView.pauseHandler == "function"){
+                    console.log('launching pauseHandler');
+                    App.Views.currentPageView.pauseHandler.apply(App.Views.currentPageView);
+                    return;
+                } else {
+                    console.log('no pause handler in PageView');
+                }
+            } catch(err){
+                console.error(err);
+            }
+        });
+
+        // Firebase update (update content on page)
+        App.Events.on('firebase.child_added', function(snapshot){
+
+            // var newPost = snapshot.val();
+
+            try {
+                console.log(App.Views.currentPageView);
+                if(typeof App.Views.currentPageView.remoteRefresh == "function"){
+                    console.log('launching refreshData');
+                    App.Views.currentPageView.remoteRefresh.apply(App.Views.currentPageView, [snapshot]);
+                    // App.Views.currentPageView.remoteRefresh(snapshot);
+                    return;
+                } else {
+                    console.log('no remoteRefresh handler in PageView');
                 }
             } catch(err){
                 console.error(err);
             }
             
-            App.history.navigate('settings');
         });
 
         return historyObj;

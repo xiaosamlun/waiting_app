@@ -13,7 +13,10 @@ define(function(require, exports, module) {
     var Matrix = require('famous/core/Transform');
     var RenderNode         = require('famous/core/RenderNode')
 
+    var MapView = require('famous-map/MapView');
+
     var Utility = require('famous/utilities/Utility');
+    var Timer = require('famous/utilities/Timer');
 
     var HeaderFooterLayout = require('famous/views/HeaderFooterLayout');
     var NavigationBar = require('famous/widgets/NavigationBar');
@@ -27,8 +30,19 @@ define(function(require, exports, module) {
     var CarModel      = require('models/car');
     var FleetModel      = require('models/fleet');
 
+    // var leaflet = require('lib2/leaflet/leaflet');
+    // require('lib2/leaflet/leaflet.label');
+    require('lib2/leaflet/tile.stamen');
+
+    var MapView = require('famous-map/MapView');
+    var MapModifier = require('famous-map/MapModifier');
+    var MapStateModifier = require('famous-map/MapStateModifier');
+    var MapUtility = require('famous-map/MapUtility');
+    var MapPositionTransitionable = require('famous-map/MapPositionTransitionable');
+    var MapTransition = require('famous-map/MapTransition');
+
     // Extras
-    var Utils    = require('lib2/utils');
+    var Utils    = require('utils');
     var _ = require('underscore');
 
     var EventHandler = require('famous/core/EventHandler');
@@ -44,7 +58,7 @@ define(function(require, exports, module) {
         });
         this.mainTransitionable = new Transitionable(0);
         this.mainTransform.transformFrom(function() {
-            return Transform.translate(this.mainTransitionable.get(), 0, 0);
+            return Transform.translate(this.mainTransitionable.get(), 0, Utils.usePlane('content',0,true));
         }.bind(this));
 
         // create the layout
@@ -59,12 +73,6 @@ define(function(require, exports, module) {
         // create the map/content area
         this.contentController = new RenderController();
 
-        // Create the CarList menu that swings out
-        this.sideView = new FleetSideMenuView();
-        this.sideView._eventOutput.on("menuToggle", (function(){
-            this.menuToggle();
-        }).bind(this));
-
         // Create Content
         this.createContent();
 
@@ -72,8 +80,8 @@ define(function(require, exports, module) {
         this.createFooter();
 
         // Attach layout to the RenderTree
-        this.add(this.mainTransform).add(this.layout);
-        this.add(this.sideView);
+        this.add(this.layout);
+        // this.add(this.sideView);
 
 
         // Events
@@ -91,14 +99,14 @@ define(function(require, exports, module) {
         this.collection = new CarModel.CarCollection();
         this.collection.on('sync', this.display_map, this);
         this.collection.on('sync', function(){
-            this.header.navBar.back.setContent(this.collection.length  + ' car' + (this.collection.length === 1 ? '':'s'));
+            // this.header.navBar.back.setContent(this.collection.length  + ' car' + (this.collection.length === 1 ? '':'s'));
         }, this);
         this.collection.on("change", function(model){
 
             if(_.intersection(Object.keys(model.changed), ['name','color']).length){
                 console.error('INTERSECTED');
                 console.log(model.get('name'));
-                that.render_map(model);
+                // that.render_map(model);
             } else {
                 that.map_update_car(model);
             }
@@ -156,7 +164,7 @@ define(function(require, exports, module) {
     PageView.prototype.constructor = PageView;
 
     PageView.prototype.refreshData = function() {
-        Utils.Notification.Toast('Refreshing');
+        // Utils.Notification.Toast('Refreshing');
         try {
             this.model.fetchDaySummary();
             this.model_info.fetchInfo();
@@ -168,20 +176,63 @@ define(function(require, exports, module) {
     PageView.prototype.createHeader = function(){
         var that = this;
 
-        this.header = new StandardHeader({
-            content: '<img height="48px" src="img/wehicle_square.svg" />',
-            classes: ["normal-header"],
-            backContent: "",
-            backClasses: ["normal-header","header-back-text-button"],
-            moreContent: "Dash",
-            moreClasses: ["normal-header","header-more-text-button"]
-        }); 
-        this.header._eventOutput.on('back', this.menuToggle.bind(this));
-        this.header._eventOutput.on('more', function(){
-            App.history.navigate('dash', {trigger: true});
+        // Header Icons
+        this.headerContent = new View();
+
+        // - Settings
+        this.headerContent.Settings = new Surface({
+            content: '<i class="icon ion-navicon-round"></i>',
+            size: [App.Defaults.Header.Icon.w, undefined],
+            classes: ['header-tab-icon-text-big']
         });
+        this.headerContent.Settings.on('click', function(){
+            App.history.navigate('settings');
+            // Utils.Popover.ColorPicker({
+            //     color: '#f0f0f0',
+            //     on_done: function(result){
+            //         alert(result);
+            //     }
+            // });
+            // App.history.navigate('popover/colorpicker');
+        });
+
+        // - Cars
+        this.headerContent.Cars = new Surface({
+            content: '<i class="icon ion-model-s"></i>',
+            size: [App.Defaults.Header.Icon.w, undefined],
+            classes: ['header-tab-icon-text-big']
+        });
+        this.headerContent.Cars.on('click', this.menuToggle.bind(this));
+
+        // - Dash
+        this.headerContent.Dash = new Surface({
+            content: '<i class="icon ion-android-contact"></i>',
+            size: [App.Defaults.Header.Icon.w, undefined],
+            classes: ['header-tab-icon-text-big']
+        });
+        this.headerContent.Dash.on('click', function(){
+            App.history.navigate('dash');
+        });
+
+        this.header = new StandardHeader({
+            content: '<img height="48px" src="img/waiting_square.svg" />',
+            classes: ["normal-header"],
+            backContent: false,
+            // backClasses: ["normal-header","header-back-text-button"],
+            // moreContent: "Dash",
+            moreSurfaces: [
+                this.headerContent.Settings,
+                this.headerContent.Cars,
+                this.headerContent.Dash
+            ]
+            // moreClasses: ["normal-header","header-more-text-button"]
+        }); 
+        // this.header._eventOutput.on('back', this.menuToggle.bind(this));
+        // this.header._eventOutput.on('more', function(){
+        //     App.history.navigate('dash');
+        // });
         this.header.navBar.title.on('click', function(){
-            App.history.navigate('settings', {trigger: true});
+            App.history.navigate('settings');
         });
 
         this._eventOutput.on('inOutTransition', function(args){
@@ -199,7 +250,7 @@ define(function(require, exports, module) {
         // this.HeaderNode.add(this.headerBg);
         // this.HeaderNode.add(this.header.StateModifier).add(this.header);
         
-        this.layout.header.add(this.header);
+        this.layout.header.add(Utils.usePlane('header')).add(this.header);
 
     };
 
@@ -257,10 +308,10 @@ define(function(require, exports, module) {
         });
 
         this.surface_AlertCount.on('click',function(e){
-            App.history.navigate('alerts/fleet', {trigger: true}); 
+            App.history.navigate('alerts/fleet');
         }.bind(this));
         this.surface_ErrorCount.on('click',function(e){
-            App.history.navigate('errors/fleet', {trigger: true}); 
+            App.history.navigate('errors/fleet');
         }.bind(this));
 
         // Footer
@@ -268,7 +319,7 @@ define(function(require, exports, module) {
         this.layout.footer.StateModifier = new StateModifier();
 
         // Add Footer to layout
-        this.layout.footer.add(this.layout.footer.StateModifier).add(this.quick_stats_grid);
+        this.layout.footer.add(Utils.usePlane('footer')).add(this.layout.footer.StateModifier).add(this.quick_stats_grid);
 
     };
 
@@ -276,11 +327,9 @@ define(function(require, exports, module) {
     PageView.prototype.createContent = function(){
         var that = this;
 
-        // Tie the sideView and the mainView together
-        this.mainNode = new RenderNode();
-        this.mainNode.add(this.contentController);
-        // this.mainNode.add(this.sideView);
 
+        // Create the CarList menu that swings out (replacing the map)
+        this.sideView = new FleetSideMenuView();
         this.sideView._eventOutput.on("menuToggle", (function(){
             this.menuToggle();
         }).bind(this));
@@ -290,7 +339,9 @@ define(function(require, exports, module) {
 
         // Add Content after sideView
         // - with itself's StateModifier
-        this.layout.content.add(this.layout.content.StateModifier).add(Transform.behind).add(this.mainNode);
+        var contentNode = this.layout.content.add(this.layout.content.StateModifier);
+        contentNode.add(Utils.usePlane('background',1)).add(this.sideView);
+        contentNode.add(this.mainTransform).add(Utils.usePlane('content')).add(this.contentController);
 
     };
 
@@ -299,7 +350,7 @@ define(function(require, exports, module) {
         console.log('menuToggle');
         if (!this.sideView.open) {
             console.log('opening');
-            this.mainTransitionable.set(200, { duration: 500, curve: 'easeOut' });
+            this.mainTransitionable.set(window.innerWidth, { duration: 250, curve: 'easeOut' });
             this.sideView.flipOut();
         } else {
             console.log('closing');
@@ -344,22 +395,25 @@ define(function(require, exports, module) {
             this.mapSurfacesCreated = true
 
             // Create node for holding map
-            this.MapNode = new RenderNode();
+            this.MapNode = new View();
 
-            // Render Map on page
-            this.surfaceMap = new Surface({
-                // content: "Actual Map Here",
-                content: '<div id="map-canvas-fleet"></div>',
-                size: PageView.DEFAULT_OPTIONS.content.size,
-                classes: ["map-area"],
-                properties: {
-                    lineHeight: "22px",
-                    textAlign: "center",
-                    zIndex: "1"
-                }
-            });
+            // Render the mapView
+            this.render_map();
+
+            // // Render Map on page
+            // this.surfaceMap = new Surface({
+            //     // content: "Actual Map Here",
+            //     content: '<div id="map-canvas-fleet"></div>',
+            //     size: PageView.DEFAULT_OPTIONS.content.size,
+            //     classes: ["map-area"],
+            //     properties: {
+            //         lineHeight: "22px",
+            //         textAlign: "center",
+            //         zIndex: "1"
+            //     }
+            // });
             // this.surfaceMap.setContent('<div id="map-canvas-fleet"></div>');
-            this.surfaceMap.pipe(this._eventInput);
+            // this.surfaceMap.pipe(this._eventInput);
 
             this.surfaceMapButton = new Surface({
                 content: '<span class="icon ion-android-location"></span>',
@@ -375,8 +429,11 @@ define(function(require, exports, module) {
                 }
             });
             this.surfaceMapButton.pipe(this._eventInput);
-            this.surfaceMapButtonMod = new Modifier({
-                transform: Transform.translate(20, 20)
+            this.surfaceMapButton.Origin = new StateModifier({
+                origin: [1,1]
+            });
+            this.surfaceMapButton.Position = new StateModifier({
+                transform: Transform.translate(-20, -20)
             });
 
             // Map button event
@@ -396,17 +453,14 @@ define(function(require, exports, module) {
                 size: [undefined, undefined],
                 // classes: ["map-area"],
                 properties: {
-                    backgroundColor: "#444"
+                    backgroundColor: "#34495e"
                 }
             });
 
             // Add to this.MapNode
-            this.MapNode.add(this.surfaceMap);
-            this.MapNode.add(Transform.inFront).add(this.surfaceMapButtonMod).add(this.surfaceMapButton);
-            this.MapNode.add(this.MapCoverModifier).add(this.surfaceMapCover);
-
-            // Render the map (waits for the DOM node to be ready)
-            this.render_map();
+            this.MapNode.add(Utils.usePlane('content',1)).add(this.mapView);
+            this.MapNode.add(Utils.usePlane('content',2)).add(this.surfaceMapButton.Origin).add(this.surfaceMapButton.Position).add(this.surfaceMapButton);
+            this.MapNode.add(Utils.usePlane('content',3)).add(this.MapCoverModifier).add(this.surfaceMapCover);
 
             this._eventInput.on('mapclick', function(MapLabel){
 
@@ -417,18 +471,18 @@ define(function(require, exports, module) {
                 }
 
                 // Show the details for this car
-                App.history.navigate('car/' + MapLabel.car._id, {trigger: true});
+                App.history.navigate('car/' + MapLabel.car._id);
 
             });
 
             this.surfaceMapLoading = new Surface({
-                content: "Loading...",
+                content: "Loading Map",
                 size: [undefined, undefined],
                 classes: ["map-area"],
                 properties: {
-                    lineHeight: "40px",
+                    lineHeight: "150px",
                     textAlign: "center",
-                    background: "#444",
+                    // background: "#444",
                     color: "white"
                 }
             });
@@ -439,7 +493,7 @@ define(function(require, exports, module) {
                 properties: {
                     lineHeight: "40px",
                     textAlign: "center",
-                    background: "#444",
+                    // background: "#444",
                     color: "white"
                 }
             });
@@ -451,7 +505,7 @@ define(function(require, exports, module) {
                 properties: {
                     lineHeight: "20px",
                     textAlign: "center",
-                    background: "#444",
+                    // background: "#444",
                     color: "white"
                 }
             })
@@ -490,35 +544,84 @@ define(function(require, exports, module) {
             console.log('No map needed');
 
             this.contentController.show(this.surfaceNoMapNeeded);
-            // this.$('.actual_map').addClass('nodisplay');
-            // this.$('.loading_map').addClass('nodisplay');
-            // this.$('.no_map_needed').removeClass('nodisplay');
-            // this.$('.plug_in_device').addClass('nodisplay');
-            // debugger;
+
             return;
         }
 
-        // this.$('.actual_map').addClass('nodisplay');
-        //     this.$('.loading_map').addClass('nodisplay');
-        //     this.$('.no_map_needed').removeClass('nodisplay');
-        //     return;
-
-        // console.log(this.collection.toJSON());
-
         // Fetched data, contained something!
         this.contentController.show(this.MapNode);
-        // debugger;
-        // this.$('.actual_map').removeClass('nodisplay');
-        // this.$('.loading_map').addClass('nodisplay');
-        // this.$('.no_map_needed').addClass('nodisplay');
-        // this.$('.plug_in_device').addClass('nodisplay');
-
-        // return;
-
     };
 
     PageView.prototype.render_map = function(model) {
         var that = this;
+
+        this.mapView = new MapView({
+            // size: [window.innerWidth, window.innerHeight],
+            type: MapView.MapType.LEAFLET,
+            mapOptions: {
+                zoomControl: false,
+                attributionControl: false
+            }
+        });
+
+        // Wait for the map to load and initialize
+        this.mapView.on('load', function () {
+
+            // Remove Map Hider
+            that.MapCoverModifier.setOpacity(0, {duration: 500}, function(){
+                that.MapCoverModifier.setSize([1,1]);
+            });
+
+            console.log(that.mapView.getMap());
+            // debugger;
+
+            // Add tile-layer (you can also get your own at mapbox.com)
+            // var layer = new L.StamenTileLayer("toner-lite");
+            // layer.addTo(that.mapView.getMap());
+            // return;
+
+            L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>'
+                //maxZoom: 18
+            }).addTo(that.mapView.getMap());
+
+
+            that.collection.populated().then(function(){
+                console.log(Utils.addLabelsToMap(that._eventInput, that.mapView, that.MapNode , that.collection.toJSON()));
+
+                // Original dimensions when loaded
+                that.fleet_map_original_zoom = that.mapView.getMap().getZoom();
+                that.fleet_map_original_bounds = that.mapView.getMap().getBounds();
+
+            });
+
+        });
+
+        this.mapView.pipe(this._eventInput);
+
+        // Missing Waypoints for any cars?
+        try {
+            if(!this.collection.toJSON()[0].latest_data.lastWaypoint){
+                this.contentController.show(this.surfacePlugInDevice);
+                return;
+            }
+        }catch(err){
+            console.log(this.collection.toJSON());
+        }
+
+
+        // this.contentController.show(mapView);
+
+        // debugger;
+
+        return;
+
+
+
+
+
+
+
 
 
         // Make sure element exists
@@ -622,6 +725,10 @@ define(function(require, exports, module) {
         // - if no cars are visible in the map, then do fitBounds?
         var that = this;
 
+
+        return;
+
+
         // fleet_map created?
         if(!this.fleet_map || !carModel){
             return;
@@ -698,13 +805,15 @@ define(function(require, exports, module) {
         // - if not, redraw
         var that = this;
 
-        if(!this.fleet_map){
+        if(!this.mapView || !this.mapView.getMap()){
             return;
         }
 
+        var mapContext = this.mapView.getMap();
+
         var inView = false;
-        _.each(this.fleet_map.markerList, function(marker){
-            if(that.fleet_map.getBounds().contains(marker.getLatLng())){
+        _.each(mapContext.markerList, function(marker){
+            if(mapContext.getBounds().contains(marker.getLatLng())){
                 inView = true;
             }
         });
@@ -727,17 +836,19 @@ define(function(require, exports, module) {
         // - also does a refresh_data
         var that = this;
 
-        if(!this.fleet_map){
+        if(!this.mapView || !this.mapView.getMap()){
             return;
         }
 
+        var mapContext = this.mapView.getMap();
+
         var bounds = [];
-        _.each(this.fleet_map.markerList, function(marker){
+        _.each(mapContext.markerList, function(marker){
             bounds.push(marker.getLatLng());
         });
 
         // Set bounds and zoom
-        this.fleet_map.fitBounds(bounds, {
+        mapContext.fitBounds(bounds, {
             maxZoom: 18,
             padding: [20,20]
         });
@@ -756,7 +867,7 @@ define(function(require, exports, module) {
 
                 // Make sure menu is being hidden
                 if (this.sideView.open) {
-                    this.menuToggle();
+                    // this.menuToggle();
                 } 
 
                 switch(otherViewName){
@@ -770,7 +881,7 @@ define(function(require, exports, module) {
                         // - not the footer
                         // console.log(transitionOptions.outTransform);
                         // debugger;
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // // Fade header
                             // that.header.StateModifier.setOpacity(0, transitionOptions.outTransition);
@@ -790,7 +901,7 @@ define(function(require, exports, module) {
                 break;
             case 'showing':
                 if(this._refreshData){
-                    window.setTimeout(this.refreshData.bind(this), 1000);
+                    Timer.setTimeout(this.refreshData.bind(this), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
@@ -804,7 +915,7 @@ define(function(require, exports, module) {
                         // that.header.StateModifier.setOpacity(0);
 
                         // Header
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // // Change header opacity
                             // that.header.StateModifier.setOpacity(1, transitionOptions.outTransition);
@@ -816,7 +927,7 @@ define(function(require, exports, module) {
 
                         // Content
                         // - extra delay for prevous content to disappear
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // Bring map content back
                             // that.layout.content.StateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);

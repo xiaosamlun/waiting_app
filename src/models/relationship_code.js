@@ -14,10 +14,8 @@ define(function (require) {
 
             initialize: function (options) {
                 // ok
-                if(options.modelType == 'friend' && options.friend_id){
-                    this.url = this.urlRoot + 'friend/' + options.friend_id;
-                } else if(options.modelType == 'add_friend'){
-                    this.url = this.urlRoot + 'add_friend'
+                if(options.modelType == 'driver' && options.driver_id){
+                    this.url = this.urlRoot + 'driver/' + options.driver_id;
                 } else {
                     this.url = this.urlRoot + this.id;
                 }

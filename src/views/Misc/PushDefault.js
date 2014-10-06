@@ -164,20 +164,69 @@ define(function(require, exports, module) {
 
         var listOptions = [
         
-            {
-                type: 'header',
-                text: 'General'
-            },
-            {
-                title: 'New Message',
-                desc: 'Every time you receive a message',
-                scheme_key: 'new_message'
-            },
+            // {
+            //     type: 'header',
+            //     text: 'General'
+            // },
             {
                 title: 'New Friend',
-                desc: 'Every time a friend accepts a request',
+                desc: 'Every time you befriend someone',
                 scheme_key: 'new_friend'
             },
+            // {
+            //     title: 'Friend Matches',
+            //     desc: 'You and a friend match',
+            //     scheme_key: 'friend_hangout_match'
+            // }
+
+
+            // {
+            //     type: 'header',
+            //     text: 'Events'
+            // },
+            // {
+            //     title: 'Nemesis Joins Event',
+            //     desc: 'A Nemesis joins an event you are at',
+            //     scheme_key: 'event_nemesis_joins_me'
+            // },
+            // {
+            //     title: 'Anybody Joins Event',
+            //     desc: 'Anybody joins an event you are at',
+            //     scheme_key: 'event_anybody_joins_me'
+            // },
+            // {
+            //     title: 'Invited to Join Event',
+            //     desc: 'Somebody invites me to join an event',
+            //     scheme_key: 'event_invited_to_join'
+            // },
+
+
+
+            // {
+            //     type: 'header',
+            //     text: 'Game Results'
+            // },
+            // {
+            //     title: 'Game Result Involving Me',
+            //     desc: 'Every time your name is used in a Game Result',
+            //     scheme_key: 'game_result_involving_me'
+            // },
+            // {
+            //     title: 'Game Result Involving Nemesis',
+            //     desc: 'Every time a Nemesis has a Result',
+            //     scheme_key: 'game_result_involving_nemesis'
+            // },
+
+
+            // {
+            //     type: 'header',
+            //     text: 'Mentions'
+            // },
+            // {
+            //     title: "Mentioned Anywhere",
+            //     desc: "My username is used in a chat or comment",
+            //     scheme_key: 'mention_me_in_chat_or_comments'
+            // },
 
 
         ];
@@ -207,7 +256,7 @@ define(function(require, exports, module) {
             });
 
             pushOpt.Layout = new FlexibleLayout({
-                ratios: [1, true]
+                ratios: [1, true, true]
             });
             // pushOpt.Layout.Views = [];
 
@@ -222,8 +271,8 @@ define(function(require, exports, module) {
                 size: [40, 40],
                 content: '',
                 classes: ['text-center'],
-                onClasses: ['circle-toggle', 'toggle-on'],
-                offClasses: ['circle-toggle', 'toggle-off'],
+                onClasses: ['push-toggle', 'circle-toggle', 'toggle-on'],
+                offClasses: ['push-toggle', 'circle-toggle', 'toggle-off'],
 
                 // NOT for setting the default toggle state of the button
                 toggleMode: ToggleButton.TOGGLE
@@ -252,9 +301,18 @@ define(function(require, exports, module) {
                 return [undefined, pushOpt.Left._size ? pushOpt.Left._size[1]:undefined];
             };
 
+            pushOpt.Right = new Surface({
+                content: '',
+                size: [10,10]
+            });
+            pushOpt.Right.getSize = function(){
+                return [10, 10];
+            };
+
             pushOpt.Layout.sequenceFrom([
                 pushOpt.Left,
-                pushOpt.Toggle
+                pushOpt.Toggle,
+                pushOpt.Right
             ]);
 
             pushOpt.add(pushOpt.Layout);

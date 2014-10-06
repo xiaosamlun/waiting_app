@@ -6,6 +6,7 @@ define(function(require, exports, module) {
     var ScrollView = require('famous/views/Scrollview');
     var SequentialLayout = require('famous/views/SequentialLayout');
     var Surface = require('famous/core/Surface');
+    var ImageSurface = require('famous/surfaces/ImageSurface');
     var InputSurface = require('famous/surfaces/InputSurface');
     var Modifier = require('famous/core/Modifier');
     var StateModifier = require('famous/modifiers/StateModifier');
@@ -15,6 +16,7 @@ define(function(require, exports, module) {
     var RenderNode         = require('famous/core/RenderNode')
 
     var Utility = require('famous/utilities/Utility');
+    var Timer = require('famous/utilities/Timer');
 
     var HeaderFooterLayout = require('famous/views/HeaderFooterLayout');
     var NavigationBar = require('famous/widgets/NavigationBar');
@@ -22,12 +24,15 @@ define(function(require, exports, module) {
 
     var Credentials         = JSON.parse(require('text!credentials.json'));
     var $ = require('jquery');
+    var Utils = require('utils');
 
     // Curves
     var Easing = require('famous/transitions/Easing');
 
     // Views
     var StandardHeader = require('views/common/StandardHeader');
+    // var TextAreaSurface = require('views/common/TextAreaSurface');
+    var TextAreaSurface = require('famous/surfaces/TextareaSurface');
     
     var EventHandler = require('famous/core/EventHandler');
 
@@ -39,6 +44,8 @@ define(function(require, exports, module) {
         var that = this;
         View.apply(this, arguments);
         this.options = options;
+
+        this._showing = false;
 
         // create the layout
         this.layout = new HeaderFooterLayout({
@@ -60,7 +67,14 @@ define(function(require, exports, module) {
 
         // Wait for model to get populated, then add the input surfaces
         // - model should be ready immediately!
-        this.model.populated().then(this.addSurfaces.bind(this));
+        this.model.populated().then(function(){
+            that.addSurfaces();
+            Timer.setInterval(function(){
+                if(that._showing){
+                    that.model.fetch();
+                }
+            },10000);
+        });
 
 
     }
@@ -70,7 +84,7 @@ define(function(require, exports, module) {
 
     PageView.prototype.createHeader = function(){
         var that = this;
-        
+
         // create the header
         this.header = new StandardHeader({
             content: "Edit Profile",
@@ -99,12 +113,12 @@ define(function(require, exports, module) {
         
         // create the scrollView of content
         this.contentScrollView = new ScrollView(App.Defaults.ScrollView);
-        this.scrollSurfaces = [];
+        this.contentScrollView.Views = [];
 
         // link endpoints of layout to widgets
 
         // Sequence
-        this.contentScrollView.sequenceFrom(this.scrollSurfaces);
+        this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
 
         // Content Modifiers
         this.layout.content.StateModifier = new StateModifier();
@@ -120,38 +134,125 @@ define(function(require, exports, module) {
 
         // Build Surfaces
         // - add to scrollView
+
+        // Profile photo
+        // Profile Image
+        this.ProfileImage = new View();
+        this.ProfileImage.SizeMod = new StateModifier({
+            size: [undefined, 120]
+        });
+        this.ProfileImage.OriginMod = new StateModifier({
+            origin: [0.5, 0.5]
+        });
+        this.ProfileImage.Surface = new ImageSurface({
+            content: 'img/generic-profile.png',
+            size: [110,110],
+            properties: {
+                borderRadius: "50%",
+                border: "1px solid #444"
+            }
+        });
+
+        // update via model
+        that.model.on('sync', function(){
+            if(that.model.get('profilephoto.urls')){
+                that.ProfileImage.Surface.setContent(that.model.get('profilephoto.urls.thumb300x300'));
+            } else {
+                that.ProfileImage.Surface.setContent('img/generic-profile.png');
+            }
+        });
+        that.model.trigger('sync');
+
+        this.ProfileImage.add(this.ProfileImage.SizeMod).add(this.ProfileImage.OriginMod).add(this.ProfileImage.Surface);
+        this.ProfileImage.Surface.on('click', function(){
+        
+            // Launch options for photo
+
+            // Slide to the change screen for the player
+            // that.previousPage = window.location.hash;
+
+            // Options and details
+            Utils.Popover.Buttons({
+                title: 'Take new photo',
+                // text: 'text here',
+                buttons: [
+                    {
+                        text: "Camera",
+                        value: "camera",
+                        success: function(){
+                            Utils.takePicture('camera', {}, that.uploadProfileImage.bind(that), function(message){
+                                // failed taking a picture
+                                console.log(message);
+                                console.log(JSON.stringify(message));
+                                Utils.Notification.Toast('Failed picture');
+                            });
+                        }
+                    },
+                    {
+                        text: "Gallery",
+                        value: "gallery",
+                        success: function(){
+                            Utils.takePicture('gallery', {}, that.uploadProfileImage.bind(that), function(message){
+                                // failed taking a picture
+                                console.log(message);
+                                console.log(JSON.stringify(message));
+                                Utils.Notification.Toast('Failed picture');
+                            });
+                        }
+                    }
+                ]
+            });
+
+        });
+        this.ProfileImage.pipe(this.contentScrollView);
+        this.contentScrollView.Views.push(this.ProfileImage);
+
+
+        // Name
         this.inputNameSurface = new InputSurface({
             name: 'name',
             placeholder: 'Name',
             type: 'text',
-            size: [200, 50],
+            size: [undefined, 50],
             value: this.model.get('profile.name')
         });
+        this.inputNameSurface.pipe(this.contentScrollView);
         this.inputNameSurface.View = new View();
         this.inputNameSurface.View.StateModifier = new StateModifier();
         this.inputNameSurface.View.add(this.inputNameSurface.View.StateModifier).add(this.inputNameSurface);
-        this.scrollSurfaces.push(this.inputNameSurface.View);
+        this.contentScrollView.Views.push(this.inputNameSurface.View);
+
+        // Bio
+        this.inputBioSurface = new TextAreaSurface({
+            name: 'bio',
+            placeholder: 'A little about yourself',
+            type: 'text',
+            size: [undefined, window.innerHeight / 3],
+            value: this.model.get('profile.bio')
+        });
+        this.inputBioSurface.pipe(this.contentScrollView);
+        this.inputBioSurface.View = new View();
+        this.inputBioSurface.View.StateModifier = new StateModifier();
+        this.inputBioSurface.View.add(this.inputBioSurface.View.StateModifier).add(this.inputBioSurface);
+        this.contentScrollView.Views.push(this.inputBioSurface.View);
 
         this.submitButtonSurface = new Surface({
-            size: [undefined,40],
-            classes: ['button-surface'],
             content: 'Save Profile',
-            properties: {
-                lineHeight : "20px"
-            }
+            size: [undefined, 60],
+            classes: ['form-button-submit-default']
         });
         this.submitButtonSurface.View = new View();
         this.submitButtonSurface.View.StateModifier = new StateModifier();
         this.submitButtonSurface.View.add(this.submitButtonSurface.View.StateModifier).add(this.submitButtonSurface);
-        this.scrollSurfaces.push(this.submitButtonSurface.View);
+        this.contentScrollView.Views.push(this.submitButtonSurface.View);
 
         // Events for surfaces
-        this.submitButtonSurface.on('click', this.save_driver.bind(this));
+        this.submitButtonSurface.on('click', this.save_profile.bind(this));
 
 
     };
 
-    PageView.prototype.save_driver = function(ev){
+    PageView.prototype.save_profile = function(ev){
         var that = this;
 
         // validate name
@@ -160,19 +261,22 @@ define(function(require, exports, module) {
             return;
         }
 
+        var bio = $.trim(this.inputBioSurface.getValue().toString());
+
         // Disable submit
         this.submitButtonSurface.setSize([0,0]);
 
         // Get elements to save
         this.model.save({
-            profile_name: name
+            profile_name: name,
+            profile_bio: bio
         },{
             patch: true,
             success: function(response){
                 // console.log(response);
                 // debugger;
-                App.history.back();//.history.go(-1);
-                // App.history.navigate('driver/' + that.model._id, {trigger: true});
+                that.model.fetch();
+                App.history.back();
             }
         });
 
@@ -191,12 +295,78 @@ define(function(require, exports, module) {
 
         //         // Redirect to the new user
         //         // that.$('.back-button').trigger('click');
-        //         App.history.navigate('driver/' + newModel._id, {trigger: true});
+        //         App.history.navigate('driver/' + newModel._id);
                 
 
         //     });
 
         return false;
+    };
+
+    PageView.prototype.uploadProfileImage = function(imageURI){
+        var that = this;
+
+        Utils.Notification.Toast('Uploading');
+
+        console.log('uploading...');
+        console.log(this.player_id);
+        console.log({
+            token : App.Data.UserToken,
+            // player_id : this.player_id,
+            extra: {
+                "description": "Uploaded from my phone testing 234970897"
+            }
+        });
+
+        var ft = new FileTransfer(),
+            options = new FileUploadOptions();
+
+        options.fileKey = "file";
+        options.fileName = 'filename.jpg'; // We will use the name auto-generated by Node at the server side.
+        options.mimeType = "image/jpeg";
+        options.chunkedMode = false;
+        options.params = {
+            token : App.Data.UserToken,
+            // player_id : this.player_id,
+            extra: {
+                "description": "Uploaded from my phone testing 193246"
+            }
+        };
+
+        ft.onprogress = function(progressEvent) {
+            
+            if (progressEvent.lengthComputable) {
+                // loadingStatus.setPercentage(progressEvent.loaded / progressEvent.total);
+                // console.log('Percent:');
+                // console.log(progressEvent.loaded);
+                // console.log(progressEvent.total);
+                console.log((progressEvent.loaded / progressEvent.total) * 100);
+                Utils.Notification.Toast((Math.floor((progressEvent.loaded / progressEvent.total) * 1000) / 10).toString() + '%');
+            } else {
+                // Not sure what is going on here...
+                // loadingStatus.increment();
+                console.log('not computable?, increment');
+            }
+        };
+        ft.upload(imageURI, Credentials.server_root + "media/profilephoto",
+            function (e) {
+                // getFeed();
+                // alert('complete');
+                // alert('upload succeeded');
+                Utils.Notification.Toast('Upload succeeded');
+                Utils.Notification.Toast('~30 seconds to process');
+
+                // update collection
+                Timer.setTimeout(function(){
+                    that.model.fetch();
+                },5000);
+
+            },
+            function (e) {
+                alert("Upload failed");
+                Utils.Notification.Toast('Upload failed');
+                // Utils.Notification.Toast(e);
+            }, options);
     };
 
     PageView.prototype.inOutTransition = function(direction, otherViewName, transitionOptions, delayShowing, otherView, goingBack){
@@ -206,6 +376,7 @@ define(function(require, exports, module) {
 
         switch(direction){
             case 'hiding':
+                this._showing = false;
                 switch(otherViewName){
 
                     default:
@@ -225,6 +396,7 @@ define(function(require, exports, module) {
 
                 break;
             case 'showing':
+                this._showing = true;
                 if(this._refreshData){
                     // window.setTimeout(that.refreshData.bind(that), 1000);
                 }
@@ -243,9 +415,9 @@ define(function(require, exports, module) {
                         //     that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth + 100,0,0));
                         // }
                         that.layout.content.StateModifier.setTransform(Transform.translate(0,0,0));
-                        that.scrollSurfaces.forEach(function(surf, index){
-                            surf.StateModifier.setTransform(Transform.translate(0,window.innerHeight,0));
-                        });
+                        // that.contentScrollView.Views.forEach(function(surf, index){
+                        //     surf.StateModifier.setTransform(Transform.translate(0,window.innerHeight,0));
+                        // });
 
                         // Content
                         // - extra delay for other content to be gone
@@ -255,13 +427,13 @@ define(function(require, exports, module) {
                             // that.layout.content.StateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);
 
                             // Bring in button surfaces individually
-                            that.scrollSurfaces.forEach(function(surf, index){
-                                window.setTimeout(function(){
-                                    surf.StateModifier.setTransform(Transform.translate(0,0,0), {
-                                        duration: 1500,
-                                        curve: Easing.inOutElastic
-                                    });
-                                }, index * 50);
+                            that.contentScrollView.Views.forEach(function(surf, index){
+                                // window.setTimeout(function(){
+                                //     surf.StateModifier.setTransform(Transform.translate(0,0,0), {
+                                //         duration: 750,
+                                //         curve: Easing.inOutElastic
+                                //     });
+                                // }, index * 50);
                             });
 
                         }, delayShowing); // + transitionOptions.outTransition.duration);

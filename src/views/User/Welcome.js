@@ -34,8 +34,8 @@ define(function(require, exports, module) {
     var _ = require('underscore');
     var $ = require('jquery');
 
-    // Models
-    var PlayerModel = require('models/player');
+    // // Models
+    // var PlayerModel = require('models/player');
 
     function PageView(params) {
         var that = this;
@@ -50,7 +50,7 @@ define(function(require, exports, module) {
             content: '',
             size: [undefined, undefined],
             properties: {
-                backgroundColor: 'black'
+                backgroundColor: 'white'
             }
         });
         this.contentView.BgOpacityMod = new StateModifier({
@@ -119,13 +119,17 @@ define(function(require, exports, module) {
         var optionSurface = new View(); 
         optionSurface.Surface = new Surface({
             size: [undefined, 180],
-            content: '<div>Welcome</div> <div>to</div> <div>Internal App!</div><div><i class="icon ion-play"></i></div>',
+            content: '<div>Welcome</div> <div>to</div> <div>handy!</div><div><i class="icon ion-play"></i></div>',
             classes: ['welcome-page-default']
         });
+        optionSurface.getSize = function(){
+            return [undefined, 180];
+        };
         optionSurface.add(optionSurface.Surface);
         optionSurface.Surface.pipe(that.contentScrollView);
         optionSurface.Surface.on('click', function(){
-            App.history.navigate('welcome/username',{history: false});
+            // App.history.navigate('welcome/fullname',{history: false});
+            App.history.navigate('profile/edit',{history: false});
         });
         that.contentScrollView.Views.push(optionSurface);
 

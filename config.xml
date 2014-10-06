@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget 
-    id="com.internal.app.pub" 
-    version="0.0.1.63" 
+    id="com.waiting.app.dev" 
+    version="0.0.1.13" 
     xmlns="http://www.w3.org/ns/widgets" 
     xmlns:gap="http://phonegap.com/ns/1.0" 
     xmlns:android="http://schemas.android.com/apk/res/android" 
@@ -9,15 +9,15 @@
 
     <name>Waiting App</name>
     <description>
-        PracticalGuideToMobileApps.com
+        Let's make an app
     </description>
-    <author email="nick@PracticalGuideToMobileApps.com" href="http://cordova.io">
-        Nick Reed
+    <author email="nicholas.a.reed@gmail.com" href="http://famousmobileapps.com">
+        Famous Mobile Apps (.com)
     </author>
     <content src="index.html" />
 
     <access origin="*" />
-    
+
     <gap:platform name="ios" />
     <gap:platform name="android" />
 
@@ -37,12 +37,15 @@
     <preference name="exit-on-suspend" value="false" />
     <preference name="detect-data-types" value="false" />
 
-    <preference name="StatusBarOverlaysWebView" value="false" />
+    <preference name="StatusBarOverlaysWebView" value="true" />
     <preference name="StatusBarBackgroundColor" value="#000000" />
     <preference name="StatusBarStyle" value="lightcontent" />
 
+    <preference name="AutoHideSplashScreen" value="false" />
+    <preference name="splashscreen" value="splash.png" /> <!-- Android -->
+
     <preference name="URL_SCHEME" value="http" />
-    <preference name="URL_HOST" value="practicalguidetomobileapps.com" />
+    <preference name="URL_HOST" value="famousmobileapps.com" />
 
 
     <gap:plugin name="org.apache.cordova.device" />
@@ -51,6 +54,7 @@
     <gap:plugin name="org.apache.cordova.file" />
     <gap:plugin name="org.apache.cordova.file-transfer" />
     <gap:plugin name="org.apache.cordova.camera" />
+    <!-- <gap:plugin name="co.mwater.foregroundcameraplugin" version="0.1.1" /> -->
     <gap:plugin name="org.apache.cordova.inappbrowser" />
     <gap:plugin name="org.apache.cordova.geolocation" />
     <gap:plugin name="org.apache.cordova.globalization" />
@@ -58,31 +62,45 @@
     <gap:plugin name="com.phonegap.plugins.pushplugin" />
     <gap:plugin name="com.phonegap.plugins.barcodescanner" />
     <gap:plugin name="com.verso.cordova.clipboard" />
+    <gap:plugin name="org.apache.cordova.splashscreen" />
 
-    <gap:plugin name="com.plugin.datepicker" />
+    <!-- <gap:plugin name="com.plugin.datepicker" /> -->
     <gap:plugin name="nl.x-services.plugins.socialsharing" />
-    <!-- <gap:plugin name="info.asankan.phonegap.smsplugin" /> -->
+    <gap:plugin name="info.asankan.phonegap.smsplugin" />
     <gap:plugin name="nl.x-services.plugins.toast" />
     <gap:plugin name="de.appplant.cordova.plugin.local-notification" />
+    <gap:plugin name="com.pylonproducts.wifiwizard" version="0.1.0" />
+
+    <gap:plugin name="com.ionic.keyboard" version="1.0.3" />
 
     <gap:plugin name="com.adobe.plugins.gaplugin" />
 
 
     <!-- Android SingleInstance LaunchMode -->
-    <gap:config-file platform="android" parent="/manifest/application">
+    <!-- <gap:config-file platform="android" parent="/manifest/application">
         <activity android:launchMode="singleInstance" />
-    </gap:config-file>
+    </gap:config-file> -->
 
     
     <gap:plugin name="nl.x-services.plugins.launchmyapp">
-        <param name="URL_SCHEME" value="guide" />
+        <param name="URL_SCHEME" value="waiting" />
     </gap:plugin>
 
 
-    <feature name="StatusBar">
-        <param name="ios-package" value="CDVStatusBar" onload="true" />
+    <feature name="SplashScreen">
+        <param name="android-package" value="org.apache.cordova.splashscreen.SplashScreen"/>
+        <param name="ios-package" value="CDVSplashScreen"/>
+        <param name="onload" value="true"/>
     </feature>
-    
+
+    <feature name="StatusBar">
+    	<param name="ios-package" value="CDVStatusBar" onload="true" />
+    </feature>
+
+    <feature name="Keyboard">
+        <param name="ios-package" value="IonicKeyboard" onload="true" />
+    </feature>
+
     <feature name="BarcodeScanner">
         <param name="ios-package" value="CDVBarcodeScanner" />
         <param name="android-package" value="com.phonegap.plugins.barcodescanner.BarcodeScanner" />
@@ -177,14 +195,29 @@
     <gap:splash src="splash.png" />
     <gap:splash src="splash/ios/Default_iphone5.png" gap:platform="ios" width="640" height="1136" />
 
+    <!-- https://www.flickr.com/photos/florianric/7263382550/in/photolist-c4QJzC-74Svtz-74SYKK-73H5zK-4C8BH6-73c2Gi-8UosBX-71fvWr-uTeUc-4e17zw-4dW8tR-4e197s-4dW9UM-4e16eb-4dW7GK-4dW94V-4dW7pv-4dW6Ve-4dW7Bn-4e17dh-4e16q7-4dW9a4-4e18n3-4dW7iD-f9gCni-4e1851-4dW6oz-4dW9fP-4e18Es-4dW7Zv-4dW7MH-4dW71c-4e17SU-4e19Gq-4e16Pb-4e15YC-4dW6CK-4dW9Bx-4e18t1-4dW9xa-4dW6bP-4dW9kr-4dW9He-4dW86g-4e17Yo-f9gHFx-5DZhEa-4BZsQJ-Bd4jF-9bvnA1/ -->
+
+    <!--<gap:config-file target="AndroidManifest.xml" parent="/*/application/activity">-->
+    <!-- <gap:config-file platform="android" parent="/manifest/application" overwrite="false">
+        <activity android:label="@string/app_name" android:name=".waiting">
+          <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="http" android:host="waitingapp.com" />
+          </intent-filter>
+      </activity>
+    </gap:config-file> -->
 
     <!-- <gap:plugin name="com.machenmusik.plugins.launchmyapp" version="3.1.2">
-        <param name="URL_SCHEME" value="ulu" />
-        <param name="HTTP_HOST" value="uluapp.com" />
+        <param name="URL_SCHEME" value="waiting" />
+        <param name="HTTP_HOST" value="waitingapp.com" />
         <param name="HTTP_PATHPREFIX" value="/" />
-        <param name="HTTPS_HOST" value="uluapp.com" />
+        <param name="HTTPS_HOST" value="waitingapp.com" />
         <param name="HTTPS_PATHPREFIX" value="/" />
     </gap:plugin> -->
+
+
 
     <!-- Hide Status Bar iOS -->
     <!--
@@ -195,8 +228,6 @@
         <false/>
     </gap:config-file>
     -->
-
-    <!-- icon image: https://www.flickr.com/photos/guwashi999/6556973511/in/photolist-aZqcMr-2gz7QT-5AdCWG-fw47vw-yMY1p-6CA23d-39Sitz-aSZQiD-5DC2uL-8sSt1m-bd5M6c-eqV9qd-mz5Nq-99dg3U-dnK7UM-8kZoqd-koBNhF-4benw-bDsGwR-cdjPEu-4gskLV-gxcw1i-nXPs47-eYd1dZ-6dVsLa-6YuQhF-9rVMrS-2HHfo-nsnByK-e1AZuE-7q3U8y-oh1xuD-5VVYyK-cazXTh-otmR1Q-nLG3jp-aTWugD-5G9n4L-6236Zk-jm3gZw-dZFjAh-6JQ7fN-iKNFMp-ogz2Xi-e2NcPb-4LUdp8-koCH3t-7fy6Yv-mSL4S-61XBp9/ -->
 
 
 </widget>

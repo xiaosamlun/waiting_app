@@ -45,7 +45,7 @@ define(function(require, exports, module) {
 
         // create the layout
         this.layout = new HeaderFooterLayout({
-            headerSize: App.Defaults.Header.size,
+            headerSize: 0, //App.Defaults.Header.size,
             footerSize: App.Defaults.Footer.size
         });
 
@@ -76,13 +76,14 @@ define(function(require, exports, module) {
             content: "",
             classes: ["normal-header"],
             backClasses: ["normal-header"],
-            moreContent: false
+            moreContent: false,
+            backContent: false
         }); 
         this.header._eventOutput.on('back',function(){
-            App.history.back();//.history.go(-1);
+            // App.history.back();//.history.go(-1);
         });
         this.header.navBar.title.on('click',function(){
-            App.history.back();
+            // App.history.back();
         });
         this.header.pipe(this._eventInput);
         this._eventOutput.on('inOutTransition', function(args){

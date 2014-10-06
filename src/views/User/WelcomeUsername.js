@@ -36,8 +36,8 @@ define(function(require, exports, module) {
     var $ = require('jquery');
     Credentials         = JSON.parse(require('text!credentials.json'));
 
-    // Models
-    var PlayerModel = require('models/player');
+    // // Models
+    // var PlayerModel = require('models/player');
 
     function PageView(params) {
         var that = this;
@@ -258,7 +258,7 @@ define(function(require, exports, module) {
                             // username OK
                             App.Data.User.set('username', result.username);
                             // Go to the dashboard!
-                            App.history.navigate('dash');
+                            App.history.navigate('user/sentence');
 
                             return;
                         }
@@ -276,7 +276,7 @@ define(function(require, exports, module) {
                     App.Data.User.set('username', result.username);
 
                     // Go to the dashboard!
-                    App.history.navigate('dash');
+                    App.history.navigate('user/sentence');
 
                 }
             });

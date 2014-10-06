@@ -8,6 +8,8 @@ define(function(require, exports, module) {
     var ScrollView         = require('famous/views/Scrollview');
 
     var Timer         = require('famous/utilities/Timer');
+
+    var Utils = require('utils');
     
     var NavigationBar = require('famous/widgets/NavigationBar');
     var StandardNavigationBar = require('views/common/StandardNavigationBar');
@@ -25,7 +27,7 @@ define(function(require, exports, module) {
         // create the header's bg
         this.background = new Surface({
             size: [undefined, undefined],
-            classes: ['header-bg-default']
+            classes: options.bgClasses || ['header-bg-default']
         });
 
         this.navBar = new StandardNavigationBar(options); 
@@ -33,8 +35,9 @@ define(function(require, exports, module) {
 
         // add to tree
         this.HeaderNode = new RenderNode();
-        this.HeaderNode.add(this.background);
-        this.HeaderNode.add(this.OpacityModifier).add(this.PositionModifier).add(this.navBar);
+        this.HeaderNode.add(Utils.usePlane('header')).add(this.background);
+        // this.HeaderNode.add(new StateModifier({transform: Transform.translate(0,0,1.0)})).add(this.OpacityModifier).add(this.PositionModifier).add(this.navBar);
+        this.HeaderNode.add(Utils.usePlane('header',1)).add(this.navBar);
 
         this.add(this.HeaderNode);
 
@@ -92,20 +95,27 @@ define(function(require, exports, module) {
                                 curve: 'easeIn'
                             });
 
+
+                            // Icons
+                            if(that.navBar._moreSurfaces){
+                                that.navBar._moreSurfaces.forEach(function(tmpView, index){
+                                    Timer.setTimeout(function(){
+                                        tmpView.Mod.setOpacity(0, {
+                                            duration: transitionOptions.outTransition.duration,
+                                            curve: 'easeOut'
+                                        });
+                                        tmpView.Mod.setTransform(Transform.translate(0,-100,0), {
+                                            duration: transitionOptions.outTransition.duration,
+                                            curve: 'easeOut'
+                                        });
+                                    }, index * 100);
+                                });
+                            }
+
                         }, delayShowing);
 
                         break;
 
-                        // that.OpacityModifier.setOpacity(1);
-
-                        // // Hide/move elements
-                        // window.setTimeout(function(){
-                        //     // Fade header
-                        //     that.OpacityModifier.setOpacity(0, transitionOptions.outTransition);
-
-                        // }, delayShowing);
-
-                        // break;
                 }
 
                 break;
@@ -135,6 +145,13 @@ define(function(require, exports, module) {
                                 that.navBar.title.PositionModifier.setTransform(Transform.translate(window.innerWidth / 4,0,0));
                             }
                         }
+
+                        // // Icons (starting hidden)
+                        // if(that.navBar._moreSurfaces){
+                        //     that.navBar._moreSurfaces.forEach(function(tmpView){
+                        //         tmpView.Mod.setTransform(Transform.translate(0,-100,0));
+                        //     });
+                        // }
 
 
                         // Header
@@ -172,6 +189,23 @@ define(function(require, exports, module) {
                                 duration: transitionOptions.outTransition.duration,
                                 curve: 'easeIn'
                             });
+
+                            // Icons (starting hidden)
+                            if(that.navBar._moreSurfaces){
+                                that.navBar._moreSurfaces.forEach(function(tmpView, index){
+                                    Timer.setTimeout(function(){
+                                        tmpView.Mod.setOpacity(1, {
+                                            duration: transitionOptions.outTransition.duration,
+                                            curve: 'easeOut'
+                                        });
+                                        tmpView.Mod.setTransform(Transform.translate(0,0,0), {
+                                            duration: transitionOptions.outTransition.duration,
+                                            curve: 'easeOut'
+                                        });
+                                    },index*100);
+                                });
+                            }
+
 
 
                         }, delayShowing);

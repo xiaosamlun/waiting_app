@@ -27,6 +27,8 @@ define(function(require, exports, module) {
 
     // Views
     var StandardHeader = require('views/common/StandardHeader');
+    var FormHelper = require('views/common/FormHelper');
+    var BoxLayout = require('famous-boxlayout');
 
     var EventHandler = require('famous/core/EventHandler');
 
@@ -91,87 +93,54 @@ define(function(require, exports, module) {
             this.header.inOutTransition.apply(that.header, args);
         })
 
-        this.layout.header.add(this.header);
+        this.layout.header.add(Utils.usePlane('header')).add(this.header);
+
     };
 
     PageView.prototype.createContent = function(){
         var that = this;
 
-        // create the scrollView of content
-        this.contentScrollView = new SequentialLayout(); //(App.Defaults.ScrollView);
-        this.contentScrollView.Views = [];
-        this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
+        this.form = new FormHelper({
+            type: 'form',
+            scroll: true
+        });
 
         // Add surfaces
         this.addSurfaces();
         
         // Content
         this.layout.content.StateModifier = new StateModifier();
-        this.contentView = new View();
-        this.contentView.SizeMod = new Modifier({
-            size: //[window.innerWidth - 50, true]
-                function(){
-                    var tmpSize = that.contentScrollView.getSize(true);
-                    if(!tmpSize){
-                        return [window.innerWidth, undefined];
-                    }
-                    return [window.innerWidth - 16, tmpSize[1]];
-                }
-        });
-        this.contentView.OriginMod = new StateModifier({
-            origin: [0.5, 0.5]
-        });
-        this.contentView.add(this.contentView.OriginMod).add(this.contentView.SizeMod).add(this.contentScrollView);
-        this.layout.content.add(this.layout.content.StateModifier).add(this.contentView);
+        this.layout.content.add(this.layout.content.StateModifier).add(Utils.usePlane('content')).add(this.form);
 
     };
 
     PageView.prototype.addSurfaces = function() {
         var that = this;
 
-        // Build Surfaces
-        // - add to scrollView
+        this.inputUsername = new FormHelper({
 
-        // // Name
-        // this.inputNameSurface = new InputSurface({
-        //     name: 'name',
-        //     placeholder: 'Your Name',
-        //     type: 'text',
-        //     size: [undefined, 50],
-        //     value: ''
-        // });
-        // this.contentScrollView.Views.push(this.inputNameSurface);
+            margins: [10,10],
 
-        // this.contentScrollView.Views.push(new Surface({
-        //     size: [undefined, 4]
-        // }));
-
-        // Username
-        this.inputTextSurface = new InputSurface({
-            name: 'text',
-            placeholder: 'Ignore',
+            form: this.form,
+            name: 'username',
+            placeholder: 'Username',
             type: 'text',
-            size: [undefined, 50],
             value: ''
         });
-        this.contentScrollView.Views.push(this.inputTextSurface);
 
-        this.contentScrollView.Views.push(new Surface({
-            size: [undefined, 4]
-        }));
-
-        // Submit button
-        this.submitButtonSurface = new Surface({
-            content: 'Save',
-            size: [undefined,60],
-            classes: ['form-button-submit-default']
+        this.submitButton = new FormHelper({
+            type: 'submit',
+            value: 'Next',
+            margins: [10,10],
+            click: function(){
+                that.options.passed.on_choose(null); //that.inputText.getValue());
+            }
         });
-        this.contentScrollView.Views.push(this.submitButtonSurface);
 
-        // Events for surfaces
-        this.submitButtonSurface.on('click', function(){
-            that.options.passed.on_choose(null); //that.inputTextSurface.getValue());
-        });
+        this.form.addInputsToForm([
+            this.inputUsername,
+            this.submitButton
+        ]);
 
     };
 

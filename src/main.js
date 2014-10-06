@@ -17,6 +17,9 @@ require.config({
         // almond: '../lib/almond/almond',
         // 'famous-polyfills': '../lib/famous-polyfills/index',
 
+        'famous-map': 'bower_components/famous-map',
+        'famous-boxlayout': 'bower_components/famous-boxlayout/BoxLayout',
+
         async : '../src/requirejs-plugins/src/async',
 
         underscore: '../src/lib2/underscore',
@@ -24,10 +27,13 @@ require.config({
         backbone: '../src/lib2/backbone',
         moment: '../src/lib2/moment',
         // history: '../src/lib2/history',
-        utils: '../src/lib2/utils',
+        utils: '../src/utils',
         handlebars: '../src/lib2/handlebars',
         'backbone-adapter' : '../src/lib2/backbone-adapter',
-        'jquery-adapter' : '../src/lib2/jquery-adapter'
+        'jquery-adapter' : '../src/lib2/jquery-adapter',
+
+        inappbrowsercss: '../css/inappbrowser.css',
+        inappbrowserjs: '../src/views/Misc/inappbrowser.js'
 
     },
 
@@ -100,19 +106,21 @@ require.config({
 });
 
 // Global "App" variable
-var App = {};
+var App = {},
+    S = null; // Utils.hbSanitize
 
 define(function(require, exports, module) {
     'use strict';
 
-    var FastClick = require('famous/inputs/FastClick');
-    
+    // var FastClick = require('famous/inputs/FastClick');
+
     // import dependencies
     var Engine = require('famous/core/Engine');
     var View = require('famous/core/View');
     var RenderController = require('famous/views/RenderController');
     var Lightbox = require('famous/views/Lightbox');
     var SequentialLayout = require('famous/views/SequentialLayout');
+    var FlexibleLayout = require('famous/views/FlexibleLayout');
     var Surface = require('famous/core/Surface');
     var ImageSurface = require('famous/surfaces/ImageSurface');
     var InputSurface = require('famous/surfaces/InputSurface');
@@ -123,6 +131,7 @@ define(function(require, exports, module) {
     var RenderNode = require('famous/core/RenderNode');
 
     var Easing = require('famous/transitions/Easing');
+    var Timer = require('famous/utilities/Timer');
 
     var StandardTabBar = require('views/common/StandardTabBar');
 
@@ -134,24 +143,29 @@ define(function(require, exports, module) {
     require('lib2/hammer'); // creates global Hammer()
     var _ = require('underscore');
     var Utils = require('utils');
-
+    S = Utils.hbSanitize;
 
     // Models
-    var PreloadModels = require('models/_preload');
+    var PreloadModels = require('models/preload');
     var UserModel = require('models/user');
 
     console.info('Loaded main.js');
     var tmpDefaultCache = {
+        geolocation_coords: {latitude: 37.441883, longitude: -122.143019},
         ModelReplacers: {},
-        RoutesByHash: {}
+        RoutesByHash: {},
     };
     // Data store
     App = {
         t: null, // for translation
+        Utils: Utils,
         Flags: {},
+        Functions: {}, // some global functions, like Pulsate
         MainContext: null,
         MainController: null,
+        MainView: null,
         Events: new EventHandler(),
+        Credentials: JSON.parse(require('text!credentials.json')),
         Config: null, // parsed in a few lines, symlinked to src/config.xml
         ConfigImportant: {},
         BackboneModels: _.extend({}, Backbone.Events),
@@ -163,29 +177,42 @@ define(function(require, exports, module) {
         DefaultCache: tmpDefaultCache,
         Cache: _.defaults({},tmpDefaultCache),
         Data: {
-            User: null,
-            Players: null // preloaded
+            User: null
         },
         Defaults: {
             ScrollView: {
-                friction: 0.001,
-                drag: 0.0001,
-                edgeGrip: 0.5,
-                edgePeriod: 500, //300,
-                edgeDamp: 1,
-                speedLimit: 2
+                // friction: 0.001,
+                // drag: 0.0001,
+                // edgeGrip: 0.5,
+                // edgePeriod: 500, //300,
+                // edgeDamp: 1,
+                // speedLimit: 2
 
                 // friction: 0.0001, // default 0.001
                 // edgeGrip: 0.05, // default 0.5
                 // speedLimit: 2.5 // default 10
             },
             Header: {
-                size: 60
+                Icon: {
+                    w: 60 // width
+                },
+                size: 60 // height, width always undefined width
             },
             Footer: {
-                size: 0
-            }
+                size: 0 // height, width always undefined
+            },
         },
+        Planes: {
+            fps: 10, // 10=hidden, frames-per-second counter
+            background: -1000000,
+            content: 100,
+            contentTabs: 400,
+            header: 500,
+            footer: 500,
+            mainfooter: 500,
+            popover: 2000,
+            splashLoading: 2100
+        }
     };
 
     // Update body stylesheet
@@ -199,7 +226,6 @@ define(function(require, exports, module) {
     var ConfigXml = require('text!config.xml');
     // Parse config.xml and set approprate App variables
     App.Config = $($.parseXML(ConfigXml));
-    console.log(App.Config);
     if(App.Config.find("widget").get(0).attributes.id.value.indexOf('.pub') !== -1){
         App.Prod = true;
         App.ConfigImportant.Version = App.Config.find("widget").get(0).attributes.version.value;
@@ -211,9 +237,9 @@ define(function(require, exports, module) {
     // - Resume, Back, etc.
     App.DeviceReady = DeviceReady;
     App.DeviceReady.init();
-    // App.DeviceReady.ready.then(function(){
-    //     App.DeviceReady.runGpsUpdate();
-    // });
+    App.DeviceReady.ready.then(function(){
+        App.DeviceReady.runGpsUpdate();
+    });
 
     // Language set?
     // - localization / globalization
@@ -272,20 +298,82 @@ define(function(require, exports, module) {
             App.MainContext = Engine.createContext();
             App.MainContext.setPerspective(1000);
 
+            // MainView
+            App.MainView = new View();
+            App.MainView.SizeMod = new StateModifier({
+                size: [undefined, undefined]
+            });
+            App.MainContext.add(App.MainView.SizeMod).add(App.MainView);
+
+            // Add main background image (pattern)
+            App.MainBackground = new Surface({
+                size: [undefined, undefined],
+                classes: ['overall-background']
+            });
+            App.MainView.add(Utils.usePlane('background')).add(App.MainBackground); 
+
             // Create main Lightbox
             App.MainController = new Lightbox();
+            App.MainController.getSize = function(){
+                return [undefined, undefined];
+            };
             App.MainController.resetOptions = function(){
                 this.setOptions(Lightbox.DEFAULT_OPTIONS);
             };
 
-            // // Add Background
-            // var MainBackgroundSurface = new Surface({
-            //     size: [undefined, undefined],
-            //     properties: {
-            //         backgroundColor: "black"
-            //     }
+            App.defaultSize = [window.innerWidth, window.innerHeight]; // use Device Width/height via native plugin? 
+            // document.body.setAttribute('style',"width:"+window.innerWidth+"px;height:"+window.innerHeight+"px");
+            // Utils.Notification.Toast(window.innerHeight);
+            App.mainSize = [window.innerWidth, window.innerHeight];
+            // Engine.nextTick(function() {
+            //     console.log('After tick=' + App.MainContext.getSize());
+            //     App.mainSize = App.MainContext.getSize();
             // });
-            // App.MainContext.add(MainBackgroundSurface);
+    
+            App.MainContext.on('resize', function(e) {
+                // Utils.Notification.Toast('Resized');
+                App.MainView.SizeMod.setSize(App.mainSize);
+                // document.body.setAttribute('style',"height:"+App.mainSize[1]+"px");
+            }.bind(this));
+
+
+            // Layout for StatusBar / Controller
+            if(App.Config.devicePlatform == 'ios'){
+                App.StatusBar = true;
+            }
+
+            // App.StatusBar set in device_ready
+            App.DeviceReady.ready.then(function(){
+
+                var ratios = [1];
+                if(App.StatusBar === true){
+                    ratios = [true, 1];
+                }
+                App.MainView.Layout = new FlexibleLayout({
+                    direction: 1,
+                    ratios: ratios
+                });
+                App.MainView.Layout.Views = [];
+
+
+                // iOS StatusBar (above MainController lightbox, if necessary)
+                App.StatusBarView = new Surface({
+                    size: [undefined, 20],
+                    properties: {
+                        // backgroundColor: App.ConfigImportant.StatusBarBackgroundColor
+                    }
+                });
+                if(App.StatusBar === true){
+                    App.MainView.Layout.Views.push(App.StatusBarView);
+                }
+
+                App.MainView.Layout.Views.push(App.MainController);
+                App.MainView.Layout.sequenceFrom(App.MainView.Layout.Views);
+
+                // Add Lightbox/RenderController to mainContext
+                App.MainView.add(Utils.usePlane('content')).add(App.MainView.Layout);
+
+            });
 
             // Add GenericToast
             // - attaches to MainContext at the Root at is an overlay for Toast notifications (more fun animation options than Native Toast)
@@ -294,19 +382,6 @@ define(function(require, exports, module) {
             // Add GenericOnlineStatus
             // - we want to effectively communicate to the user when we have lost or are experiencing a degraded internet connection
             // - todo...
-
-            // Add main background image (pattern)
-            App.MainContext.add(new Surface({
-                size: [undefined, undefined],
-                properties: {
-                    // background: "url(img/mochaGrunge.png) repeat",
-                    backgroundColor: "white",
-                    zIndex : -10
-                }
-            })); 
-
-            // Add Lightbox/RenderController to mainContext
-            App.MainContext.add(App.MainController);
 
             // Main Footer
             var createMainFooter = function(){
@@ -350,7 +425,7 @@ define(function(require, exports, module) {
                             break;
 
                         case 'profiles':
-                            App.history.navigate('dash');
+                            App.history.navigate('user',{history: false});
                             break;
 
                         case 'messages':
@@ -369,9 +444,6 @@ define(function(require, exports, module) {
 
 
                 // Attach header to the layout 
-                App.Views.MainFooter.frontMod = new StateModifier({
-                    transform: Transform.inFront
-                });
                 App.Views.MainFooter.originMod = new StateModifier({
                     origin: [0, 1]
                 });
@@ -382,7 +454,7 @@ define(function(require, exports, module) {
                     size: [undefined, 60]
                 });
 
-                App.Views.MainFooter.add(App.Views.MainFooter.frontMod).add(App.Views.MainFooter.originMod).add(App.Views.MainFooter.positionMod).add(App.Views.MainFooter.sizeMod).add(App.Views.MainFooter.Tabs);
+                App.Views.MainFooter.add(App.Views.MainFooter.originMod).add(App.Views.MainFooter.positionMod).add(App.Views.MainFooter.sizeMod).add(App.Views.MainFooter.Tabs);
 
                 App.Views.MainFooter.show = function(transition){
                     transition = transition || {
@@ -395,13 +467,13 @@ define(function(require, exports, module) {
                 App.Views.MainFooter.hide = function(transition){
                     transition = transition || {
                         duration: 250,
-                        curve: Easing.itExpo
+                        curve: Easing.inExpo
                     };
-                    App.Views.MainFooter.positionMod.setTransform(Transform.translate(0,60,0), transition);
+                    App.Views.MainFooter.positionMod.setTransform(Transform.translate(0,1000,0), transition);
                 };
 
                 // Add to maincontext
-                App.MainContext.add(App.Views.MainFooter);
+                App.MainView.add(Utils.usePlane('mainfooter')).add(App.Views.MainFooter);
 
             };
             createMainFooter();
@@ -414,56 +486,118 @@ define(function(require, exports, module) {
                     inTransition: false,
                     outTransition: false,
                 });
-                // var po = App.Views.Popover;
-                App.Views.Popover.frontMod = new StateModifier({
-                    transform: Transform.inFront
-                });
-                App.MainContext.add(App.Views.Popover.frontMod).add(App.Views.Popover);
+                App.Views.Popover.hideIf = function(thisView){
+                    if(App.Views.Popover.CurrentPopover === thisView){
+                        App.Views.Popover.hide();
+                    }
+                };
+                App.MainView.add(Utils.usePlane('popover')).add(App.Views.Popover);
 
             };
             createPopover();
+
+            // Splash Page
+            var createSplashLoading = function(){
+                // var that = this;
+                App.Views.SplashLoading = new RenderController({
+                    inTransition: false,
+                    // outTransition: false,
+                });
+                App.Views.SplashLoading.View = new View();
+                App.Views.SplashLoading.View.SizeMod = new StateModifier({
+                    size: [undefined, undefined]
+                });
+                App.Views.SplashLoading.View.OriginMod = new StateModifier({
+                    origin: [0.5,0.5]
+                });
+                var viewNode = App.Views.SplashLoading.View.add(App.Views.SplashLoading.View.SizeMod).add(App.Views.SplashLoading.View.OriginMod);
+                App.Views.SplashLoading.BgSurface = new Surface({
+                    content: '',
+                    size: [undefined, undefined],
+                    properties: {
+                        backgroundColor: 'black'
+                    }
+                });
+
+
+                // spinning logo
+
+                App.Views.SplashLoading.Logo = new Surface({
+                    content: 'Waiting',
+                    classes: ['splash-surface-default'],
+                    properties: {
+                        'backface-visibility' : 'visible'
+                    },
+                    size: [window.innerWidth, 70]
+                });
+                var rotation = 0;
+                App.Views.SplashLoading.Logo.StateMod = new StateModifier({
+                    opacity: 0
+                });
+                App.Views.SplashLoading.Logo.Mod = new Modifier({
+                    transform: function(){
+                        rotation += 0.02;
+                        return Transform.rotateY(rotation);
+                    }
+                });
+
+                // App.Views.SplashLoading.hide = function(thisView){
+                //     // if(App.Views.SplashLoading.CurrentPopover === thisView){
+                //         App.Views.SplashLoading.hide();
+                //     // }
+                // };
+
+                App.Functions.action = function(){
+
+                    // Fade in logo
+                    App.Views.SplashLoading.Logo.StateMod.setOpacity(1,{
+                        curve: 'linear',
+                        duration: 2000
+                    });
+
+                }
+
+                App.Views.SplashLoading.View.add(Utils.usePlane('splashLoading',1)).add(App.Views.SplashLoading.BgSurface);
+                viewNode.add(Utils.usePlane('splashLoading',2)).add(App.Views.SplashLoading.Logo.StateMod).add(App.Views.SplashLoading.Logo.Mod).add(App.Views.SplashLoading.Logo);
+
+                App.Views.SplashLoading.show(App.Views.SplashLoading.View);
+                App.MainView.add(Utils.usePlane('splashLoading')).add(App.Views.SplashLoading);
+
+            };
+            createSplashLoading();
 
 
             // Add ToastController to mainContext
             // - it should be a ViewSequence or something that allows multiple 'toasts' to be displayed at once, with animations)
             // - todo
             var toastNode = new RenderNode();
-            App.MainContext.add(toastNode);
+            App.MainView.add(toastNode);
 
-            // Add FPS Surface to mainContext
+            // Add FPS Surface to MainView
             var fps = new View();
             fps.Surface = new Surface({
-                content: 'test',
+                content: 'fps',
                 size: [12,12],
-                properties: {
-                    fontSize: '10px',
-                    lineHeight: '12px',
-                    backgroundColor: 'white',
-                    textAlign: 'center',
-                    color: 'red',
-                    zIndex: '1000'
-                }
+                classes: ['fps-counter-default']
             });
             fps.Mod = new StateModifier({
+                opacity: 0,
                 origin: [1,1]
             });
-            var inFront = new StateModifier({
-                transform: Transform.inFront
-            });
-            window.setInterval(function(){
+            Timer.setInterval(function(){
                 var fpsNum = parseInt(Engine.getFPS(), 10);
-                var thresh = 30;
+                var thresh = App.Credentials.fps_threshold;
                 if(fpsNum >= thresh){
                     fps.Mod.setOpacity(0);
                 }
-                if(fpsNum < thresh){
+                if(fpsNum < thresh && App.Credentials.show_fps){
                     fps.Mod.setOpacity(1);
                 }
 
                 fps.Surface.setContent(fpsNum);
             },1000);
-            fps.add(inFront).add(fps.Mod).add(fps.Surface);
-            App.MainContext.add(fps);
+            fps.add(fps.Mod).add(fps.Surface);
+            App.MainView.add(Utils.usePlane('fps')).add(fps);
 
             App.StartRouter = new App.Router.DefaultRouter();
 
@@ -485,6 +619,7 @@ define(function(require, exports, module) {
             // Test login
             $.ajaxSetup({
                 cache: false,
+                contentType: 'application/json', // need to do JSON.stringify() every .data in an $.ajax!
                 statusCode: {
                     401: function(){
                         // Redirect the to the login page.
@@ -496,9 +631,7 @@ define(function(require, exports, module) {
                         // alert(403);
                         // 403 -- Access denied
                         // window.location.replace('/#denied');
-                        if(App.Data.User){
-                            App.Data.User.clear();
-                        }
+                        App.Data.User.clear();
                     },
                     404: function() {
                         // alert(404);
@@ -512,98 +645,74 @@ define(function(require, exports, module) {
                     }
                 }
             });
-
-
-            // Ajax setup for users
-            var localUser = localStorage.getItem('user_v3_');
-            App.Data.User = new UserModel.User();
-            try {
-
-                // debugger;
-                localUser = JSON.parse(localUser);
-                
-                // Set User model to our locally-stored values
-                App.Data.User.set(localUser);
-                console.log(App.Data.User);
-
-                // Set up ajax credentials for later calls using this user
-                App.Data.UserToken = localStorage.getItem('usertoken_v1_');
-                $.ajaxSetup({
-                    headers: {
-                        'x-token' : App.Data.UserToken
+    
+            // Hide SplashScreen
+            Timer.setTimeout(function(){
+                try {
+                    App.Functions.action();
+                    if(App.Data.usePg){
+                        navigator.splashscreen.hide();
+                    } else {
+                        App.Functions.action();
                     }
-                });
-                
-                // Redirect after setting ajax credentials
-                if(localUser && !initialUrl){
-                    // Navigate to my Profiles page
-                    window.setTimeout(function(){
-                        App.Views.MainFooter.Tabs.select('profiles');
-                    }, 100);
+                }catch(err){
+                    alert('failed hiding splash screen');
+                    alert(err);
                 }
+            },500);
 
-                // Preload models
-                PreloadModels(App);
+            // Set up ajax credentials for later calls using this user
+            App.Data.UserToken = localStorage.getItem(App.Credentials.local_token_key);
 
-                // Fetch
-                App.Data.User.fetch({
-                    statusCode: {
-                        403: function(){
-                            // failed login
-                            // alert('Failed login on startup');
-                            console.log(4);
-                            App.Data.User.clear();
-
-                            // Unregister from Push Notifications
-                            App.DeviceReady.ready.then(function(){
-                                console.info('Unregisering from PushNotification');
-                                try {
-                                    window.plugins.pushNotification.unregister();
-                                }catch(err){
-                                    console.error('Failed unregistering from PushNotification');
-                                }
-                            });
-
-                            // Logout
-                            // - if not already at the login page
-                            // - and if data is already clear
-                            if(!localUser){
-                                App.history.navigate('login');
-                                return;   
-                            }
-
-                            console.log(window.location.hash);
-
-                            if(window.location.hash != '#login' && window.location.hash != '#logout'){
-                                App.history.navigate('logout');
-                            }
-
-                        }
-                    },
-                    success: function(){
-                        // Resolve deferred (in case anyone is listening)
-                        // Store credentials
-
-                        // Update localStorage
-                        localStorage.setItem('user_v3_',JSON.stringify(App.Data.User.toJSON()));
-
-                    }
-                });
-
-            } catch(err){
-                // Failed badly somewhere
-                // - log the person out?
-                console.log('Failed trying to test login');
-                console.log(err);
-
-                // Navigate to Logout
-                App.history.navigate('logout');
-                // return;
-
-                // alert('Unable to log in');
-                // debugger;
-
+            App.Data.User = new UserModel.User(); // empty, because Waiting doesn't have a GET for users
+            if(!App.Data.UserToken || App.Data.UserToken == 'undefined'){
+                App.history.navigate('landing');
+                return;
             }
+            $.ajaxSetup({
+                headers: {
+                    'x-token' : App.Data.UserToken
+                    // 'Authorization' : 'Bearer ' + App.Data.UserToken
+                }
+            });
+
+            // Preload models
+            PreloadModels(App);
+
+            // Navigate to home_route
+            // - if it is a "Default"-style view, we should use history:false
+            App.history.navigate(App.Credentials.home_route);
+
+            // if(localStorage.getItem(App.Credentials.Waiting_verified_email_key) == 1){
+            //     // Navigate to my controllers (Dashboard)
+            //     // Utils.Notification.Toast();
+            //     App.history.navigate('fleet');
+            //     return;
+            // }
+
+            // // Need to check if verified yet
+            // App.Data.User.verifiedEmail()
+            // .then(function(){
+            //     localStorage.setItem(App.Credentials.Waiting_verified_email_key, 1)
+            //     App.history.navigate('controller/view');
+            // })
+            // .fail(function(err){
+            //     // alert('failed verify');
+            //     // alert(App.Data.UserToken);
+            //     // console.log(err);
+            //     if([0,503].indexOf(err.status) !== -1){
+            //         // server error, we should stop here as well? 
+            //         // - no, just pretend it worked ok, that the email was verified
+            //         App.history.navigate('controller/view');
+            //         return;
+            //     }
+            //     App.history.navigate('user/verifyemail');
+            //     Utils.Popover.Help({
+            //         title: "Email Not Verified",
+            //         body: "To activate your Waiting, please verify your email address by clicking the link in the email you should have received. "
+            //     });
+            // });
+
 
         });
     });

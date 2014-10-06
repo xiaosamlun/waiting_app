@@ -34,15 +34,48 @@ define(function(require, exports, module) {
                         window.location = window.location.href.split('#')[0];
                     }
                 },
+                'random(:anynumber)' : function(){
+                    if(App.history.data.length == 0){
+                        window.location = window.location.href.split('#')[0];
+                    }
+                },
 
-                'logout' : function(){
+                'logout(/:force)' : function(){
+                    arguments[0] = 'force';
+                    if(arguments[0] === 'force'){
+                        App.DeviceReady.ready.then(function(){
+                            Utils.logout();
+                        });
+                        return;
+                    }
 
-                    // Unregister from Push Notifications
-                    // - do this before exiting
-                    App.DeviceReady.ready.then(function(){
-                        Utils.logout();
+                    Utils.Popover.Buttons({
+                        title: 'Are you sure?',
+                        buttons: [
+                            {
+                                text: 'No',
+                                value: 'no'
+                            },
+                            {
+                                text: 'Yes, Logout',
+                                value: 'logout',
+                                success: function(){
+
+                                    // Unregister from Push Notifications
+                                    // - do this before exiting
+                                    App.DeviceReady.ready.then(function(){
+                                        Utils.logout();
+                                    });
+
+                                }
+                            }
+                        ]
                     });
 
+                },
+
+                'welcome/fullname' : function(){
+                    defaultRoute('WelcomeUsername', 'User/WelcomeFullname', arguments, {cache: false});
                 },
 
                 'welcome/username' : function(){
@@ -53,42 +86,89 @@ define(function(require, exports, module) {
                     defaultRoute('Welcome', 'User/Welcome', arguments, {cache: false});
                 },
 
-                'modal/helppopover' : function(){
+                'popover/colorpicker' : function(){
                     // eh, I should be able to cache this route before login, then destroy after login
                     // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
                     App.Flags.InPopover = true;
-                    App.history.navigate('random', {history: false});
-                    defaultRoute('HelpPopover', 'Misc/HelpPopover', arguments, {cache: false, popover: true});
+                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
+                    defaultRoute('PopoverAlert', 'Misc/PopoverColorPicker', arguments, {cache: false, popover: true});
                 },
 
-                'modal/list' : function(){
+                'popover/alert' : function(){
                     // eh, I should be able to cache this route before login, then destroy after login
                     // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
                     App.Flags.InPopover = true;
-                    App.history.navigate('random', {history: false});
-                    defaultRoute('Popover', 'Misc/Popover', arguments, {cache: false, popover: true});
+                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
+                    defaultRoute('PopoverAlert', 'Misc/PopoverAlert', arguments, {cache: false, popover: true});
                 },
 
-                'modal/old_list' : function(){
+                'popover/confirm' : function(){
                     // eh, I should be able to cache this route before login, then destroy after login
-                    defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
+                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
+                    App.Flags.InPopover = true;
+                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
+                    defaultRoute('PopoverConfirm', 'Misc/PopoverConfirm', arguments, {cache: false, popover: true});
                 },
-                
+
+                'popover/prompt' : function(){
+                    // eh, I should be able to cache this route before login, then destroy after login
+                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
+                    App.Flags.InPopover = true;
+                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
+                    defaultRoute('PopoverPrompt', 'Misc/PopoverPrompt', arguments, {cache: false, popover: true});
+                },
+
+                'popover/buttons' : function(){
+                    // eh, I should be able to cache this route before login, then destroy after login
+                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
+                    App.Flags.InPopover = true;
+                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
+                    defaultRoute('PopoverButtons', 'Misc/PopoverButtons', arguments, {cache: false, popover: true});
+                },
+
+                'popover/help' : function(){
+                    // eh, I should be able to cache this route before login, then destroy after login
+                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
+                    App.Flags.InPopover = true;
+                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
+                    defaultRoute('PopoverHelp', 'Misc/PopoverHelp', arguments, {cache: false, popover: true});
+                },
+
+                'popover/list' : function(){
+                    // eh, I should be able to cache this route before login, then destroy after login
+                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
+                    App.Flags.InPopover = true;
+                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
+                    defaultRoute('PopoverList', 'Misc/PopoverList', arguments, {cache: false, popover: true});
+                },
+
                 'misc/help' : function(){
                     defaultRoute('MiscHelp', 'Misc/HelpStatic', arguments, {cache: false});
                 },
 
+                'troubleshoot' : function(){
+                    // eh, I should be able to cache this route before login, then destroy after login
+                    defaultRoute('Troubleshoot', 'Misc/Troubleshoot', arguments, {cache: true});
+                },
+                'landing' : function(){
+                    // eh, I should be able to cache this route before login, then destroy after login
+                    Timer.setTimeout(function(){
+                        App.Views.SplashLoading.hide();
+                    },3000);
+                    defaultRoute('Landing', 'User/Landing', arguments, {cache: true});
+                },
+
                 'login' : function(){
                     // eh, I should be able to cache this route before login, then destroy after login
-                    defaultRoute('Login', 'Misc/Login', arguments, {cache: false});
+                    defaultRoute('Login', 'User/Login', arguments, {cache: false});
                 },
 
                 'signup' : function(){
-                    defaultRoute('Signup', 'Misc/Signup', arguments, {cache: false});
+                    defaultRoute('Signup', 'User/Signup', arguments, {cache: false});
                 },
 
                 'forgot' : function(){
-                    defaultRoute('Forgot', 'Misc/Forgot', arguments, {cache: false});
+                    defaultRoute('Forgot', 'User/Forgot', arguments, {cache: false});
                 },
 
                 'settings/push': function(){
@@ -98,14 +178,62 @@ define(function(require, exports, module) {
                 'settings': function(){
                     defaultRoute('Settings', 'Misc/Settings', arguments);
                 },
-                'perks': function(){
-                    defaultRoute('Perks', 'Misc/Perks', arguments);
-                },
+
                 'feedback(/:indicator)': function(){
                     defaultRoute('Feedback', 'Misc/Feedback', arguments);
                 },
 
+
+
+
+                'user' : function(){
+                    
+                    Timer.setTimeout(function(){
+                        App.Views.SplashLoading.hide();
+                    },3000);
+                    
+                    // App.Views.MainFooter.route_show = true;
+                    // App.Views.MainFooter.Tabs.select('profiles', false);
+                    defaultRoute('UserDefault', 'User/Default', arguments, { cache: false });
+                },
+                
+                'user/waiting' : function(){
+
+                    Timer.setTimeout(function(){
+                        App.Views.SplashLoading.hide();
+                    },3000);
+
+                    App.Views.MainFooter.route_show = true;
+                    App.Views.MainFooter.Tabs.select('home', false);
+                    defaultRoute('UserWaiting', 'User/Waiting', arguments, {cache: true});
+                },
+
+                'user/:id' : function(){
+                    App.Views.MainFooter.route_show = true;
+                    App.Views.MainFooter.Tabs.select('profiles', false);
+                    defaultRoute('UserView', 'User/View', arguments);
+                },
+
+                // 'dash(/:id)' : function(){
+
+                //     Timer.setTimeout(function(){
+                //         App.Views.SplashLoading.hide();
+                //     },3000);
+                    
+                //     console.error("DASH");
+                //     App.history.modifyLast({
+                //         tag: 'Dash'
+                //     });
+                //     App.Views.MainFooter.route_show = true;
+                //     App.Views.MainFooter.Tabs.select('profiles', false);
+                //     defaultRoute('Dash', 'User/View', arguments); // used to be Player/Dash
+                // },
+
                 'friend/list' : function(){
+
+                    App.Views.MainFooter.route_show = true;
+                    App.Views.MainFooter.Tabs.select('friends', false);
+
                     defaultRoute('FriendList', 'Friend/List', arguments, {cache: true});
 
                 },
@@ -138,29 +266,6 @@ define(function(require, exports, module) {
                     defaultRoute('MessageAdd', 'Message/Add', arguments, {cache: false});
                 },
 
-                'dash(/:id)' : function(){
-                    console.error("DASH");
-                    App.history.modifyLast({
-                        tag: 'Dash'
-                    });
-                    App.Views.MainFooter.route_show = true;
-                    App.Views.MainFooter.Tabs.select('profiles', false);
-                    // defaultRoute('Dash', 'Player/Player', arguments); // used to be Player/Dash
-                    defaultRoute('Dash', 'User/View', arguments); // used to be Player/Dash
-                },
-
-                'user/waiting' : function(){
-                    defaultRoute('UserWaiting', 'User/Waiting', arguments, {cache: true});
-                },
-
-                'user/:id' : function(){
-                    console.log('User/:id');
-                    App.Views.MainFooter.route_show = true;
-                    App.Views.MainFooter.Tabs.select('profiles', false);
-                    defaultRoute('UserView', 'User/View', arguments);
-                },
-
-
                 'users/search' : function(){
                     defaultRoute('UsersSearch', 'User/Search', arguments, { cache: true });
                 },
@@ -170,9 +275,6 @@ define(function(require, exports, module) {
                     defaultRoute('ProfileEdit', 'User/ProfileEdit', arguments, {cache: false});
                 },
 
-                'playerselect': function(){
-                    defaultRoute('PlayerSelect', 'Misc/PlayerSelect', arguments, {cache: false});
-                }
             }
         });
 
@@ -221,8 +323,8 @@ define(function(require, exports, module) {
                 outOpacity: 1,
                 inTransform: Transform.identity,
                 outTransform: Transform.identity,
-                inTransition: { duration: 2400, curve: Easing.easeIn },
-                outTransition: { duration: 2400, curve: Easing.easeIn },
+                inTransition: { duration: 250, curve: Easing.easeIn },
+                outTransition: { duration: 250, curve: Easing.easeIn },
             },
 
             OpacityIn: {
@@ -230,8 +332,8 @@ define(function(require, exports, module) {
                 outOpacity: 0,
                 inTransform: Transform.identity,
                 outTransform: Transform.identity,
-                inTransition: { duration: 750, curve: Easing.easeIn },
-                outTransition: { duration: 750, curve: Easing.easeOut }
+                inTransition: { duration: 250, curve: Easing.easeIn },
+                outTransition: { duration: 250, curve: Easing.easeOut }
             },
 
             HideOutgoingSpringIn: {
@@ -248,8 +350,8 @@ define(function(require, exports, module) {
                 outOpacity: 1,
                 inTransform: Transform.identity, //Transform.translate(0,window.innerHeight * -1,0),
                 outTransform: Transform.translate(0,window.innerHeight,0),
-                inTransition: { duration: 750},
-                outTransition: { duration: 750},
+                inTransition: { duration: 250},
+                outTransition: { duration: 250},
                 overlap: true
             },
 
@@ -258,8 +360,8 @@ define(function(require, exports, module) {
                 outOpacity: 1,
                 inTransform: Transform.translate(0,window.innerHeight,0),
                 outTransform: Transform.identity, //Transform.translate(0,window.innerHeight * -1,0),
-                inTransition: { duration: 750},
-                outTransition: { duration: 750},
+                inTransition: { duration: 250},
+                outTransition: { duration: 250},
                 overlap: true
             },
 
@@ -268,8 +370,8 @@ define(function(require, exports, module) {
                 outOpacity: 1,
                 inTransform: Transform.translate(window.innerWidth,0,0),
                 outTransform: Transform.translate(window.innerWidth * -1,0,0),
-                inTransition: { duration: 500, curve: Easing.easeIn },
-                outTransition: { duration: 500, curve: Easing.easeIn },
+                inTransition: { duration: 200, curve: Easing.easeIn },
+                outTransition: { duration: 200, curve: Easing.easeIn },
                 overlap: true
             },
 
@@ -278,8 +380,8 @@ define(function(require, exports, module) {
                 outOpacity: 1,
                 inTransform: Transform.translate(window.innerWidth * -1,0,0),
                 outTransform: Transform.translate(window.innerWidth,0,0),
-                inTransition: { duration: 500, curve: Easing.easeIn },
-                outTransition: { duration: 500, curve: Easing.easeIn },
+                inTransition: { duration: 250, curve: Easing.easeIn },
+                outTransition: { duration: 250, curve: Easing.easeIn },
                 overlap: true
             }
         };
@@ -309,6 +411,7 @@ define(function(require, exports, module) {
                 var cachePath = window.location.hash;
 
                 if(PageView === false || options.cache === false){
+                    
                     // create it! 
                     // - first time creating it
                     PageView = new LoadedView({
@@ -323,7 +426,7 @@ define(function(require, exports, module) {
                         console.info('Do Not Show - Page (passthrough)');
                         return;
                     }
-
+                    
                     // Cache it
                     App.Router.Cache.set(PageView, cachePath);
 
@@ -332,15 +435,16 @@ define(function(require, exports, module) {
                     // Already cached, use the cached version
                 }
 
-                // Cache pageview
-                App.Views.currentPageView = PageView;
-
                 // Popover?
                 if(options.popover === true){
                     PageView.inOutTransitionPopover('showing');
+                    App.Views.Popover.CurrentPopover = PageView;
                     App.Views.Popover.show(PageView);
                     return;
                 }
+                
+                // Cache pageview
+                App.Views.currentPageView = PageView;
 
                 // Switch to it
                 // - if going backwards, do something interesting?
@@ -495,6 +599,15 @@ define(function(require, exports, module) {
                     App.Cache.RoutesByHash[hash] = view;
                     // view.isCachedView = true;
                     return view;
+                },
+                del: function(view, hash){// Returns a cached view for this route
+                    hash = hash || window.location.hash;
+                    App.Cache.RoutesByHash[hash] = undefined;
+                    // view.isCachedView = true;
+                    return view;
+                },
+                clear: function(){
+                    App.Cache.RoutesByHash = {};
                 }
             }
 

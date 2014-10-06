@@ -1,20 +1,34 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <title>InternalApp</title>
+        <title>Waiting App</title>
         <meta name="viewport" content="width=device-width, maximum-scale=1, user-scalable=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+        <!-- leaflet / open street maps -->
+        <script src="src/lib2/leaflet/leaflet.js"></script>
         <link rel="stylesheet" type="text/css" href="src/lib2/leaflet/leaflet.css" />
+
         <link rel="stylesheet" type="text/css" href="src/famous/core/famous.css" />
         <link rel="stylesheet" type="text/css" href="css/ionicons.css" />
         <link rel="stylesheet" type="text/css" href="css/spectrum.css" />
         <link rel="stylesheet" type="text/css" href="css/bootflat.css" />
+
+        <link rel="stylesheet" type="text/css" href="css/general.css" />
         <link rel="stylesheet" type="text/css" href="css/app.css" />
 
+        <script type="text/javascript" src="src/lib2/firebase.js"></script>
+
+        <script type="text/javascript">
+            var cordova;
+        </script>
         <script type="text/javascript" src="cordova.js"></script>
 
+        <script type="text/javascript" src="src/lib2/stripe.js"></script>
+
+        <script type="text/javascript" src="src/lib2/fastclick.js"></script>
         <script type="text/javascript" src="src/lib/functionPrototypeBind.js"></script>
         <script type="text/javascript" src="src/lib/classList.js"></script>
         <script type="text/javascript" src="src/lib/requestAnimationFrame.js"></script>
@@ -23,10 +37,9 @@
         <script type="text/javascript">
             var GLOBAL_onReady = false;
 
-            // track.js customer id
-            var _trackJs = { 
-                customer: '2138571d0e004d109396748e01e291a0'
-            };
+            window.addEventListener('load', function() {
+                FastClick.attach(document.body);
+            }, false);
 
             // Required scripts to add after deviceready
             var require_scripts = [
@@ -70,23 +83,61 @@
                 // browser?
                 if (!navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
                     // browser
+                    GLOBAL_onReady = true;
                     addScripts(require_scripts);
+                } else {
+                    try {
+                        if(cordova === undefined){
+                            throw 'addScript';
+                        }
+                    }catch(err){
+                        // browser
+                        console.log('catch browser');
+                        GLOBAL_onReady = true;
+                        addScripts(require_scripts);
+                        return;
+                    }
+
                 }
 
                 // wait for deviceready from cordova
+                console.log('wait for deviceready from cordova');
                 document.addEventListener("deviceready", function(){
                     // alert('deviceready listener fired!');
                     GLOBAL_onReady = true;
                     addScripts(require_scripts);
-                    // loadGoogleMapsScript();
                 }, false);
 
+
             }
+
+            function handleOpenURL(url, not_immediate) {
+                console.log('handleOpenURL');
+                console.log(url);
+                setTimeout(function() {
+                    // console.log('setTimeout');
+                    if(App && App.Events){
+                        // alert('OK');
+                        if(not_immediate){
+                            setTimeout(function(){
+                                App.Events.emit('handle-open-url', url);
+                            },1000); // give it an extra second to finish loading everything
+                        } else {
+                            // no delay in launching
+                            App.Events.emit('handle-open-url', url);
+                        }
+                    } else {
+                        handleOpenURL(url, true);
+                    }
+
+                }, 500);
+            }
+
         </script>
 
         
         
 
     </head>
-    <body onload="onLoad()" style="background:#666;"></body>
+    <body onload="onLoad()" style="background:#000;"></body>
 </html>

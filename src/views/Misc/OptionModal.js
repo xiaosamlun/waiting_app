@@ -30,8 +30,8 @@ define(function(require, exports, module) {
     var Utils = require('utils');
     var _ = require('underscore');
 
-    // Models
-    var PlayerModel = require('models/player');
+    // // Models
+    // var PlayerModel = require('models/player');
 
     function PageView(params) {
         var that = this;
@@ -48,7 +48,7 @@ define(function(require, exports, module) {
 
         // Add to new ".passed" options, separate from this.options.App and other root-level arguments/objects
         this.params.passed = _.extend({
-            title: 'Select Player',
+            title: 'Option Modal',
             back_to_default_hint: true
         }, this.modalOptions || {});
 
@@ -69,11 +69,8 @@ define(function(require, exports, module) {
         });
         this.layout.content.add(this.BgSurface);
 
-        // Create Content Views
-        this.lightbox = new RenderController();
-
         // create the "select from" Player List scroller
-        this.contentScrollView = new ScrollView(App.Defaults.ScrollView);
+        this.contentScrollView = new ScrollView();
         this.contentScrollView.Views = [];
         this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
 

@@ -32,13 +32,13 @@ define(function(require, exports, module) {
     var Credentials         = JSON.parse(require('text!credentials.json'));
     var numeral = require('lib2/numeral.min');
 
-    // Side menu of options
-    var GameMenuView      = require('views/Game/GameMenu');
+    // // Side menu of options
+    // var GameMenuView      = require('views/Game/GameMenu');
 
-    // Models
-    var GameModel = require('models/game');
-    var PlayerModel = require('models/player');
-    var MediaModel = require('models/media');
+    // // Models
+    // var GameModel = require('models/game');
+    // var PlayerModel = require('models/player');
+    // var MediaModel = require('models/media');
 
     function PageView(params) {
         var that = this;
@@ -60,7 +60,7 @@ define(function(require, exports, module) {
             origin: [0, 0.5]
         });
         this.contentView.Surface = new Surface({
-            content: '<i class="icon ion-asterisk"></i><div><h3>This would be a useful one-page help! </h3><p>You will have to build it yourself though</p></div>',
+            content: '<i class="icon ion-asterisk"></i><div><h3>People helping People</h3><p>handy helps you find a recommended person for your Todo, easily communicate with that person, and perhaps hire them again in the future! </p></div>',
             size: [undefined, true],
             classes: ['explore-surface-temp'],
             properties: {
@@ -99,7 +99,7 @@ define(function(require, exports, module) {
         });
         this.header._eventOutput.on('more',function(){
             // if(that.model.get('CarPermission.coowner')){
-            //     App.history.navigate('car/permission/' + that.model.get('_id'), {trigger: true});
+            //     App.history.navigate('car/permission/' + that.model.get('_id'));
             // }
             // that.menuToggle();
         });
@@ -374,7 +374,7 @@ define(function(require, exports, module) {
             window.plugins.socialsharing.shareViaSMS('www.nemesisapp.net/game/public/' + that.model.get('_id'), null);
         });
 
-        // window.plugins.socialsharing.shareViaSMS('Wehicle code: ' + this.model.get('code').toUpperCase(), null);
+        // window.plugins.socialsharing.shareViaSMS('Waiting code: ' + this.model.get('code').toUpperCase(), null);
 
     };
 

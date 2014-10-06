@@ -13,6 +13,8 @@ define(function(require, exports, module) {
     var ViewSequence = require('famous/core/ViewSequence');
     var Utility = require('famous/utilities/Utility');
 
+    var EventHandler = require('famous/core/EventHandler');
+
     /**
      * SequentialLayout will lay out a collection of renderables sequentially in the specified direction.
      * @class SequentialLayout
@@ -31,14 +33,24 @@ define(function(require, exports, module) {
         this._size = null;
         this._outputFunction = SequentialLayout.DEFAULT_OUTPUT_FUNCTION;
 
+        this._eventOutput = new EventHandler();
+        this._eventOutput.bindThis(this);
+
         this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
         this.optionsManager = new OptionsManager(this.options);
+
+        this._itemsCache = [];
+        this._outputCache = {
+            size: null,
+            target: this._itemsCache
+        };
 
         if (options) this.setOptions(options);
     }
 
     SequentialLayout.DEFAULT_OPTIONS = {
         direction: Utility.Direction.Y,
+        itemSpacing: 0,
         defaultItemSize: [50, 50]
     };
 
@@ -108,6 +120,9 @@ define(function(require, exports, module) {
      * @return {number} Render spec for this component
      */
     SequentialLayout.prototype.render = function render() {
+        
+        this._eventOutput.emit('render');
+        
         var length = 0;
         var girth = 0;
 
@@ -115,32 +130,35 @@ define(function(require, exports, module) {
         var girthDim = (this.options.direction === Utility.Direction.X) ? 1 : 0;
 
         var currentNode = this._items;
-        var result = [];
+        var result = this._itemsCache;
+        var i = 0;
         while (currentNode) {
             var item = currentNode.get();
+            if (!item) break;
 
             var itemSize;
             if (item && item.getSize) itemSize = item.getSize();
             if (!itemSize) itemSize = this.options.defaultItemSize;
             if (itemSize[girthDim] !== true) girth = Math.max(girth, itemSize[girthDim]);
 
-            var output = this._outputFunction.call(this, item, length, result.length);
-            result.push(output);
+            var output = this._outputFunction.call(this, item, length, i);
+            result[i] = output;
 
-            if (itemSize[lengthDim] && (itemSize[lengthDim] !== true)) length += itemSize[lengthDim];
+            if (itemSize[lengthDim] && (itemSize[lengthDim] !== true)) length += itemSize[lengthDim] + this.options.itemSpacing;
             currentNode = currentNode.getNext();
+            i++;
         }
+        this._itemsCache.splice(i);
 
         if (!girth) girth = undefined;
 
         if (!this._size) this._size = [0, 0];
-        this._size[lengthDim] = length;
+        this._size[lengthDim] = length - this.options.itemSpacing; // account for last itemSpacing
         this._size[girthDim] = girth;
 
-        return {
-            size: this.getSize(),
-            target: result
-        };
+        this._outputCache.size = this.getSize();
+
+        return this._outputCache;
     };
 
     module.exports = SequentialLayout;

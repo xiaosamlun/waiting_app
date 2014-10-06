@@ -109,7 +109,7 @@ define(function(require, exports, module) {
         this.header._eventOutput.on('more',function(){
             // rewrite the event
             // this._eventOutput.emit('menutoggle');
-            // App.history.navigate('player/add', {trigger: true});
+            // App.history.navigate('player/add');
         });
         this.header.navBar.title.on('click',function(){
             // rewrite the event
@@ -200,7 +200,7 @@ define(function(require, exports, module) {
         temp.pipe(this.contentScrollView);
         temp.on('click', (function(){
             this._eventOutput.emit("menuToggle");
-            App.history.navigate('player/' + Model.get('_id'), {trigger: true});
+            App.history.navigate('player/' + Model.get('_id'));
         }).bind(this));
         temp.on('swipe', (function(){
             this._eventOutput.emit("menuToggle");

@@ -384,7 +384,7 @@
     // Proxy `Backbone.sync` by default -- but override this if you need
     // custom syncing semantics for *this* particular model.
     sync: function() {
-      console.info('sync model');
+      // console.info('sync model');
       return Backbone.sync.apply(this, arguments);
     },
 
@@ -1097,7 +1097,7 @@
     _prepareModel: function(attrs, options) {
 
       if (attrs instanceof Model){
-        debugger;
+        // debugger;
         return attrs;
       }
       options = options ? _.clone(options) : {};
@@ -1473,7 +1473,7 @@
 
     // Simple proxy to `Backbone.history` to save a fragment into the history.
     navigate: function(fragment, options) {
-      Backbone.history.navigate(fragment, options);
+      App.history.navigate(fragment, options);
       return this;
     },
 

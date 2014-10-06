@@ -16,6 +16,9 @@ define(function(require, exports, module) {
     var Easing = require('famous/transitions/Easing');
 
     var _ = require('underscore');
+    var Utils = require('utils');
+
+    var tinycolor = require('lib2/tinycolor');
 
     // Models
     var CarModel    = require('models/car');
@@ -33,12 +36,12 @@ define(function(require, exports, module) {
             content: "",
             properties: {
                 // backgroundColor: "#111", // invisible!
-                zIndex: "-2"
+                // zIndex: "-2"
             }
         });
-        this.bgSurface.on('swipe', (function(){
-            this._eventOutput.emit("menuToggle");
-        }).bind(this));
+        // this.bgSurface.on('swipe', (function(){
+        //     this._eventOutput.emit("menuToggle");
+        // }).bind(this));
         this.bgSurface.on('click', (function(){
             this._eventOutput.emit("menuToggle");
         }).bind(this));
@@ -48,10 +51,10 @@ define(function(require, exports, module) {
         });
 
         // Create ScrollView
-        this.contentScrollView = new ScrollView(App.Defaults.ScrollView);
-        this.scrollSurfaces = [];
+        this.contentScrollView = new ScrollView();
+        this.contentScrollView.Views = [];
         this.modelSurfaces = {};
-        this.contentScrollView.sequenceFrom(this.scrollSurfaces);
+        this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
 
         // Car list
         this.collection = new CarModel.CarCollection();
@@ -61,10 +64,10 @@ define(function(require, exports, module) {
         this.collection.on("remove", function(Model){
             // This was a remove as triggered by the collection
             // - we want to differentiate from a move triggered elsewhere? (like by our same view, we might want to animate differently)
-            this.scrollSurfaces = _.without(this.scrollSurfaces, this.modelSurfaces[Model.get('_id')]);
+            this.contentScrollView.Views = _.without(this.contentScrollView.Views, this.modelSurfaces[Model.get('_id')]);
 
             // Re-sequence (unfortunate that I have to do this, thought it would auto-resequence)
-            this.contentScrollView.sequenceFrom(this.scrollSurfaces);
+            this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
         }, this);
         this.collection.on("cachesync", function(collection){
             // got a "prefill" value
@@ -85,8 +88,8 @@ define(function(require, exports, module) {
             origin : [0,0],
             transform: Transform.thenMove(Transform.identity, [0, 91, 0]) // rotateY(-Math.PI/2.5)
         })).add(this.hinge);
-        hingeNode.add(this.bgSurface);
-        hingeNode.add(this.layout);
+        hingeNode.add(Utils.usePlane('content',-2)).add(this.bgSurface);
+        hingeNode.add(Utils.usePlane('content',-1)).add(this.layout);
    
     }
 
@@ -98,24 +101,38 @@ define(function(require, exports, module) {
     };
 
     SideView.prototype.addOne = function(Car, CarIndex) { 
+        var that = this;
         
         var temp = new Surface({
-             content: Car.get('name'),
+             content: '<div>' + S(Car.get('name')) + '</div>',
              size: [this.options.width, this.options.height],
+             classes: ['fleet-side-menu-car'],
              properties: {
-                 color: "white",
-                 backgroundColor: Car.get('color'),
-                 lineHeight: "50px",
-                 padding: "0 8px",
-                 zIndex: "0"
+                color: tinycolor.mostReadable(Car.get('color'), ["#000", "#fff"]).toHexString(),
+                backgroundColor: Car.get('color')
              }
+        });
+
+        Car.on('change', function(){
+            temp.setContent('<div>' + S(Car.get('name')) + '</div>');
+            temp.setProperties({
+                color: tinycolor.mostReadable(Car.get('color'), ["#000", "#fff"]).toHexString(),
+                backgroundColor: Car.get('color')
+            });
         });
 
         // Push surface/View to sequence
         temp.View = new View();
         temp.View.positionModifier = new StateModifier({
-            transform: Transform.translate(-250,40,0)
+            transform: Transform.translate(-1 * window.innerWidth,40,0)
         });
+        if(this.open){
+            console.log(that.contentScrollView.Views);
+            temp.View.positionModifier.setTransform(Transform.translate(0,0,0), {
+                duration: 250,
+                curve: Easing.easeOut
+            });
+        }
         temp.View.rotateModifier = new StateModifier({
             transform: Transform.rotateZ(this.options.angle)
         });
@@ -128,13 +145,14 @@ define(function(require, exports, module) {
 
         // Events
         temp.pipe(this.contentScrollView);
-        temp.on('click', (function(){
-            this._eventOutput.emit("menuToggle");
-            App.history.navigate('car/' + Car.get('_id'), {trigger: true});
-        }).bind(this));
-        temp.on('swipe', (function(){
-            this._eventOutput.emit("menuToggle");
-        }).bind(this));
+        temp.on('click', function(){
+            App.history.navigate('car/' + Car.get('_id'));
+            that._eventOutput.emit("menuToggle");
+        });
+
+        // temp.on('swipe', (function(){
+        //     this._eventOutput.emit("menuToggle");
+        // }).bind(this));
 
         // Model change
         Car.on('change:name', function(ModelTmp){
@@ -142,29 +160,29 @@ define(function(require, exports, module) {
         }, this);
 
 
-        this.scrollSurfaces.unshift(temp.View);
+        this.contentScrollView.Views.unshift(temp.View);
 
         this.modelSurfaces[Car.get('_id')] = temp.View;
 
     }
 
     SideView.prototype.addNewCarButton = function(Car, CarIndex) { 
-        
+        var that = this;
+
         var temp = new Surface({
-             content: "New Car",
+             content: "<div>New Vehicle</div>",
              size: [this.options.width, this.options.height],
+             classes: ['fleet-side-menu-car'],
              properties: {
                  color: "black",
                  backgroundColor: "white",
-                 lineHeight: "50px",
-                 padding: "0 8px"
              }
         });
 
         // Push surface/View to sequence
         temp.View = new View();
         temp.View.positionModifier = new StateModifier({
-            transform: Transform.translate(-250,40,0)
+            transform: Transform.translate(-1 * window.innerWidth,40,0)
         });
         temp.View.rotateModifier = new StateModifier({
             transform: Transform.rotateZ(this.options.angle)
@@ -176,12 +194,12 @@ define(function(require, exports, module) {
 
         temp.pipe(this.contentScrollView);
         temp.on('click', (function(){
-            this._eventOutput.emit("menuToggle");
-            App.history.navigate('car/add', {trigger: true});
+            App.history.navigate('car/add');
+            that._eventOutput.emit("menuToggle");
         }).bind(this));
 
 
-        this.scrollSurfaces.push(temp.View);
+        this.contentScrollView.Views.push(temp.View);
 
     }
 
@@ -190,12 +208,12 @@ define(function(require, exports, module) {
 
         this.refreshData();
 
-        this.scrollSurfaces.forEach(function(view, index){
+        this.contentScrollView.Views.forEach(function(view, index){
             Timer.setTimeout(function(index) {
-                console.log(that.scrollSurfaces);
-                that.scrollSurfaces[index].positionModifier.setTransform(Transform.translate(0,0,0), {
-                    duration: 500,
-                    curve: Easing.easeIn
+                // console.log(that.contentScrollView.Views);
+                that.contentScrollView.Views[index].positionModifier.setTransform(Transform.translate(0,0,0), {
+                    duration: 250,
+                    curve: Easing.easeOut
                 });
             }.bind(this, index), 50 * index);
         });
@@ -206,23 +224,23 @@ define(function(require, exports, module) {
     SideView.prototype.flipIn = function() {
         // this.hinge.setTransform(Transform.thenMove(Transform.identity, [-200, 0, 0]), { duration: 500, curve: 'easeOut' }); // Transform.rotateY(-Math.PI/2.2)
 
-        this.scrollSurfaces.reverse().forEach(function(view, index){
-            window.setTimeout(function(){
-                view.positionModifier.setTransform(Transform.translate(-250,40,0), {
-                    duration: 500,
+        this.contentScrollView.Views.reverse().forEach(function(view, index){
+            Timer.setTimeout(function(){
+                view.positionModifier.setTransform(Transform.translate(-1 * window.innerWidth,40,0), {
+                    duration: 250,
                     curve: Easing.outBack
                 });
             }, 50 * index);
         });
 
-        this.scrollSurfaces.reverse();
+        this.contentScrollView.Views.reverse();
 
     };
 
     SideView.DEFAULT_OPTIONS = {
-        width: 210,
+        width: window.innerWidth * 0.75,
         height: 50,
-        angle: -0.2
+        angle: -0.1
     };
 
 
