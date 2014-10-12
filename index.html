@@ -37,6 +37,14 @@
         <script type="text/javascript">
             var GLOBAL_onReady = false;
 
+            // temp fix for iOS8 beta 1 (fixed in beta 2), add it after the reference to cordova.js
+            if (navigator.userAgent === undefined) {
+                navigator.__defineGetter__('userAgent', function() {
+                    return("Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit");
+                });
+            }
+
+
             window.addEventListener('load', function() {
                 FastClick.attach(document.body);
             }, false);

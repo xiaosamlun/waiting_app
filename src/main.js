@@ -161,7 +161,8 @@ define(function(require, exports, module) {
         t: null, // for translation
         Utils: Utils,
         Flags: {},
-        Functions: {}, // some global functions, like Pulsate
+        Functions: {}, // some global functions, like .action for Splash
+        KeyboardShowing: false,
         MainContext: null,
         MainController: null,
         MainView: null,
@@ -666,7 +667,7 @@ define(function(require, exports, module) {
                 }
             });
     
-            // Hide SplashScreen
+            // Start Splashscreen
             Timer.setTimeout(function(){
                 try {
                     App.Functions.action();
