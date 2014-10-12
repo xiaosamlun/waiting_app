@@ -475,25 +475,8 @@ define(function(require, exports, module) {
             };
             createMainFooter();
 
-
-            // Main Popover (keeps PageView underneath)
-            var createPopover = function(){
-                // var that = this;
-                App.Views.Popover = new Lightbox({
-                    inTransition: false,
-                    outTransition: false,
-                });
-                App.Views.Popover.hideIf = function(thisView){
-                    if(App.Views.Popover.CurrentPopover === thisView){
-                        App.Views.Popover.hide();
-                    }
-                };
-                App.MainView.add(Utils.usePlane('popover')).add(App.Views.Popover);
-
-            };
-            createPopover();
-
-            // Splash Page
+            // Splash Page (bloom loading)
+            // - terminated by the 
             var createSplashLoading = function(){
                 // var that = this;
                 App.Views.SplashLoading = new RenderController({
@@ -512,30 +495,38 @@ define(function(require, exports, module) {
                     content: '',
                     size: [undefined, undefined],
                     properties: {
-                        backgroundColor: 'black'
+                        backgroundColor: '#444'
                     }
                 });
 
 
                 // spinning logo
 
+                // 0 - innermost
                 App.Views.SplashLoading.Logo = new Surface({
-                    content: 'Waiting',
+                    content: 'Waiting App',
                     classes: ['splash-surface-default'],
                     properties: {
-                        'z-index' : 100,
-                        'backface-visibility' : 'visible'
+                        // 'backface-visibility' : 'visible'
                     },
+                    // content: 'https://dl.dropboxusercontent.com/u/6673634/wehicle_square.svg',
                     size: [window.innerWidth, 70]
                 });
-                var rotation = 0;
+                App.Views.SplashLoading.Logo.useOpacity = 0;
+                var splashOpacity = 0;
                 App.Views.SplashLoading.Logo.StateMod = new StateModifier({
-                    opacity: 0
+                    opacity: App.Views.SplashLoading.Logo.useOpacity
                 });
                 App.Views.SplashLoading.Logo.Mod = new Modifier({
-                    transform: function(){
-                        rotation += 0.02;
-                        return Transform.rotateY(rotation);
+                    opacity: function(){
+                        // splashOpacity += 0.01;
+                        // var through = splashOpacity % 1.20;
+                        // var topOrBottom = (parseInt(splashOpacity / 1.20,10)) % 2;
+                        // if(topOrBottom == 1){
+                        //     through = 1 - through;
+                        // }
+                        // return through;
+                        return 1;
                     }
                 });
 
@@ -547,11 +538,42 @@ define(function(require, exports, module) {
 
                 App.Functions.action = function(){
 
-                    // Fade in logo
-                    App.Views.SplashLoading.Logo.StateMod.setOpacity(1,{
+                    var durationOfOpacity = 2000;
+
+                    if(App.Views.SplashLoading.Logo.useOpacity != 1){
+                        App.Views.SplashLoading.Logo.useOpacity = 1;
+                    } else {
+                        App.Views.SplashLoading.Logo.useOpacity = 0.1;
+                    }
+                    App.Views.SplashLoading.Logo.StateMod.setOpacity(App.Views.SplashLoading.Logo.useOpacity,{
                         curve: 'linear',
-                        duration: 2000
+                        duration: durationOfOpacity
                     });
+
+                    Timer.setTimeout(function(){
+                        if(App.Views.SplashLoading._showing != -1){
+                            App.Functions.action();
+                        }
+                    },durationOfOpacity);
+                    
+                    // rotate it
+                    // Timer.setTimeout(function(){
+                        // App.Views.SplashLoading.Logo.StateMod.setTransform(Transform.rotateY(Math.PI),{
+                        //     duration: 1000,
+                        //     curve: 'linear',
+                        // }, function(){
+                        //     // App.Views.SplashLoading.Logo.StateMod.setTransform(0,{
+                        //     //     duration: 1000,
+                        //     //     curve: 'linear'
+                        //     // });
+                        // });
+                    // },250);
+
+                    // if(1==1){
+                    //     Timer.setTimeout(function(){
+                    //         App.Functions.action();
+                    //     },3000);
+                    // }
 
                 }
 

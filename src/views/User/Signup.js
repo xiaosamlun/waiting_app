@@ -31,6 +31,7 @@ define(function(require, exports, module) {
     var Utils = require('utils');
 
     // Views
+    var StandardPageView = require('views/common/StandardPageView');
     var StandardHeader = require('views/common/StandardHeader');
     var FormHelper = require('views/common/FormHelper');
 
@@ -47,7 +48,7 @@ define(function(require, exports, module) {
 
     function PageView(options) {
         var that = this;
-        View.apply(this, arguments);
+        StandardPageView.apply(this, arguments);
         this.options = options;
 
         // User
@@ -67,7 +68,7 @@ define(function(require, exports, module) {
 
     }
 
-    PageView.prototype = Object.create(View.prototype);
+    PageView.prototype = Object.create(StandardPageView.prototype);
     PageView.prototype.constructor = PageView;
 
 
