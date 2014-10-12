@@ -133,7 +133,6 @@ define(function(require, exports, module) {
         // Now add content
         this.layout.content.add(this.layout.content.StateModifier).add(Utils.usePlane('content')).add(this.form);
 
-
     };
 
     PageView.prototype.addSurfaces = function() {

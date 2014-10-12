@@ -310,7 +310,7 @@ define(function(require, exports, module) {
         // this.HeaderNode.add(this.header.StateModifier).add(this.header);
 
         // Attach header to the layout        
-        this.layout.header.add(this.header);
+        this.layout.header.add(Utils.usePlane('header')).add(this.header);
 
     };
 
@@ -791,7 +791,7 @@ define(function(require, exports, module) {
         this.contentLightbox.show(this.loadingUser);
 
         // this.layout.content.add(this.ContentStateModifier).add(this.mainNode);
-        this.layout.content.add(this.ContentStateModifier).add(this.contentLightbox);
+        this.layout.content.add(this.ContentStateModifier).add(Utils.usePlane('content')).add(this.contentLightbox);
 
     };
 

@@ -58,6 +58,7 @@ define(function(require, exports, module) {
             case 'zipcode':
             case 'password':
             case 'text':
+            case 'textarea':
                 this.createInput(options);
                 break;
 
@@ -123,14 +124,26 @@ define(function(require, exports, module) {
         var that = this;
 
         // Inputs
-        var inputSurface = new InputSurface({
-            name: opts.name,
-            placeholder: opts.placeholder,
-            type: opts.type,
-            size: opts.size ? opts.size : [undefined, true],
-            value: opts.value,
-            attr: opts.attr || {}
-        });
+        var inputSurface;
+        if(opts.type == 'textarea'){
+            inputSurface = new TextareaSurface({
+                name: opts.name,
+                placeholder: opts.placeholder,
+                size: opts.size ? opts.size : [undefined, true],
+                value: opts.value,
+                attr: opts.attr || {},
+                classes: opts.classes || ['textarea-default']
+            });
+        } else {
+            inputSurface = new InputSurface({
+                name: opts.name,
+                placeholder: opts.placeholder,
+                type: opts.type,
+                size: opts.size ? opts.size : [undefined, true],
+                value: opts.value,
+                attr: opts.attr || {}
+            });
+        }
 
         // Build Margins
         var boxLayout = new BoxLayout({ margins: opts.margins });
@@ -138,6 +151,7 @@ define(function(require, exports, module) {
 
         inputSurface.View = new View();
         inputSurface.View.StateModifier = new StateModifier();
+        this.StateModifier = inputSurface.View.StateModifier;
         inputSurface.View.add(inputSurface.View.StateModifier).add(boxLayout);
 
         if(opts.form){
@@ -148,7 +162,9 @@ define(function(require, exports, module) {
                 console.log(inputSurface.View);
                 console.log(myIndex);
                 console.log(opts.form._formScrollView);
-                opts.form._formScrollView.goToIndex(myIndex,0,60);
+                if(App.KeyboardShowing != true){
+                    opts.form._formScrollView.goToIndex(myIndex,0,60);
+                }
             });
 
             inputSurface.pipe(opts.form._formScrollView);
@@ -188,6 +204,9 @@ define(function(require, exports, module) {
             size: opts.size ? opts.size : [undefined, true],
             value: opts.value
         });
+        if(opts.form){
+            inputSurface.pipe(opts.form._formScrollView);
+        }
 
         // Build Margins
         var boxLayout = new BoxLayout({ margins: opts.margins });
@@ -199,11 +218,11 @@ define(function(require, exports, module) {
             console.log(this);
             console.log(this._currentTarget);
             // debugger;
-            $(this._currentTarget).spectrum({
-                flat: true,
-                showButtons: false,
-                replacerClassName: 'awesome22222222222222'
-            });
+            // $(this._currentTarget).spectrum({
+            //     flat: true,
+            //     showButtons: false,
+            //     replacerClassName: 'awesome22222222222222'
+            // });
         });
 
 
@@ -215,6 +234,7 @@ define(function(require, exports, module) {
         // inputSurface.View.add(boxLayout);
         // inputSurface.View.add(inputSurface);
         inputSurface.View.StateModifier = new StateModifier();
+        this.StateModifier = inputSurface.View.StateModifier;
         inputSurface.View.add(inputSurface.View.StateModifier).add(boxLayout).add(boxLayout);
 
         if(opts.form){
@@ -257,6 +277,11 @@ define(function(require, exports, module) {
         });
         submitButtonSurface.View = new View();
         submitButtonSurface.View.StateModifier = new StateModifier();
+        this.StateModifier = submitButtonSurface.View.StateModifier;
+
+        if(opts.form){
+            submitButtonSurface.pipe(opts.form._formScrollView);
+        }
 
         // Build Margins
         var boxLayout = new BoxLayout({ margins: opts.margins });

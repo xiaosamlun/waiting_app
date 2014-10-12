@@ -137,11 +137,12 @@ define(function(require, exports, module) {
 
     var EventHandler = require('famous/core/EventHandler');
 
-    var Backbone = require('backbone');
+    var Backbone = require('backbone-adapter');
     var DeviceReady = require('./device_ready');
     var $ = require('jquery-adapter');
-    require('lib2/hammer'); // creates global Hammer()
+
     var _ = require('underscore');
+
     var Utils = require('utils');
     S = Utils.hbSanitize;
 
@@ -288,11 +289,6 @@ define(function(require, exports, module) {
 
             // Router
             App.Router = require('router')(App); // Passing "App" context to Router also
-
-            // Hammer device events, like doubletap
-            Hammer($('body').get(0), {
-                // swipe_velocity : 0.2
-            });
 
             // create the main context
             App.MainContext = Engine.createContext();
@@ -527,6 +523,7 @@ define(function(require, exports, module) {
                     content: 'Waiting',
                     classes: ['splash-surface-default'],
                     properties: {
+                        'z-index' : 100,
                         'backface-visibility' : 'visible'
                     },
                     size: [window.innerWidth, 70]
