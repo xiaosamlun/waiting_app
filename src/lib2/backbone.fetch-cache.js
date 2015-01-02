@@ -118,7 +118,7 @@
 
   function setLocalStorage() {
 
-    if(App && App.Data && App.Data.usePg){
+    if(App && App.usePg){
 
       var fail = function (evt) {
         console.log('FAILED evt2');
@@ -176,7 +176,7 @@
 
     var dfd = $.Deferred();
 
-    if(App && App.Data && App.Data.usePg){
+    if(App && App.usePg){
 
       // Read in saved data cache
 

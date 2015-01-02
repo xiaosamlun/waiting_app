@@ -384,7 +384,7 @@
     // Proxy `Backbone.sync` by default -- but override this if you need
     // custom syncing semantics for *this* particular model.
     sync: function() {
-      // console.info('sync model');
+      console.info('sync model');
       return Backbone.sync.apply(this, arguments);
     },
 
@@ -573,7 +573,12 @@
         model.trigger('sync', model, resp, options);
       };
       wrapError(this, options);
-      return this.sync('read', this, options);
+      // return this.sync('read', this, options);
+      window.setTimeout((function(){
+        this.sync('read', this, options);
+        // debugger;
+      }).bind(this),500);
+      return;
     },
 
     // Set a hash of model attributes, and sync the model to the server.
@@ -1053,7 +1058,12 @@
         collection.trigger('sync', collection, resp, options);
       };
       wrapError(this, options);
-      return this.sync('read', this, options);
+      // return this.sync('read', this, options);
+
+      window.setTimeout((function(){
+        this.sync('read', this, options);
+      }).bind(this),500);
+      return;
     },
 
     // Create a new instance of a model in this collection. Add the model to the
@@ -1473,7 +1483,7 @@
 
     // Simple proxy to `Backbone.history` to save a fragment into the history.
     navigate: function(fragment, options) {
-      App.history.navigate(fragment, options);
+      Backbone.history.navigate(fragment, options);
       return this;
     },
 
