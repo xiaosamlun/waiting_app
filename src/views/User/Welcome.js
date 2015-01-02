@@ -34,8 +34,8 @@ define(function(require, exports, module) {
     var _ = require('underscore');
     var $ = require('jquery');
 
-    // // Models
-    // var PlayerModel = require('models/player');
+    // Models
+    // - none
 
     function PageView(params) {
         var that = this;
@@ -74,10 +74,10 @@ define(function(require, exports, module) {
             origin: [0.5, 0.5]
         });
         this.contentScrollView.SizeMod = new StateModifier({
-            size: [window.innerWidth - 80, true]
+            size: [Utils.WindowWidth() - 80, true]
         });
         this.contentScrollView.PositionMod = new StateModifier({
-            transform: Transform.translate(0, window.innerHeight, 0)
+            transform: Transform.translate(0, Utils.WindowHeight(), 0)
         });
         this.contentScrollView.ScaleMod = new StateModifier({
             transform: Transform.scale(0.001, 0.001, 0.001)
