@@ -31,19 +31,16 @@ define(function(require, exports, module) {
     var Utils = require('utils');
 
     // Views
+    var LayoutBuilder = require('views/common/LayoutBuilder');
     var StandardPageView = require('views/common/StandardPageView');
     var StandardHeader = require('views/common/StandardHeader');
     var FormHelper = require('views/common/FormHelper');
-
     var BoxLayout = require('famous-boxlayout');
     
     var EventHandler = require('famous/core/EventHandler');
 
     // Models
     var UserModel = require('models/user');
-
-    // Custom Surface
-    var TextAreaSurface = require('views/common/TextAreaSurface');
 
 
     function PageView(options) {
@@ -91,8 +88,8 @@ define(function(require, exports, module) {
             content: "Login",
             classes: ["normal-header"],
             backClasses: ["normal-header"],
-            moreClasses: ["normal-header"],
-            moreContent: "&nbsp;"
+            // moreClasses: ["normal-header"],
+            moreContent: false, //"&nbsp;"
             // moreSurfaces: [
             //     this.headerContent.Settings
             // ]
@@ -110,7 +107,7 @@ define(function(require, exports, module) {
         this.header.pipe(this._eventInput);
         this._eventOutput.on('inOutTransition', function(args){
             this.header.inOutTransition.apply(this.header, args);
-        })
+        });
 
         // Attach header to the layout        
         this.layout.header.add(Utils.usePlane('header')).add(this.header);
@@ -134,12 +131,46 @@ define(function(require, exports, module) {
         // Now add content
         this.layout.content.add(this.layout.content.StateModifier).add(Utils.usePlane('content')).add(this.form);
 
+
     };
 
     PageView.prototype.addSurfaces = function() {
         var that = this;
 
         // Build Surfaces
+
+        // Facebook signup (encouraged because easiest)
+        this.fbSignup = new LayoutBuilder({
+            sequential: {
+                direction: 1,
+                sequenceFrom: [{
+                    surface: {
+                        key: 'Separator',
+                        surface: new Surface({
+                            content: 'Or Log In using',
+                            wrap: '<div> <span></span> </div>',
+                            size: [undefined, 40],
+                            classes: ['login-separator']
+                        })
+                    },
+                },{
+                    surface: {
+                        key: 'SigninButtons',
+                        surface: new Surface({
+                            content: '<i class="icon ion-social-facebook"></i>',
+                            wrap: '<div></div>',
+                            size: [undefined, true],
+                            classes: ['login-circled-icon']
+                        }),
+                        click: function(){
+                            // Pass off Facebook login/signup to the user's model
+                            var userModel = new UserModel.User();
+                            userModel.fb_login();
+                        }
+                    }
+                }]
+            }
+        });
 
         this.inputEmail = new FormHelper({
 
@@ -164,6 +195,7 @@ define(function(require, exports, module) {
         });
 
         this.submitButton = new FormHelper({
+            form: this.form,
             type: 'submit',
             value: 'Login',
             margins: [10,10],
@@ -175,10 +207,11 @@ define(function(require, exports, module) {
         this.forgotPassword = new View();
         this.forgotPassword.StateModifier = new StateModifier();
         this.forgotPassword.Surface = new Surface({
-            content: 'Forgot your password? Reset Now',
-            size: [undefined, 60],
+            content: 'Forgot your password?',
+            size: [undefined, true], 
             classes: ['login-forgot-pass-button']
         });
+        this.forgotPassword.Surface.pipe(this.form._formScrollView);
         this.forgotPassword.Surface.on('click', function(){
             App.history.navigate('forgot');
         });
@@ -189,7 +222,8 @@ define(function(require, exports, module) {
             this.inputEmail,
             this.inputPassword,
             this.submitButton,
-            this.forgotPassword
+            this.forgotPassword,
+            // this.fbSignup,
         ]);
 
     };
@@ -227,7 +261,7 @@ define(function(require, exports, module) {
         .fail(function(){
             // invalid login
 
-            alert('Failed logging in');
+            Utils.Popover.Alert('Sorry, wrong email or password', 'Try Again');
             that.checking = false;
             that.submitButton.setContent('Login');
 
@@ -245,6 +279,10 @@ define(function(require, exports, module) {
 
         });
 
+    };
+
+    PageView.prototype.keyboardHandler = function(){
+        // no keyboard logic
     };
 
     PageView.prototype.inOutTransition = function(direction, otherViewName, transitionOptions, delayShowing, otherView, goingBack){
@@ -274,7 +312,7 @@ define(function(require, exports, module) {
                 break;
             case 'showing':
                 if(this._refreshData){
-                    // window.setTimeout(that.refreshData.bind(that), 1000);
+                    // Timer.setTimeout(that.refreshData.bind(that), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
