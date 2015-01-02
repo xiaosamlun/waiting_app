@@ -31,6 +31,7 @@ define(function(require, exports, module) {
     var Utils = require('utils');
 
     // Views
+    var LayoutBuilder = require('views/common/LayoutBuilder');
     var StandardPageView = require('views/common/StandardPageView');
     var StandardHeader = require('views/common/StandardHeader');
     var FormHelper = require('views/common/FormHelper');
@@ -121,6 +122,30 @@ define(function(require, exports, module) {
     PageView.prototype.addSurfaces = function() {
         var that = this;
 
+        // Facebook signup (encouraged because easiest)
+        this.fbSignup = new Surface({
+            content: 'Signup through Facebook',
+            wrap: '<div class="outward-button"></div>"',
+            size: [undefined, true],
+            classes: ['button-outwards-default']
+        });
+        this.fbSignup.on('click',function(){
+            // Pass off Facebook login/signup to the user's model
+            var userModel = new UserModel.User();
+            userModel.fb_login();
+        });
+
+        this.inputName = new FormHelper({
+
+            margins: [10,10],
+
+            form: this.form,
+            name: 'name',
+            placeholder: 'Name',
+            type: 'text',
+            value: ''
+        });
+
         this.inputEmail = new FormHelper({
 
             margins: [10,10],
@@ -145,13 +170,15 @@ define(function(require, exports, module) {
 
         this.submitButton = new FormHelper({
             type: 'submit',
-            value: 'Sign Up',
+            value: 'Sign Up with Email',
             margins: [10,10],
             click: this.create_account.bind(this)
         });
 
 
         this.form.addInputsToForm([
+            // this.fbSignup,
+            this.inputName,
             this.inputEmail,
             this.inputPassword,
             this.submitButton
@@ -167,6 +194,12 @@ define(function(require, exports, module) {
             return;
         }
         this.checking = true;
+
+        var name = this.inputName.getValue().toString();
+        if(!name.length){
+            Utils.Notification.Toast('Please include your Name!');
+            return;
+        }
 
         // Get email and password
         var email = $.trim(this.inputEmail.getValue().toString());
@@ -194,6 +227,7 @@ define(function(require, exports, module) {
         var dataBody = {
             email: email,
             password: password,
+            profile_name: name,
             platform: App.Config.devicePlatform
             // profile_name: profile_name
             // code: code,
@@ -213,7 +247,7 @@ define(function(require, exports, module) {
             .fail(function(){
 
                 that.checking = false;
-                that.submitButton.setContent('Sign Up');
+                that.submitButton.setContent('Sign Up with Email');
 
                 // invalid login
                 console.error('Fail, invalid login');
@@ -229,7 +263,7 @@ define(function(require, exports, module) {
                 // Success logging in
 
                 that.checking = false;
-                that.submitButton.setContent('Sign Up');
+                that.submitButton.setContent('Sign Up with Email');
 
                 // Go to signup/home (will get redirected)
                 App.history.eraseUntilTag('all-of-em');
@@ -241,11 +275,15 @@ define(function(require, exports, module) {
         })
         .fail(function(){
 
-            Utils.Notification.Toast('Failed creating Waiting account');
-            that.submitButton.setContent('Sign Up');
+            Utils.Notification.Toast('Failed creating account');
+            that.submitButton.setContent('Sign Up with Email');
             that.checking = false;
         });
 
+    };
+
+    PageView.prototype.keyboardHandler = function(){
+        // no keyboard logic
     };
 
     PageView.prototype.inOutTransition = function(direction, otherViewName, transitionOptions, delayShowing, otherView, goingBack){
@@ -275,7 +313,7 @@ define(function(require, exports, module) {
                 break;
             case 'showing':
                 if(this._refreshData){
-                    // window.setTimeout(that.refreshData.bind(that), 1000);
+                    // Timer.setTimeout(that.refreshData.bind(that), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
