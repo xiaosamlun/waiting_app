@@ -272,8 +272,8 @@ define(function(require, exports, module) {
         // Landing Page Title
         this.landingTitle = new View();
         this.landingTitle.OriginMod = new StateModifier({
-            align: [0.5, 0.5],
-            origin: [0.5,0.5]
+            // align: [0.5, 0.5],
+            // origin: [0.5,0.5]
         });
         this.landingTitle.Bg = new Surface({
             content: '',
@@ -282,7 +282,7 @@ define(function(require, exports, module) {
         });
         this.landingTitle.Surface = new Surface({
             content: '<div>'+App.Credentials.app_name+'</div><div>Start Something</div>',
-            size: [undefined, 200],
+            size: [undefined, true],
             classes: ['landing-page-logo-tagline']
         });
 

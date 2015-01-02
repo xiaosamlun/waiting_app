@@ -1010,7 +1010,13 @@
 }
 
 .landing-page-logo-tagline {
+  padding: 30% 0 10%;
+  background: #4e99dc;
+  color: white;
+
   text-align: center;
+
+  border-bottom: 1px solid #fdfdfd;
 }
 
 .landing-page-logo-tagline > div:nth-child(1) {
