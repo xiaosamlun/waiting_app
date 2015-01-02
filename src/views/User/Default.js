@@ -71,12 +71,23 @@ define(function(require, exports, module) {
         // }
 
         // Determine my user._id
+
+        // if(App.Data.User.hasFetched){
+        //     console.log('HAS FETCHED', App.Data.User.toJSON());
+        // //     that.user_id = App.Data.User.get('_id');
+        // //     App.history.navigate('user/' + that.user_id);
+        // }
+        console.log(App.Data.User);
+        console.log(App.Data.User.toJSON());
         App.Data.User.populated().then(function(){
+            console.log('user POPULATED');
             Timer.setTimeout(function(){
                 that.user_id = App.Data.User.get('_id');
                 App.history.navigate('user/' + that.user_id);
             },1000);
         });
+        // }
+        console.log('PST POPULATION');
 
     }
 
@@ -98,6 +109,7 @@ define(function(require, exports, module) {
             size: [undefined, undefined]
         });
         this.loadingUser.OriginMod = new StateModifier({
+            align: [0.5,0.5],
             origin: [0.5, 0.5]
         });
         this.loadingUser.Surface = new Surface({
@@ -188,7 +200,7 @@ define(function(require, exports, module) {
 
                         // // Header
                         // // - no extra delay
-                        // window.setTimeout(function(){
+                        // Timer.setTimeout(function(){
 
                         //     // Change header opacity
                         //     that.header.StateModifier.setOpacity(1, transitionOptions.outTransition);
