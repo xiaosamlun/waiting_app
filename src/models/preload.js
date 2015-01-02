@@ -1,20 +1,9 @@
-/*globals define*/
 define(function(require, exports, module) {
     
-    var Action               = require('models/action'),
-        // AlertAction         = require('models/alert_action'),
-        // AlertTrigger        = require('models/alert_trigger'),
-        // Car                 = require('models/car'),
-        // CarError            = require('models/car_error'),
-        // CarPermission       = require('models/car_permission'),
-        // Driver              = require('models/driver'),
-        // Error               = require('models/error'),
-        // Fleet               = require('models/fleet'),
-        // Leg                 = require('models/leg'),
-        // RelationshipCode    = require('models/relationship_code'),
-        // Trip                = require('models/trip'),
-        User                = require('models/user');
+    var User                     = require('models/user');
+    var FriendModel              = require('models/friend');
 
+    var Utils = require('utils');
 
     module.exports = function(App){
 
@@ -25,23 +14,116 @@ define(function(require, exports, module) {
         // Preload the necessary models by fetching from the server
         console.info('preloading models');
 
-        App.Data.User.fetch({prefill: true});
+        App.Data.UserFriends = new FriendModel.FriendCollection([],{
+            type: 'friend'
+        });
 
         if(App.Data.User.get('_id')){
             // Logged in
-            
-            // // Car List
-            // var carList = new Car.CarCollection();
-            // carList.fetch({prefill: true});
 
-            // // Driver List
-            // var driverList = new Driver.DriverCollection();
-            // driverList.fetch({prefill: true});
+            // Update Track.js information
+            try {
+              // window._trackJs.userId = body.email;
+              trackJs.configure({
+
+                // // Custom session identifier.
+                // sessionId: "",
+
+                // Custom user identifier.
+                userId: App.Data.User.get('email'),
+
+                // // Custom application identifier.
+                // version: ""
+
+              });
+            } catch(err){
+              console.error('No Track.js');
+            }
+
+            App.Data.UserFriends.fetch({prefill: true});
+
+            // // Todos
+            // App.Data.TodoCollection = new TodoModel.TodoCollection([],{
+            //     '$filter' : {
+            //         tags: {
+            //             '$ne' : 'complete'
+            //         }
+            //     }
+            // });
+            // App.Data.TodoCollection.on('sync', function(){
+            //     App.Views.MainFooter.Tabs.buttons[0].setOptions({
+            //         content: '<i class="icon ion-android-lightbulb"></i><div><span class="ellipsis-all">'+App.Data.TodoCollection.totalResults+' Jobs</span></div>'
+            //     });
+            // });
+            // App.Data.TodoCollection.fetch();
+
+            // // Invoices
+            // App.Data.InvoiceCollection = new InvoiceModel.InvoiceCollection([],{
+            //     '$filter' : {
+            //         tags: {
+            //             '$ne' : 'complete'
+            //         }
+            //     }
+            // });
+            // App.Data.InvoiceCollection.on('sync', function(){
+            //     App.Views.MainFooter.Tabs.buttons[1].setOptions({
+            //         content: '<i class="icon ion-social-usd"></i><div><span class="ellipsis-all">'+App.Data.InvoiceCollection.totalResults+' Invoices</span></div>'
+            //     });
+            // });
+            // App.Data.InvoiceCollection.fetch();
+
+            // // Updates
+            // App.Data.ActionCollection = new ActionModel.ActionCollection([],{
+            //     // type: 'friend'
+            // });
+            // App.Data.ActionCollection.on('sync', function(){
+            //     App.Views.MainFooter.Tabs.buttons[1].setOptions({
+            //         content: '<i class="icon ion-android-sort"></i><div><span class="ellipsis-all">'+App.Data.ActionCollection.totalResults+' Updates</span></div>'
+            //     });
+            //     App.Data.ActionCollection.totalResults;
+            // });
+            // App.Data.ActionCollection.fetch();
+
+            // // Unread Messages
+            // App.Data.MessageCollection = new MessageModel.MessageCollection([],{
+            //     '$filter' : {
+            //         to_user_id: App.Data.User.get('_id'),
+            //         read: false
+            //     }
+            // });
+            // App.Data.MessageCollection.on('sync', function(){
+            //     // App.Views.MainFooter.Tabs.buttons[2].setOptions({
+            //     //     content: '<i class="icon ion-android-inbox"></i><div><span class="ellipsis-all">'+App.Data.MessageCollection.totalResults+' Msgs</span></div>'
+            //     // });
+            //     // App.Data.MessageCollection.totalResults;
+            // });
+            // App.Data.MessageCollection.fetch();
 
 
+            // Websocket user signin
+            if(App.Data.UserWebsocketToken){
+                // Websocket backend
+                Utils.Websocket.login(App.Data.UserWebsocketToken);
+            }
+
+            // var firebase = new Firebase(App.Credentials.firebase_url + 'users/' + App.Data.User.get('_id'));
+            // firebase.on('child_changed', function (snapshot) {
+            //     console.info('firebase child_changed');
+            //     App.Events.trigger('firebase.child_changed', snapshot);
+            // });
+
+            // console.log('Logged in, preloading');
+            // console.log(App);
+            // debugger;
+            // App.Data.Sports = new Sport.SportCollection();
+            // App.Data.Sports.fetch({prefill: true});
+
+
+            // debugger;
         } else {
             // Not logged in
             // - probably not fetching anything!
+            // debugger;
         }
         
         // // Player List
