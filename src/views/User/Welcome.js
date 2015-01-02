@@ -35,7 +35,6 @@ define(function(require, exports, module) {
     var $ = require('jquery');
 
     // Models
-    // - none
 
     function PageView(params) {
         var that = this;
