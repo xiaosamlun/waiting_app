@@ -197,13 +197,10 @@ define(function(require, exports, module) {
 
                     // Surfaces for success (after submitting)
                     var successSurface = new Surface({
-                        content: "Sent Reset Email",
+                        content: 'If an account exists with that email address, we have sent a Reset Email that you should open.<br /><br />It may take up to 5 minutes to receive the email, please be patient! Contact us anytime at <a href="mailto:'+App.Credentials.admin_emails[0]+'">'+App.Credentials.admin_emails[0]+'</a>',
+                        wrap: '<div></div>',
                         size: [undefined, 80],
-                        properties: {
-                            color: "white",
-                            lineHeight: "80px",
-                            textAlign: "center"
-                        }
+                        classes: ['sent-reset-email-surface']
                     });
 
                     that.form._formScrollView.Views = [successSurface];
@@ -242,6 +239,10 @@ define(function(require, exports, module) {
 
     };
 
+    PageView.prototype.keyboardHandler = function(){
+        // no keyboard logic
+    };
+
     PageView.prototype.inOutTransition = function(direction, otherViewName, transitionOptions, delayShowing, otherView, goingBack){
         var that = this;
 
@@ -269,7 +270,7 @@ define(function(require, exports, module) {
                 break;
             case 'showing':
                 if(this._refreshData){
-                    // window.setTimeout(that.refreshData.bind(that), 1000);
+                    // Timer.setTimeout(that.refreshData.bind(that), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
