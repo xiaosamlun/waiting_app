@@ -26,6 +26,8 @@ define(function(require, exports, module) {
     // Curves
     var Easing = require('famous/transitions/Easing');
 
+    var Timer = require('famous/utilities/Timer');
+
     // Views
     var StandardHeader = require('views/common/StandardHeader');
     
