@@ -535,7 +535,7 @@ define(function(require, exports, module) {
                         // App.Utils.Notification.debug.temporary('Push Setup OK'); // not actually ok, not registering, nothing sending to it
 
                     }, function(err){
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
                             Utils.Notification.Alert('failed Push Notifications');
                         },2000);
                         // App.Utils.Notification.debug.temporary('Failed Push Notification Setup');
@@ -556,7 +556,7 @@ define(function(require, exports, module) {
                         // - see if the user is logged in
                         var i = 0;
                         var pushRegInterval = function(){
-                            window.setTimeout(function(){
+                            Timer.setTimeout(function(){
                                 // See if logged in
                                 if(App.Data.User.get('_id')){
                                     App.Data.User.set({ios: [{reg_id: token, last: new Date()}]});
@@ -626,7 +626,7 @@ define(function(require, exports, module) {
                     console.log(err);
                 });
 
-                window.setTimeout(runGpsUpdateFunc, 1000 * 60 * 5); // 5 minutes
+                Timer.setTimeout(runGpsUpdateFunc, 1000 * 60 * 5); // 5 minutes
             };
 
             runGpsUpdateFunc(); // uncomment for coordinate uploads
@@ -729,7 +729,7 @@ function onNotificationGCM(e){
                     // - see if the user is logged in
                     var i = 0;
                     var pushRegInterval = function(){
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
                             // See if logged in
                             if(App.Data.User.get('_id')){
                                 // Sweet, logged in, update user's android_reg_id
@@ -798,7 +798,7 @@ function onNotificationGCM(e){
                     // - process all of them at once
                     // alert('in background');
 
-                    window.setTimeout(function(){
+                    Timer.setTimeout(function(){
 
                     }, 1000);
 
