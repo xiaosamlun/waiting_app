@@ -13,12 +13,17 @@ define(function(require, exports, module) {
 
     StandardPageView.prototype.keyboardHandler = function(showing){
         var that = this;
+
+        // overrwrite keyboardHandler to prevent this standard behaviour
+        // - affects the StandardHeader and HeaderFooterLayout (keyboard show/hide logic in both)
+
         // standard header
         if(this.header && this.header instanceof StandardHeader){
             this.header.keyboardShowHide(showing);
         };
 
         // Layout
+        // - expecting a HeaderFooterLayout
         if(this.layout){
             Timer.setTimeout(function(){
                 that.layout.keyboardShowHide(showing);

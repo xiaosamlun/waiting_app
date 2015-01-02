@@ -7,6 +7,7 @@ define(function(require, exports, module) {
     var Transform = require('famous/core/Transform');
     var View = require('famous/core/View');
 
+    var Modifier = require('famous/core/Modifier');
     var StateModifier = require('famous/modifiers/StateModifier');
 
     var Surface = require('famous/core/Surface');
@@ -59,6 +60,7 @@ define(function(require, exports, module) {
             case 'password':
             case 'text':
             case 'textarea':
+            case 'select':
                 this.createInput(options);
                 break;
 
@@ -78,12 +80,19 @@ define(function(require, exports, module) {
 
     FormHelper.prototype.createFormContainer = function(opts){
 
+        var planeMod = new StateModifier();
+        if(opts.planeMod){
+            planeMod = opts.planeMod;
+        }
+
         // Form Container
         var FormContainer = new FormContainerSurface();
+        var FormNode = FormContainer.add(planeMod);
 
         // prevent submit from actually submitting the form
         FormContainer.on('submit', function(ev){
             ev.preventDefault();
+            ev.stopPropagation();
             return false;
         });
 
@@ -96,18 +105,52 @@ define(function(require, exports, module) {
         } else {
             contentScrollView = new SequentialLayout();
         }
+        contentScrollView.scroll = opts.scroll;
 
         contentScrollView.Views = [];
 
         // sequenceFrom
         contentScrollView.sequenceFrom(contentScrollView.Views);
 
-        this._form = FormContainer;
+        // background if necessary
+        if(opts.bg){
+            var bgClasses = ['form-bg-default'];
+            if(opts.bg !== true){
+                bgClasses = opts.bg
+            }
+            this._bg = new View();
+            this._bg.Surface = new Surface({
+                size: [undefined, undefined],
+                classes: bgClasses
+            });
+            this._bg.Surface.pipe(contentScrollView);
+            this._bg.SizeMod = new Modifier({
+                size: function(){
+                    // console.log(FormNode.getSize());
+                    // console.log(FormNode.getSize(true));
+                    // console.log(contentScrollView);
+                    // console.log(contentScrollView.getSize());
+                    // debugger;
+                    // console.log(contentScrollView._trueSize);
+                    return [undefined, contentScrollView.getSize() ? contentScrollView.getSize()[1]+20 : undefined]
+                }
+            });
+            this._bg.add(this._bg.SizeMod).add(this._bg.Surface);
+            FormNode.add(Utils.Z(1)).add(this._bg);
+        }
+
+        this._form = FormNode;
         this._formScrollView = contentScrollView;
 
-        FormContainer.add(contentScrollView);
+        FormNode.add(Utils.Z(10)).add(contentScrollView);
 
-        this.add(FormContainer);
+        this.add(FormNode);
+
+        this.getSize = function(){
+            // console.log('contentScrollView getSize', contentScrollView.getSize());
+            // console.log(contentScrollView);
+            return contentScrollView.getSize();
+        };
 
     };
 
@@ -124,15 +167,17 @@ define(function(require, exports, module) {
         var that = this;
 
         // Inputs
-        var inputSurface;
+        var inputSurface = null;
         if(opts.type == 'textarea'){
+            console.log(opts);
             inputSurface = new TextareaSurface({
                 name: opts.name,
                 placeholder: opts.placeholder,
                 size: opts.size ? opts.size : [undefined, true],
                 value: opts.value,
                 attr: opts.attr || {},
-                classes: opts.classes || ['textarea-default']
+                classes: opts.classes || ['textarea-default'],
+                properties: opts.properties || {},
             });
         } else {
             inputSurface = new InputSurface({
@@ -141,28 +186,39 @@ define(function(require, exports, module) {
                 type: opts.type,
                 size: opts.size ? opts.size : [undefined, true],
                 value: opts.value,
+                classes: opts.classes || [],
+                properties: opts.properties || {},
                 attr: opts.attr || {}
             });
         }
+        this.Surface = inputSurface;
+
+        var nextSurface;
 
         // Build Margins
-        var boxLayout = new BoxLayout({ margins: opts.margins });
-        boxLayout.middleAdd(inputSurface);
+        if(opts.margins){
+            var boxLayout = new BoxLayout({ margins: opts.margins });
+            boxLayout.middleAdd(inputSurface);
+            nextSurface = boxLayout;
+        } else {
+            nextSurface = inputSurface;
+        }
 
         inputSurface.View = new View();
         inputSurface.View.StateModifier = new StateModifier();
         this.StateModifier = inputSurface.View.StateModifier;
-        inputSurface.View.add(inputSurface.View.StateModifier).add(boxLayout);
+        inputSurface.View.add(inputSurface.View.StateModifier).add(nextSurface);
 
         if(opts.form){
 
             inputSurface.on('focus', function(){
                 var myIndex = opts.form._formScrollView.Views.indexOf(that);
-                console.log(opts.form._formScrollView.Views);
-                console.log(inputSurface.View);
-                console.log(myIndex);
-                console.log(opts.form._formScrollView);
-                if(App.KeyboardShowing != true){
+                // console.log(opts.form._formScrollView.Views);
+                // console.log(inputSurface.View);
+                // console.log(myIndex);
+                // console.log(opts.form._formScrollView);
+                // if(App.KeyboardShowing != true && opts.form._formScrollView.goToIndex){
+                if(opts.form._formScrollView.goToIndex){
                     opts.form._formScrollView.goToIndex(myIndex,0,60);
                 }
             });
@@ -171,6 +227,7 @@ define(function(require, exports, module) {
         }
 
         this._value = function(){
+            console.log(inputSurface.getValue());
             return inputSurface.getValue();
         };
 
@@ -260,7 +317,8 @@ define(function(require, exports, module) {
         };
 
         this._setContent = function(data){
-            inputSurface.setContent(data);
+            debugger;
+            inputSurface.setValue(data);
         };
 
         this.add(inputSurface.View);
@@ -273,7 +331,7 @@ define(function(require, exports, module) {
         var submitButtonSurface = new SubmitInputSurface({
             value: opts.value,
             size: [undefined, true],
-            classes: ['form-button-submit-default']
+            classes: opts.classes || ['form-button-submit-default']
         });
         submitButtonSurface.View = new View();
         submitButtonSurface.View.StateModifier = new StateModifier();
@@ -297,10 +355,10 @@ define(function(require, exports, module) {
         // callback already specified for click?
         if(opts.click){
             submitButtonSurface.on('click', opts.click);
-        } else{
-            // emit event
-            submitButtonSurface.on('click', this._eventOutput.emit('click'));
         }
+
+        // emit event
+        submitButtonSurface.on('click', this._eventOutput.emit('click'));
 
         this.add(submitButtonSurface.View);
 
@@ -313,6 +371,11 @@ define(function(require, exports, module) {
     FormHelper.prototype.setContent = function(data){
         return this._setContent(data);
     };
+
+    // FormHelper.prototype.getSize = function(){
+    //     console.log('formhelper getsize');
+    //     return this._size ? this._size : [undefined, undefined];
+    // };
 
     module.exports = FormHelper;
 });

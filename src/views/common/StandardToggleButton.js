@@ -12,8 +12,6 @@ define(function(require, exports, module) {
     var EventHandler = require('famous/core/EventHandler');
     var RenderController = require('famous/views/RenderController');
 
-    var StateModifier = require('famous/modifiers/StateModifier');
-
     /**
      * A view for transitioning between two surfaces based
      *  on a 'on' and 'off' state
@@ -26,7 +24,7 @@ define(function(require, exports, module) {
      */
     function StandardToggleButton(options) {
         this.options = {
-            content: '',
+            content: ['', ''],
             offClasses: ['off'],
             onClasses: ['on'],
             size: undefined,
@@ -51,11 +49,6 @@ define(function(require, exports, module) {
         }.bind(this));
         this.onSurface.pipe(this._eventOutput);
 
-        
-        if(1==1){
-            this.StateModifier = new StateModifier();
-        }
-
         this.arbiter = new RenderController({
             overlap : this.options.crossfade
         });
@@ -71,32 +64,39 @@ define(function(require, exports, module) {
 
     /**
      * Transition towards the 'on' state and dispatch an event to
-     *  listeners to announce it was selected
+     *  listeners to announce it was selected. Accepts an optional
+     *  argument, `suppressEvent`, which, if truthy, prevents the
+     *  event from being dispatched.
      *
      * @method select
+     * @param [suppressEvent] {Boolean} When truthy, prevents the
+     *   widget from emitting the 'select' event.
      */
-    StandardToggleButton.prototype.select = function select(triggerEvent) {
-        triggerEvent = triggerEvent === undefined ? true : triggerEvent;
+    StandardToggleButton.prototype.select = function select(suppressEvent) {
         this.selected = true;
         this.arbiter.show(this.onSurface, this.options.inTransition);
 //        this.arbiter.setMode(StandardToggleButton.ON, this.options.inTransition);
-        if(triggerEvent){
-            this._eventOutput.emit('select');
-        } else {
-            console.log('Not triggered event for ToggleButton');
+        if (!suppressEvent) {
+            this._eventOutput.emit('select',arguments, false);
         }
     };
 
     /**
      * Transition towards the 'off' state and dispatch an event to
-     *  listeners to announce it was deselected
+     *  listeners to announce it was deselected. Accepts an optional
+     *  argument, `suppressEvent`, which, if truthy, prevents the
+     *  event from being dispatched.
      *
      * @method deselect
+     * @param [suppressEvent] {Boolean} When truthy, prevents the
+     *   widget from emitting the 'deselect' event.
      */
-    StandardToggleButton.prototype.deselect = function deselect() {
+    StandardToggleButton.prototype.deselect = function deselect(suppressEvent) {
         this.selected = false;
         this.arbiter.show(this.offSurface, this.options.outTransition);
-        this._eventOutput.emit('deselect');
+        if (!suppressEvent) {
+            this._eventOutput.emit('deselect',arguments, false);
+        }
     };
 
     /**
@@ -119,9 +119,11 @@ define(function(require, exports, module) {
      */
     StandardToggleButton.prototype.setOptions = function setOptions(options) {
         if (options.content !== undefined) {
+            if (!(options.content instanceof Array))
+                options.content = [options.content, options.content];
             this.options.content = options.content;
-            this.offSurface.setContent(this.options.content);
-            this.onSurface.setContent(this.options.content);
+            this.offSurface.setContent(this.options.content[0]);
+            this.onSurface.setContent(this.options.content[1]);
         }
         if (options.offClasses) {
             this.options.offClasses = options.offClasses;

@@ -4,6 +4,7 @@ define(function(require, exports, module) {
     var Modifier           = require('famous/core/Modifier');
     var StateModifier      = require('famous/modifiers/StateModifier');
     var Transform          = require('famous/core/Transform');
+    var Easing           = require('famous/transitions/Easing');
     var View               = require('famous/core/View');
     var ScrollView         = require('famous/views/Scrollview');
 
@@ -29,15 +30,22 @@ define(function(require, exports, module) {
             size: [undefined, undefined],
             classes: options.bgClasses || ['header-bg-default']
         });
+        this.background.View = new View();
+        this.background.StateMod = new StateModifier({
+            opacity: 0
+        });
+        this.background.View.add(this.background.StateMod).add(this.background);
 
         this.navBar = new StandardNavigationBar(options); 
         this.navBar.pipe(this._eventOutput);
 
         // add to tree
         this.HeaderNode = new RenderNode();
-        this.HeaderNode.add(Utils.usePlane('header')).add(this.background);
+        this.HeaderNode.StateMod = new StateModifier();
+        this.HeaderNodeView = this.HeaderNode.add(this.HeaderNode.StateMod);
+        this.HeaderNodeView.add(Utils.usePlane('header')).add(this.background.View);
         // this.HeaderNode.add(new StateModifier({transform: Transform.translate(0,0,1.0)})).add(this.OpacityModifier).add(this.PositionModifier).add(this.navBar);
-        this.HeaderNode.add(Utils.usePlane('header',1)).add(this.navBar);
+        this.HeaderNodeView.add(Utils.usePlane('header',1)).add(this.navBar);
 
         this.add(this.HeaderNode);
 
@@ -45,6 +53,35 @@ define(function(require, exports, module) {
 
     StandardHeader.prototype = Object.create(View.prototype);
     StandardHeader.prototype.constructor = StandardHeader;
+
+
+    StandardHeader.prototype.keyboardShowHide = function(showing){
+        var that = this;
+
+        // EVERY SINGLE HEADER MOVES/ANIMATES RIGHT NOW!!!
+        // - we should only animate the currently displayed PageView!
+        
+        if(showing || App.KeyboardShowing === true){
+            that.HeaderNode.StateMod.setTransform(Transform.translate(0,-100,0),{
+                curve: 'linear',
+                duration: 250
+            });
+        } else {
+
+            that.HeaderNode.StateMod.setTransform(Transform.translate(0,0,0),{
+                curve: 'linear',
+                duration: 250
+            });
+        }
+
+        // App.Events.emit('KeyboardShowHide', function(e){
+        //     that.HeaderNode.StateMod.setTransform(Transform.translate(0,0,0),{
+        //         curve: 'linear',
+        //         duration: 250
+        //     });
+        // });
+
+    };
 
 
     StandardHeader.prototype.inOutTransition = function(direction, otherViewName, transitionOptions, delayShowing, otherView, goingBack){
@@ -62,6 +99,24 @@ define(function(require, exports, module) {
 
                         // Hide/move elements
                         Timer.setTimeout(function(){
+
+                            // background header fade
+                            if(!otherView || !otherView.header || !(otherView.header instanceof StandardHeader) || JSON.stringify(otherView.header.options.bgClasses) != JSON.stringify(that.options.bgClasses)){
+                                that.background.StateMod.setOpacity(0, {
+                                    duration: transitionOptions.outTransition.duration,
+                                    curve: 'linear'
+                                });
+
+                                // App.StatusBarView.newSurface({
+                                //     bgClasses: that.options.bgClasses || ['header-bg-default']
+                                // });
+
+                                // that.background.StateMod.setTransform(Transform.translate(0,-100,0), {
+                                //     duration: transitionOptions.outTransition.duration,
+                                //     curve: 'linear'
+                                // });
+                            }
+
                             // Fade header
                             // - using PositionModifier of navBar.title
                             if(goingBack){
@@ -125,7 +180,16 @@ define(function(require, exports, module) {
                     default:
 
                         // Default header opacity
-                        
+                        console.log(otherView);
+                        if(!otherView || !otherView.header || !(otherView.header instanceof StandardHeader) || JSON.stringify(otherView.header.options.bgClasses) != JSON.stringify(that.options.bgClasses)){
+                            that.background.StateMod.setOpacity(0);
+                            that.background.StateMod.setTransform(Transform.translate(0,0,0));
+
+                            App.StatusBarView.newSurface({
+                                bgClasses: that.options.bgClasses || ['header-bg-default']
+                            });
+                        }
+
                         that.OpacityModifier.setOpacity(0);
                         that.navBar.title.OpacityModifier.setOpacity(0);
                         that.navBar.title.PositionModifier.setTransform(Transform.translate(0,0,0));
@@ -157,6 +221,15 @@ define(function(require, exports, module) {
                         // Header
                         // - no extra delay
                         Timer.setTimeout(function(){
+
+                            that.background.StateMod.setOpacity(1, {
+                                duration: transitionOptions.outTransition.duration,
+                                curve: 'easeOut'
+                            });
+                            that.background.StateMod.setTransform(Transform.translate(0,0,0), {
+                                duration: transitionOptions.outTransition.duration,
+                                curve: 'easeIn'
+                            });
 
                             // Change header opacity
                             if(goingBack){
