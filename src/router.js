@@ -29,19 +29,20 @@ define(function(require, exports, module) {
             routes: {
 
                 '' : function(){
-                    console.info('homeAlso');
-                    if(App.history.data.length == 0){
-                        window.location = window.location.href.split('#')[0];
-                    }
                 },
                 'random(:anynumber)' : function(){
-                    if(App.history.data.length == 0){
+                    console.log(App.history.data[0]);
+                    // if(App.history.isFirst()){
+                    if(App.history.data.length == 0 || (App.history.data.length == 1 && App.history.data[0][0].substr(1,6) == 'random')){
+                        console.log(App.history.data);
+                        // debugger;
                         window.location = window.location.href.split('#')[0];
+                        // App.history.navigate('dash');
                     }
                 },
 
                 'logout(/:force)' : function(){
-                    arguments[0] = 'force';
+                    
                     if(arguments[0] === 'force'){
                         App.DeviceReady.ready.then(function(){
                             Utils.logout();
@@ -86,76 +87,39 @@ define(function(require, exports, module) {
                     defaultRoute('Welcome', 'User/Welcome', arguments, {cache: false});
                 },
 
-                'popover/colorpicker' : function(){
-                    // eh, I should be able to cache this route before login, then destroy after login
-                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
-                    App.Flags.InPopover = true;
-                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
-                    defaultRoute('PopoverAlert', 'Misc/PopoverColorPicker', arguments, {cache: false, popover: true});
-                },
 
-                'popover/alert' : function(){
-                    // eh, I should be able to cache this route before login, then destroy after login
-                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
-                    App.Flags.InPopover = true;
-                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
-                    defaultRoute('PopoverAlert', 'Misc/PopoverAlert', arguments, {cache: false, popover: true});
-                },
+                'popover/:type' : function(){
+                    // Types:
+                    // - Buttons
+                    // - Help
+                    // - Alert
+                    // - Prompt
+                    // - List
+                    // - Confirm (todo?)
+                    // - Share
 
-                'popover/confirm' : function(){
                     // eh, I should be able to cache this route before login, then destroy after login
                     // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
-                    App.Flags.InPopover = true;
-                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
-                    defaultRoute('PopoverConfirm', 'Misc/PopoverConfirm', arguments, {cache: false, popover: true});
-                },
 
-                'popover/prompt' : function(){
-                    // eh, I should be able to cache this route before login, then destroy after login
-                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
+                    var theType = arguments[0];
+                    var uppercaseType = theType.charAt(0).toUpperCase() + theType.substring(1);
                     App.Flags.InPopover = true;
-                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
-                    defaultRoute('PopoverPrompt', 'Misc/PopoverPrompt', arguments, {cache: false, popover: true});
-                },
-
-                'popover/buttons' : function(){
-                    // eh, I should be able to cache this route before login, then destroy after login
-                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
-                    App.Flags.InPopover = true;
-                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
-                    defaultRoute('PopoverButtons', 'Misc/PopoverButtons', arguments, {cache: false, popover: true});
-                },
-
-                'popover/help' : function(){
-                    // eh, I should be able to cache this route before login, then destroy after login
-                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
-                    App.Flags.InPopover = true;
-                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
-                    defaultRoute('PopoverHelp', 'Misc/PopoverHelp', arguments, {cache: false, popover: true});
-                },
-
-                'popover/list' : function(){
-                    // eh, I should be able to cache this route before login, then destroy after login
-                    // defaultRoute('OptionModal', 'Misc/OptionModal', arguments, {cache: false});
-                    App.Flags.InPopover = true;
-                    App.history.navigate('random' + Utils.randomInt(0,10000), {history: false});
-                    defaultRoute('PopoverList', 'Misc/PopoverList', arguments, {cache: false, popover: true});
+                    App.history.navigate('random_popover' + Popovers, {history: false});
+                    Popovers += 1;
+                    console.log(Popovers);
+                    defaultRoute('Popover' + uppercaseType, 'Misc/Popover/' + uppercaseType, arguments, {cache: false, popover: true});
                 },
 
                 'misc/help' : function(){
                     defaultRoute('MiscHelp', 'Misc/HelpStatic', arguments, {cache: false});
                 },
 
-                'troubleshoot' : function(){
-                    // eh, I should be able to cache this route before login, then destroy after login
-                    defaultRoute('Troubleshoot', 'Misc/Troubleshoot', arguments, {cache: true});
-                },
                 'landing' : function(){
                     // eh, I should be able to cache this route before login, then destroy after login
                     Timer.setTimeout(function(){
                         App.Views.SplashLoading.hide();
                     },3000);
-                    defaultRoute('Landing', 'User/Landing', arguments, {cache: true});
+                    defaultRoute('Landing', 'Misc/Landing', arguments, {cache: false});
                 },
 
                 'login' : function(){
@@ -172,6 +136,11 @@ define(function(require, exports, module) {
                 },
 
                 'settings/push': function(){
+
+                    Timer.setTimeout(function(){
+                        App.Views.SplashLoading.hide();
+                    },3000);
+
                     defaultRoute('PushDefault', 'Misc/PushDefault', arguments);
                 },
 
