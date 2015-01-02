@@ -9,7 +9,7 @@
  */
 
 define(function(require, exports, module) {
-    var Surface = require('famous/core/Surface');
+    var Surface = require('../core/Surface');
 
     /**
      * A surface containing image content.
@@ -24,6 +24,25 @@ define(function(require, exports, module) {
     function ImageSurface(options) {
         this._imageUrl = undefined;
         Surface.apply(this, arguments);
+
+        this.on('deploy',function(){ 
+            // console.log('deployed image', this);
+            if (this._currentTarget.complete) {
+                // surface.setContent('Fully loaded on deploy');
+                // console.log('fully loaded on deploy');
+            } else {
+                this.on('load', function(e){
+                    // surface.setContent('completed loading = ' + this._currentTarget.complete);
+                    // console.log('NOW loaded');
+                    // console.log(this);
+                    // console.log(this._contentDirty);
+                    // this.setSize(this._originalSize);
+                    this._contentDirty = true; // good or bad?
+                });
+            }
+        });
+
+
     }
 
     var urlCache = [];
@@ -104,6 +123,15 @@ define(function(require, exports, module) {
         }
 
         target.src = this._imageUrl || '';
+
+        // var size = this.size ? this.size : [undefined, undefined]; //this.getSize() return _size, which we don't want
+        // if(size.indexOf(true) !== -1){
+        //     var width = size[0] === true ? target.offsetWidth : size[0];
+        //     var height = size[1] === true ? target.offsetHeight : size[1];
+
+        //     this._trueSize = [width, height];
+        //     console.log('image trueSize');
+        // }
     };
 
     /**

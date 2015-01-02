@@ -8,11 +8,11 @@
  */
 
 define(function(require, exports, module) {
-    var PE = require('famous/physics/PhysicsEngine');
-    var Particle = require('famous/physics/bodies/Particle');
-    var Spring = require('famous/physics/forces/Spring');
-    var Wall = require('famous/physics/constraints/Wall');
-    var Vector = require('famous/math/Vector');
+    var PE = require('../physics/PhysicsEngine');
+    var Particle = require('../physics/bodies/Particle');
+    var Spring = require('../physics/forces/Spring');
+    var Wall = require('../physics/constraints/Wall');
+    var Vector = require('../math/Vector');
 
     /**
      * WallTransition is a method of transitioning between two values (numbers,
@@ -99,7 +99,7 @@ define(function(require, exports, module) {
     };
 
     function _getEnergy() {
-        return this.particle.getEnergy() + this.spring.getEnergy(this.particle);
+        return this.particle.getEnergy() + this.spring.getEnergy([this.particle]);
     }
 
     function _setAbsoluteRestTolerance() {
@@ -179,6 +179,8 @@ define(function(require, exports, module) {
         if (def.dampingRatio === undefined) def.dampingRatio = defaults.dampingRatio;
         if (def.velocity === undefined) def.velocity = defaults.velocity;
         if (def.restitution === undefined) def.restitution = defaults.restitution;
+        if (def.drift === undefined) def.drift = Wall.DEFAULT_OPTIONS.drift;
+        if (def.slop === undefined) def.slop = Wall.DEFAULT_OPTIONS.slop;
 
         //setup spring
         this.spring.setOptions({
@@ -188,7 +190,9 @@ define(function(require, exports, module) {
 
         //setup wall
         this.wall.setOptions({
-            restitution : def.restitution
+            restitution : def.restitution,
+            drift: def.drift,
+            slop: def.slop
         });
 
         //setup particle

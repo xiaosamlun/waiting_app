@@ -8,11 +8,11 @@
  */
 
 define(function(require, exports, module) {
-    var Entity = require('famous/core/Entity');
-    var Transform = require('famous/core/Transform');
-    var OptionsManager = require('famous/core/OptionsManager');
-    var EventHandler = require('famous/core/EventHandler');
-    var Transitionable = require('famous/transitions/Transitionable');
+    var Entity = require('../core/Entity');
+    var Transform = require('../core/Transform');
+    var OptionsManager = require('../core/OptionsManager');
+    var EventHandler = require('../core/EventHandler');
+    var Transitionable = require('../transitions/Transitionable');
 
     /**
      * A layout which divides a context into sections based on a proportion
@@ -34,9 +34,9 @@ define(function(require, exports, module) {
 
         this._ratios = new Transitionable(this.options.ratios);
         this._nodes = [];
+        this._size = [0, 0];
 
         this._cachedDirection = null;
-        this._cachedTotalLength = false;
         this._cachedLengths = [];
         this._cachedTransforms = null;
         this._ratiosDirty = false;
@@ -66,39 +66,23 @@ define(function(require, exports, module) {
         this._cachedLengths = [];
         this._cachedTransforms = [];
 
-        // hack/fix for setRatio with true surfaces
-        // - should instead have the FlexibleLayout check for a "still dirty" surface or getSize and wait for it to not be "null"
-
-        var still_dirty = false;
-
         for (i = 0; i < ratios.length; i++){
             ratio = ratios[i];
             node = this._nodes[i];
-            if(!node || !node.getSize || node.getSize() === null){
-                still_dirty = true;
-            }
-            if (typeof ratio !== 'number'){
-                if(!node || !node.getSize){
-                    flexLength = 0;
-                } else {
-                    flexLength -= (node.getSize() ? node.getSize()[direction] : 0) || 0;
-                }
-            } else {
+
+            if (typeof ratio !== 'number')
+                flexLength -= node.getSize()[direction] || 0;
+            else
                 ratioSum += ratio;
-            }
         }
 
         for (i = 0; i < ratios.length; i++) {
             node = this._nodes[i];
             ratio = ratios[i];
 
-            if(!node || !node.getSize || node.getSize() === null){
-                still_dirty = true;
-            }
-
             length = (typeof ratio === 'number')
                 ? flexLength * ratio / ratioSum
-                : (node.getSize ? (node.getSize() ? node.getSize()[direction] : 0) : 0);
+                : node.getSize()[direction];
 
             currTransform = (direction === FlexibleLayout.DIRECTION_X)
                 ? Transform.translate(translation, 0, 0)
@@ -109,18 +93,17 @@ define(function(require, exports, module) {
 
             translation += length;
         }
+    }
 
-        if(still_dirty){
-            // Trigger a _reflow in a moment, after surfaces have rendered
-            // debugger;
-            var that = this;
-            setTimeout(function(){
-                // this._ratiosDirty = true;
-                // console.log(that.options.ratios);
-                that.setRatios(that.options.ratios);
-            },5);
+    function _trueSizedDirty(ratios, direction) {
+        for (var i = 0; i < ratios.length; i++) {
+            if (typeof ratios[i] !== 'number') {
+                if (this._nodes[i].getSize()[direction] !== this._cachedLengths[i])
+                    return true;
+            }
         }
 
+        return false;
     }
 
     /**
@@ -177,6 +160,21 @@ define(function(require, exports, module) {
         this._ratiosDirty = true;
     };
 
+    FlexibleLayout.prototype.updateRatios = function updateRatios(ratios, transition, callback) {
+        this.setRatios(this.options.ratios);
+    };
+
+    /**
+     * Gets the size of the context the FlexibleLayout exists within.
+     *
+     * @method getSize
+     *
+     * @return {Array} Size of the FlexibleLayout in pixels [width, height]
+     */
+    FlexibleLayout.prototype.getSize = function getSize() {
+        return this._size;
+    };
+
     /**
      * Apply changes from this component to the corresponding document element.
      * This includes changes to classes, styles, size, content, opacity, origin,
@@ -197,10 +195,14 @@ define(function(require, exports, module) {
         var length = parentSize[direction];
         var size;
 
-        if (length !== this._cachedTotalLength || this._ratiosDirty || this._ratios.isActive() || direction !== this._cachedDirection) {
+        if (length !== this._size[direction] || this._ratiosDirty || this._ratios.isActive() || direction !== this._cachedDirection || _trueSizedDirty.call(this, ratios, direction)) {
             _reflow.call(this, ratios, length, direction);
 
-            if (length !== this._cachedTotalLength) this._cachedTotalLength = length;
+            if (length !== this._size[direction]) {
+                this._size[0] = parentSize[0];
+                this._size[1] = parentSize[1];
+            }
+
             if (direction !== this._cachedDirection) this._cachedDirection = direction;
             if (this._ratiosDirty) this._ratiosDirty = false;
         }
@@ -210,11 +212,18 @@ define(function(require, exports, module) {
             size = [undefined, undefined];
             length = this._cachedLengths[i];
             size[direction] = length;
-            result.push({
-                transform : this._cachedTransforms[i],
-                size: size,
-                target : this._nodes[i].render()
-            });
+            try {
+                result.push({
+                    transform : this._cachedTransforms[i],
+                    size: size,
+                    target : this._nodes[i].render()
+                });
+            }catch(err){
+                console.error('Missing enough items in your sequenceFrom to match the .ratios!');
+                console.log('length', this._nodes.length);
+                console.log('i', i);
+                debugger;
+            }
         }
 
         if (parentSize && (parentOrigin[0] !== 0 && parentOrigin[1] !== 0))

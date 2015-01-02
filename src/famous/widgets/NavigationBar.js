@@ -8,10 +8,10 @@
  */
 
 define(function(require, exports, module) {
-    var Scene = require('famous/core/Scene');
-    var Surface = require('famous/core/Surface');
-    var Transform = require('famous/core/Transform');
-    var View = require('famous/core/View');
+    var Scene = require('../core/Scene');
+    var Surface = require('../core/Surface');
+    var Transform = require('../core/Transform');
+    var View = require('../core/View');
 
     /**
      * A view for displaying the title of the current page
@@ -64,15 +64,18 @@ define(function(require, exports, module) {
                 {
                     transform: Transform.inFront,
                     origin: [0, 0.5],
+                    align: [0, 0.5],
                     target: this.back
                 },
                 {
                     origin: [0.5, 0.5],
+                    align: [0.5, 0.5],
                     target: this.title
                 },
                 {
                     transform: Transform.inFront,
                     origin: [1, 0.5],
+                    align: [1, 0.5],
                     target: this.more
                 }
             ]
@@ -116,7 +119,7 @@ define(function(require, exports, module) {
     NavigationBar.prototype.constructor = NavigationBar;
 
     NavigationBar.DEFAULT_OPTIONS = {
-        size: [undefined, 510],
+        size: [undefined, 50],
         backClasses: ['back'],
         backContent: '&#x25c0;',
         classes: ['navigation'],

@@ -8,7 +8,7 @@
  */
 
 define(function(require, exports, module) {
-    var Surface = require('famous/core/Surface');
+    var Surface = require('../core/Surface');
 
     /**
      * Creates a famous surface containing video content. Currently adding
@@ -28,12 +28,12 @@ define(function(require, exports, module) {
      * @param {boolean} [options.autoplay] autoplay
      */
     function VideoSurface(options) {
+        Surface.apply(this, arguments);
         this._videoUrl = undefined;
         this.options = Object.create(VideoSurface.DEFAULT_OPTIONS);
         if (options) this.setOptions(options);
-
-        Surface.apply(this, arguments);
     }
+
     VideoSurface.prototype = Object.create(Surface.prototype);
     VideoSurface.prototype.constructor = VideoSurface;
 

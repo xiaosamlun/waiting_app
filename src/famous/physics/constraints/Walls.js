@@ -10,7 +10,7 @@
 define(function(require, exports, module) {
     var Constraint = require('./Constraint');
     var Wall = require('./Wall');
-    var Vector = require('famous/math/Vector');
+    var Vector = require('../../math/Vector');
 
     /**
      *  Walls combines one or more Wall primitives and exposes a simple API to
@@ -233,6 +233,17 @@ define(function(require, exports, module) {
             var n = wall.options.normal;
             n.rotateY(angle).put(n);
         });
+    };
+
+    /**
+     * Resets the walls to their starting oritentation
+     */
+    Walls.prototype.reset = function reset() {
+        var sides = this.options.sides;
+        for (var i in sides) {
+            var component = this.components[i];
+            component.options.normal.set(_SIDE_NORMALS[i]);
+        }
     };
 
     module.exports = Walls;

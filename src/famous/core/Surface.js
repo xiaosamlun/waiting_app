@@ -10,8 +10,6 @@
 define(function(require, exports, module) {
     var ElementOutput = require('./ElementOutput');
 
-    var LongTapSync = require("views/common/LongTapSync");
-
     /**
      * A base class for viewable content and event
      *   targets inside a Famo.us application, containing a renderable document
@@ -24,7 +22,8 @@ define(function(require, exports, module) {
      * @param {Object} [options] default option overrides
      * @param {Array.Number} [options.size] [width, height] in pixels
      * @param {Array.string} [options.classes] CSS classes to set on target div
-     * @param {Array} [options.properties] string dictionary of HTML attributes to set on target div
+     * @param {Array} [options.properties] string dictionary of CSS properties to set on target div
+     * @param {Array} [options.attributes] string dictionary of HTML attributes to set on target div
      * @param {string} [options.content] inner (HTML) content of surface
      */
     function Surface(options) {
@@ -33,14 +32,18 @@ define(function(require, exports, module) {
         this.options = {};
 
         this.properties = {};
+        this.attributes = {};
         this.content = '';
         this.classList = [];
         this.size = null;
+        this.wrap = null;
 
         this._classesDirty = true;
         this._stylesDirty = true;
+        this._attributesDirty = true;
         this._sizeDirty = true;
         this._contentDirty = true;
+        this._trueSizeCheck = true;
 
         this._dirtyClasses = [];
 
@@ -52,6 +55,32 @@ define(function(require, exports, module) {
     Surface.prototype.constructor = Surface;
     Surface.prototype.elementType = 'div';
     Surface.prototype.elementClass = 'famous-surface';
+
+    /**
+     * Set HTML attributes on this Surface. Note that this will cause
+     *    dirtying and thus re-rendering, even if values do not change.
+     *
+     * @method setAttributes
+    * @param {Object} attributes property dictionary of "key" => "value"
+     */
+    Surface.prototype.setAttributes = function setAttributes(attributes) {
+        for (var n in attributes) {
+            if (n === 'style') throw new Error('Cannot set styles via "setAttributes" as it will break Famo.us.  Use "setProperties" instead.');
+            this.attributes[n] = attributes[n];
+        }
+        this._attributesDirty = true;
+    };
+
+    /**
+     * Get HTML attributes on this Surface.
+     *
+     * @method getAttributes
+     *
+     * @return {Object} Dictionary of this Surface's attributes.
+     */
+    Surface.prototype.getAttributes = function getAttributes() {
+        return this.attributes;
+    };
 
     /**
      * Set CSS-style properties on this Surface. Note that this will cause
@@ -140,6 +169,12 @@ define(function(require, exports, module) {
      * @param {Array.string} classList
      */
     Surface.prototype.setClasses = function setClasses(classList) {
+        var tmpClassList = classList,
+            classList = tmpClassList;
+        if(tmpClassList instanceof Function){
+            classList = tmpClassList();
+        }
+
         var i = 0;
         var removal = [];
         for (i = 0; i < this.classList.length; i++) {
@@ -150,6 +185,11 @@ define(function(require, exports, module) {
         for (i = 0; i < classList.length; i++) this.addClass(classList[i]);
         return this;
     };
+
+    Surface.prototype.updateClasses = function updateClasses() {
+        this.setClasses(this.options.classes);
+    }
+
 
     /**
      * Get array of CSS-style classes attached to this div.
@@ -170,9 +210,23 @@ define(function(require, exports, module) {
      * @param {string|Document Fragment} content HTML content
      */
     Surface.prototype.setContent = function setContent(content) {
+        // content = content === undefined ? '':content;
         if (this.content !== content) {
             this.content = content;
             this._contentDirty = true;
+        }
+        return this;
+    };
+
+    Surface.prototype.updateContent = function updateContent() {
+        this._contentDirty = true;
+        return this;
+    }
+
+    Surface.prototype.setWrap = function setContent(wrap) {
+        if (this.wrap !== wrap) {
+            this.wrap = wrap;
+            this._contentDirty = true; // just dirty the content
         }
         return this;
     };
@@ -196,10 +250,13 @@ define(function(require, exports, module) {
      * @param {Object} [options] overrides for default options.  See constructor.
      */
     Surface.prototype.setOptions = function setOptions(options) {
+        this.options = options;
         if (options.size) this.setSize(options.size);
         if (options.classes) this.setClasses(options.classes);
         if (options.properties) this.setProperties(options.properties);
+        if (options.attributes) this.setAttributes(options.attributes);
         if (options.content) this.setContent(options.content);
+        if (options.wrap) this.setWrap(options.wrap);
         return this;
     };
 
@@ -222,6 +279,22 @@ define(function(require, exports, module) {
     function _cleanupStyles(target) {
         for (var n in this.properties) {
             target.style[n] = '';
+        }
+    }
+
+    // Apply values of all Famous-managed attributes to the document element.
+    //  These will be deployed to the document on call to #setup().
+    function _applyAttributes(target) {
+        for (var n in this.attributes) {
+            target.setAttribute(n, this.attributes[n]);
+        }
+    }
+
+    // Clear all Famous-managed attributes from the document element.
+    // These will be deployed to the document on call to #setup().
+    function _cleanupAttributes(target) {
+        for (var n in this.attributes) {
+            target.removeAttribute(n);
         }
     }
 
@@ -255,18 +328,11 @@ define(function(require, exports, module) {
         this._currentTarget = target;
         this._stylesDirty = true;
         this._classesDirty = true;
+        this._attributesDirty = true;
         this._sizeDirty = true;
         this._contentDirty = true;
         this._originDirty = true;
         this._transformDirty = true;
-
-        // var ltSync = new LongTapSync();
-        // ltSync.on('longtap', function(event){
-        //     alert('lt');
-        //     that._eventOutput.emit('longtap',event);
-        // });
-        // this.pipe(ltSync);
-
     };
 
     /**
@@ -288,26 +354,60 @@ define(function(require, exports, module) {
             var classList = this.getClassList();
             for (var i = 0; i < classList.length; i++) target.classList.add(classList[i]);
             this._classesDirty = false;
+            this._trueSizeCheck = true;
         }
 
         if (this._stylesDirty) {
             _applyStyles.call(this, target);
             this._stylesDirty = false;
+            this._trueSizeCheck = true;
+        }
+
+        if (this._attributesDirty) {
+            _applyAttributes.call(this, target);
+            this._attributesDirty = false;
+            this._trueSizeCheck = true;
         }
 
         if (this.size) {
             var origSize = context.size;
             size = [this.size[0], this.size[1]];
             if (size[0] === undefined) size[0] = origSize[0];
-            else if (size[0] === true) size[0] = target.clientWidth;
             if (size[1] === undefined) size[1] = origSize[1];
-            else if (size[1] === true) size[1] = target.clientHeight;
+            if (size[0] === true || size[1] === true) {
+                if (size[0] === true){
+                    if (this._trueSizeCheck || (this._size[0] === 0)) {
+                        var width = target.offsetWidth;
+                        if (this._size && this._size[0] !== width) {
+                            this._size[0] = width;
+                            this._sizeDirty = true;
+                        }
+                        size[0] = width;
+                    } else {
+                        if (this._size) size[0] = this._size[0];
+                    }
+                }
+                if (size[1] === true){
+                    if (this._trueSizeCheck || (this._size[1] === 0)) {
+                        var height = target.offsetHeight;
+                        if (this._size && this._size[1] !== height) {
+                            this._size[1] = height;
+                            this._sizeDirty = true;
+                        }
+                        size[1] = height;
+                    } else {
+                        if (this._size) size[1] = this._size[1];
+                    }
+                }
+                this._trueSizeCheck = false;
+            }
         }
 
         if (_xyNotEquals(this._size, size)) {
             if (!this._size) this._size = [0, 0];
             this._size[0] = size[0];
             this._size[1] = size[1];
+
             this._sizeDirty = true;
         }
 
@@ -316,13 +416,15 @@ define(function(require, exports, module) {
                 target.style.width = (this.size && this.size[0] === true) ? '' : this._size[0] + 'px';
                 target.style.height = (this.size && this.size[1] === true) ?  '' : this._size[1] + 'px';
             }
-            this._sizeDirty = false;
+
+            this._eventOutput.emit('resize');
         }
 
         if (this._contentDirty) {
             this.deploy(target);
             this._eventOutput.emit('deploy');
             this._contentDirty = false;
+            this._trueSizeCheck = true;
         }
 
         ElementOutput.prototype.commit.call(this, context);
@@ -346,8 +448,8 @@ define(function(require, exports, module) {
         target.style.opacity = '';
         target.style.width = '';
         target.style.height = '';
-        this._size = null;
         _cleanupStyles.call(this, target);
+        _cleanupAttributes.call(this, target);
         var classList = this.getClassList();
         _cleanupClasses.call(this, target);
         for (i = 0; i < classList.length; i++) target.classList.remove(classList[i]);
@@ -374,22 +476,32 @@ define(function(require, exports, module) {
      * @param {Node} target document parent of this container
      */
     Surface.prototype.deploy = function deploy(target) {
-        var content = this.getContent();
+        var tmpContent = this.getContent();
+            content = tmpContent;
+            // content = null;
+        if(tmpContent instanceof Function){
+            content = tmpContent();
+        }
         if (content instanceof Node) {
             while (target.hasChildNodes()) target.removeChild(target.firstChild);
             target.appendChild(content);
+        } else {
+            // wrap the content if necessary
+            if(this.wrap){
+                var wrap = this.wrap.split('><');
+                content = wrap[0] + '>' + content + '<' + wrap[1];
+            }
+            target.innerHTML = content;
         }
-        else target.innerHTML = content;
 
         var size = this.size ? this.size : [undefined, undefined]; //this.getSize() return _size, which we don't want
-        if(size.indexOf(true) === -1){
-            return;
-        }
-        var width = size[0] === true ? target.offsetWidth : size[0];
-        var height = size[1] === true ? target.offsetHeight : size[1];
+        if(size.indexOf(true) !== -1){
+            var width = size[0] === true ? target.offsetWidth : size[0];
+            var height = size[1] === true ? target.offsetHeight : size[1];
 
-        this._trueSize = [width, height];
-        this.setSize([width, height]);
+            this._trueSize = [width, height];
+            console.log('surface trueSize');
+        }
 
     };
 
@@ -413,14 +525,17 @@ define(function(require, exports, module) {
      * @return {Array.Number} [x,y] size of surface
      */
     Surface.prototype.getSize = function getSize() {
-        return this._size;
+        return this._size ? this._size : this.size;
     };
+
     Surface.prototype.getTrueSize = function getTrueSize() {
+        // return this._size ? this._size : this.size;
+
         if(!this._trueSize){
             return [undefined, undefined];
         }
         return this._trueSize;
-    };
+     };
 
     /**
      * Set x and y dimensions of the surface.
@@ -430,6 +545,7 @@ define(function(require, exports, module) {
      * @param {Array.Number} size as [width, height]
      */
     Surface.prototype.setSize = function setSize(size) {
+        this._originalSize = size;
         this.size = size ? [size[0], size[1]] : null;
         this._sizeDirty = true;
         return this;

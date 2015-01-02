@@ -8,13 +8,13 @@
  */
 
 define(function(require, exports, module) {
-    var Surface = require('../core/Surface');
+    var Surface = require('famous/core/Surface');
 
     /**
      * A Famo.us surface in the form of an HTML input element.
      *   This extends the Surface class.
      *
-     * @class InputSurface
+     * @class SelectInputSurface
      * @extends Surface
      * @constructor
      * @param {Object} [options] overrides of default options
@@ -22,33 +22,35 @@ define(function(require, exports, module) {
      * @param {string} [options.type] specifies the type of element to display (e.g. 'datetime', 'text', 'button', etc.)
      * @param {string} [options.value] value of text
      */
-    function InputSurface(options) {
+    function SelectInputSurface(options) {
         this._placeholder = options.placeholder || '';
+        this._id          = options.id || '';
         this._value       = options.value || '';
         this._type        = options.type || 'text';
         this._name        = options.name || '';
+        this._attr        = options.attr || {};
 
         Surface.apply(this, arguments);
 
         this.on('click', this.focus.bind(this));
         window.addEventListener('click', function(event) {
-            if (event.target !== this._currentTarget) this.blur();
+            if (event.target !== this._currTarget) this.blur();
         }.bind(this));
     }
-    InputSurface.prototype = Object.create(Surface.prototype);
-    InputSurface.prototype.constructor = InputSurface;
+    SelectInputSurface.prototype = Object.create(Surface.prototype);
+    SelectInputSurface.prototype.constructor = SelectInputSurface;
 
-    InputSurface.prototype.elementType = 'input';
-    InputSurface.prototype.elementClass = 'famous-surface';
+    SelectInputSurface.prototype.elementType = 'select';
+    SelectInputSurface.prototype.elementClass = 'famous-surface';
 
     /**
      * Set placeholder text.  Note: Triggers a repaint.
      *
      * @method setPlaceholder
      * @param {string} str Value to set the placeholder to.
-     * @return {InputSurface} this, allowing method chaining.
+     * @return {SelectInputSurface} this, allowing method chaining.
      */
-    InputSurface.prototype.setPlaceholder = function setPlaceholder(str) {
+    SelectInputSurface.prototype.setPlaceholder = function setPlaceholder(str) {
         this._placeholder = str;
         this._contentDirty = true;
         return this;
@@ -58,10 +60,10 @@ define(function(require, exports, module) {
      * Focus on the current input, pulling up the keyboard on mobile.
      *
      * @method focus
-     * @return {InputSurface} this, allowing method chaining.
+     * @return {SelectInputSurface} this, allowing method chaining.
      */
-    InputSurface.prototype.focus = function focus() {
-        if (this._currentTarget) this._currentTarget.focus();
+    SelectInputSurface.prototype.focus = function focus() {
+        if (this._currTarget) this._currTarget.focus();
         return this;
     };
 
@@ -69,10 +71,10 @@ define(function(require, exports, module) {
      * Blur the current input, hiding the keyboard on mobile.
      *
      * @method blur
-     * @return {InputSurface} this, allowing method chaining.
+     * @return {SelectInputSurface} this, allowing method chaining.
      */
-    InputSurface.prototype.blur = function blur() {
-        if (this._currentTarget) this._currentTarget.blur();
+    SelectInputSurface.prototype.blur = function blur() {
+        if (this._currTarget) this._currTarget.blur();
         return this;
     };
 
@@ -82,44 +84,12 @@ define(function(require, exports, module) {
      *
      * @method setValue
      * @param {string} str Value to set the main input value to.
-     * @return {InputSurface} this, allowing method chaining.
+     * @return {SelectInputSurface} this, allowing method chaining.
      */
-    InputSurface.prototype.setValue = function setValue(str) {
+    SelectInputSurface.prototype.setValue = function setValue(str) {
         this._value = str;
         this._contentDirty = true;
         return this;
-    };
-
-    /**
-     * Set the type of element to display conent.
-     *   Note: Triggers a repaint next tick.
-     *
-     * @method setType
-     * @param {string} str type of the input surface (e.g. 'button', 'text')
-     * @return {InputSurface} this, allowing method chaining.
-     */
-    InputSurface.prototype.setType = function setType(str) {
-        this._type = str;
-        this._contentDirty = true;
-        return this;
-    };
-
-    /**
-     * Get the value of the inner content of the element (e.g. the entered text)
-     *
-     * @method getValue
-     * @return {string} value of element
-     */
-    InputSurface.prototype.getValue = function getValue() {
-        if (this._currentTarget) {
-            return this._currentTarget.value;
-        }
-        else if(this._currTarget){
-            return this._currTarget.value;   
-        }
-        else {
-            return this._value;
-        }
     };
 
     /**
@@ -128,9 +98,9 @@ define(function(require, exports, module) {
      *
      * @method setName
      * @param {string} str element name
-     * @return {InputSurface} this, allowing method chaining.
+     * @return {SelectInputSurface} this, allowing method chaining.
      */
-    InputSurface.prototype.setName = function setName(str) {
+    SelectInputSurface.prototype.setName = function setName(str) {
         this._name = str;
         this._contentDirty = true;
         return this;
@@ -142,9 +112,28 @@ define(function(require, exports, module) {
      * @method getName
      * @return {string} name of element
      */
-    InputSurface.prototype.getName = function getName() {
+    SelectInputSurface.prototype.getName = function getName() {
         return this._name;
     };
+
+
+    SelectInputSurface.prototype.setId = function setId(str) {
+        this._id = str;
+        this._contentDirty = true;
+        return this;
+    };
+
+    /**
+     * Get the name attribute of the element.
+     *
+     * @method getName
+     * @return {string} name of element
+     */
+    SelectInputSurface.prototype.getId = function getId() {
+        return this._id;
+    };
+
+
 
     /**
      * Place the document element this component manages into the document.
@@ -153,12 +142,19 @@ define(function(require, exports, module) {
      * @method deploy
      * @param {Node} target document parent of this container
      */
-    InputSurface.prototype.deploy = function deploy(target) {
+    SelectInputSurface.prototype.deploy = function deploy(target) {
         if (this._placeholder !== '') target.placeholder = this._placeholder;
+        // if(this._id != '') target._id = this._id;
         target.value = this._value;
         target.type = this._type;
         target.name = this._name;
+
+        var that = this;
+        Object.keys(this._attr).forEach((function(key){
+            target.setAttribute(key, that._attr[key]);
+        }).bind(this));
+
     };
 
-    module.exports = InputSurface;
+    module.exports = SelectInputSurface;
 });

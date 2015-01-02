@@ -8,10 +8,10 @@
  */
 
 define(function(require, exports, module) {
-    var Transform = require('famous/core/Transform');
-    var Transitionable = require('famous/transitions/Transitionable');
-    var RenderNode = require('famous/core/RenderNode');
-    var OptionsManager = require('famous/core/OptionsManager');
+    var Transform = require('../core/Transform');
+    var Transitionable = require('../transitions/Transitionable');
+    var RenderNode = require('../core/RenderNode');
+    var OptionsManager = require('../core/OptionsManager');
 
     /**
      * Allows you to link two renderables as front and back sides that can be
@@ -22,6 +22,7 @@ define(function(require, exports, module) {
      * @constructor
      * @param {Options} [options] An object of options.
      * @param {Transition} [options.transition=true] The transition executed when flipping your Flipper instance.
+     * @param {Direction} [options.direction=Flipper.DIRECTION_X] Direction specifies the axis of rotation.
      */
     function Flipper(options) {
         this.options = Object.create(Flipper.DEFAULT_OPTIONS);

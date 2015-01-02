@@ -8,7 +8,7 @@
  */
 
 define(function(require, exports, module) {
-    var Surface = require('famous/core/Surface');
+    var Surface = require('../core/Surface');
 
     /**
      * A Famo.us surface in the form of an HTML textarea element.
@@ -62,7 +62,7 @@ define(function(require, exports, module) {
      * @return {TextareaSurface} this, allowing method chaining.
      */
     TextareaSurface.prototype.focus = function focus() {
-        if (this._currTarget) this._currTarget.focus();
+        if (this._currentTarget) this._currentTarget.focus();
         return this;
     };
 
@@ -73,7 +73,7 @@ define(function(require, exports, module) {
      * @return {TextareaSurface} this, allowing method chaining.
      */
     TextareaSurface.prototype.blur = function blur() {
-        if (this._currTarget) this._currTarget.blur();
+        if (this._currentTarget) this._currentTarget.blur();
         return this;
     };
 
@@ -100,9 +100,6 @@ define(function(require, exports, module) {
     TextareaSurface.prototype.getValue = function getValue() {
         if (this._currentTarget) {
             return this._currentTarget.value;
-        }
-        else if(this._currTarget){
-            return this._currTarget.value;   
         }
         else {
             return this._value;
@@ -186,7 +183,10 @@ define(function(require, exports, module) {
      */
     TextareaSurface.prototype.deploy = function deploy(target) {
         if (this._placeholder !== '') target.placeholder = this._placeholder;
-        if (this._value !== '') target.value = this._value;
+
+        // Broken implementation of updatng the "target" causes Textarea to not update value, if value="" (EVEN ON NEWLY_CREATED ELEMENTS!!!!)
+        // if (this._value !== '') target.value = this._value;
+        target.value = this._value;
         if (this._name !== '') target.name = this._name;
         if (this._wrap !== '') target.wrap = this._wrap;
         if (this._cols !== '') target.cols = this._cols;

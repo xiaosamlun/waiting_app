@@ -81,7 +81,7 @@ define(function(require, exports, module) {
     TweenTransition.SUPPORTS_MULTIPLE = true;
     TweenTransition.DEFAULT_OPTIONS = {
         curve: TweenTransition.Curves.linear,
-        duration: 500,
+        duration: 250,
         speed: 0 /* considered only if positive */
     };
 
