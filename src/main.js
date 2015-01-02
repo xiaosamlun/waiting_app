@@ -744,9 +744,9 @@ define(function(require, exports, module) {
                         App.Views.SplashLoading.hide();
                     },1000);
 
-                    // if(App.usePg){
-                    //     navigator.splashscreen.hide();
-                    // }
+                    if(App.usePg){
+                        navigator.splashscreen.hide();
+                    }
                 }catch(err){
                     alert('failed hiding splash screen');
                     alert(err);
