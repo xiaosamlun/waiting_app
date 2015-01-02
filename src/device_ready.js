@@ -17,10 +17,15 @@ define(function(require, exports, module) {
             var that = this;
 
             // phonegap/cordova usage
+            App.usePg = false;
             App.Data.usePg = false;
             if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/) && cordova) {
                 console.log('Using PhoneGap/Cordova!');
                 App.Data.usePg = true;
+                App.usePg = true;
+                console.info('Native app detected');
+            } else {
+                console.info('Desktop app detected');
             }
 
             // runGpsUpdate();
@@ -30,7 +35,7 @@ define(function(require, exports, module) {
             // Trigger .onReady
 
             // Browser (development)
-            if(!App.Data.usePg){
+            if(!App.usePg){
                 console.log('Using Browser');
                 console.log(that);
                 that.onReady();
@@ -87,6 +92,38 @@ define(function(require, exports, module) {
             }
             this.isReady = true;
 
+            //Loads facebook for if we're on desktop)
+            if(App.Credentials.fb_app_id){
+                window.fbAsyncInit = function() {
+                    FB.init({
+                        appId      : App.Credentials.fb_app_id,
+                        xfbml      : true,
+                        version    : 'v2.1'
+                    });
+                };
+                (function(d, s, id){
+                 var js, fjs = d.getElementsByTagName(s)[0];
+                 if (d.getElementById(id)) {return;}
+                 js = d.createElement(s); js.id = id;
+                 js.src = "//connect.facebook.net/en_US/sdk.js";
+                 fjs.parentNode.insertBefore(js, fjs);
+                }(document, 'script', 'facebook-jssdk'));
+            }
+
+            // Logout of Google Plus OAuth token
+            if(window.plugins && window.plugins.googleplus){
+                window.plugins.googleplus.logout(
+                    function (msg) {
+                      console.log(msg);
+                    }
+                );
+                window.plugins.googleplus.disconnect(
+                    function (msg) {
+                        console.log('disconnected account too.', msg);
+                    }
+                );
+            }
+
             // Overwrite console.log and console.info
 
             // console.log('overwrite log');
@@ -125,6 +162,10 @@ define(function(require, exports, module) {
             }catch(err){}
             $('head').append('<link rel="stylesheet" href="css/'+ App.Config.devicePlatform +'.css" type="text/css" />');
 
+            if(window.navigator.standalone){
+                App.Config.devicePlatform = 'ios';
+            }
+
             // Status bar colors
             try {
 
@@ -145,9 +186,12 @@ define(function(require, exports, module) {
             // Resolve deferred
             this.readyDeferred.resolve();
 
+            // Stripe
+            Stripe.setPublishableKey(Credentials['stripe_publishable_key_' + Credentials.stripe_mode]);
+
             // Track.js
             // - only using in production
-            if(App.Data.usePg && App.Prod){
+            if(App.usePg && App.Prod){
 
                 // lazy-load track.js
                 var script = document.createElement( 'script' );
@@ -206,9 +250,51 @@ define(function(require, exports, module) {
             //  console.log(err);
             // }
 
-            // // Push notifications
-            // this.initPush();
+            // Push notifications
+            if(App.Credentials.push_notifications === true){
+                this.initPush();
+            }
 
+            // window resize
+            window.addEventListener("resize", function() {
+                App.mainSize = [Utils.WindowWidth(), Utils.WindowHeight()];
+                App.Events.emit('resize');
+            });
+            window.addEventListener("orientationchange", function() {
+                // Change to "temporary" orientation switching view (like a "loading orientation" type of display)
+
+                // Should be removing iOS status bar
+                if(App.StatusBar === true){
+                    var ratios = [1];
+                    if(window.innerWidth > window.innerHeight){
+                        // landscape, no StatusBar
+                        App.MainView.Layout.Views = _.without(App.MainView.Layout.Views,App.StatusBarView);
+                    } else {
+                        // Portrait, expecting StatusBar
+                        App.MainView.Layout.Views.unshift(App.StatusBarView);
+                        ratios = [true, 1];
+                    }
+                    App.MainView.Layout.sequenceFrom(App.MainView.Layout.Views);
+                    App.MainView.Layout.setRatios(ratios);
+                }
+
+                Timer.setTimeout(function(){
+                    App.mainSize = [Utils.WindowWidth(), Utils.WindowHeight()];
+                    App.Events.emit('resize');
+                },1000);
+            });
+
+            // Window scroll watcher (never allowed to scroll)
+            $(window).on('scroll',function(){
+                if(window.scrollY != 0){
+                    window.scrollTo(0,0);
+                }
+            }); 
+            Timer.setInterval(function(){
+                if(window.scrollY != 0){
+                    window.scrollTo(0,0);
+                }
+            },1000);
 
             // Keyboard
             // - requires ionic keyboard plugin
@@ -222,32 +308,45 @@ define(function(require, exports, module) {
             window.addEventListener('native.keyboardshow', function(e){
                 // Utils.Notification.Toast('Keyboard Show');
 
-                var keyboardHeight = e.keyboardHeight;
+                Timer.setTimeout(function(){
+                    var keyboardHeight = e.keyboardHeight;
 
-                // Has the body changed in height?
-                // if yes, set that as the keyboardHeight
-                if(App.defaultSize[1] != window.innerHeight){
-                    keyboardHeight = App.defaultSize[1] - window.innerHeight;
-                } else {
-                    // if no, use the supplied keyboardHeight
-                    switch(App.Config.devicePlatform){
-                        case 'android':
-                            keyboardHeight -= 40;
-                            break;
-                        case 'ios':
-                            break;
-                        default:
-                            break;
+                    console.log('e',e);
+                    console.log('keyboardHeight', keyboardHeight + 0);
+
+                    // Has the body changed in height?
+                    // if yes, set that as the keyboardHeight
+                    if(App.defaultSize[1] != Utils.WindowHeight()){
+                        keyboardHeight = App.defaultSize[1] - Utils.WindowHeight();
+                        console.log('new keyboardheight from resized window', keyboardHeight + 0);
+                    } else {
+                        console.log('resizing because the window height did NOT change');
+                        // if no, use the supplied keyboardHeight
+                        switch(App.Config.devicePlatform){
+                            case 'android':
+                                keyboardHeight -= 40;
+                                console.log('shorter android keyboard! -40');
+                                break;
+                            case 'ios':
+                                break;
+                            default:
+                                break;
+                        }
                     }
-                }
 
-                // Timer.setTimeout(function(){
                     App.mainSize = [App.defaultSize[0],App.defaultSize[1] - keyboardHeight];
-                    App.MainContext.emit('resize');
-                // });
 
-                App.Events.emit('KeyboardShowHide', true);
-                App.KeyboardShowing = true;
+                    App.KeyboardShowing = true;
+                    App.Events.emit('KeyboardShowHide', true);
+
+                    App.Events.emit('resize');
+
+                    // Timer.setTimeout(function(){
+                    //     Utils.Notification.Toast('Top');
+                    //     window.scrollTo(0, 0);
+                    //     document.body.scrollTop = 0;
+                    // },2028);
+                },16);
 
                 // App.mainSize = App.MainContext.getSize();
                 // if (App.MainController)
@@ -258,11 +357,17 @@ define(function(require, exports, module) {
                 // Utils.Notification.Toast('Keyboard HIDE');
                 
                 App.mainSize = [App.defaultSize[0],App.defaultSize[1]];
-                App.MainContext.emit('resize');
 
                 // Update the page (tell 'em)
-                App.Events.emit('KeyboardShowHide', false);
                 App.KeyboardShowing = false;
+                App.Events.emit('KeyboardShowHide', false);
+
+                App.Events.emit('resize');
+                
+                // Timer.setTimeout(function(){
+                //     window.scrollTo(0, 0);
+                //     document.body.scrollTop = 0;
+                // },16);
 
                 // App.mainSize = App.MainContext.getSize();
                 // if (App.MainController)
@@ -283,7 +388,7 @@ define(function(require, exports, module) {
             }, false);
 
             // Back button capturing in Browser
-            if(!App.Data.usePg){
+            if(!App.usePg){
                 $(document).keydown(function (e) {
                     var preventKeyPress;
                     if (e.keyCode == 8) {
@@ -410,9 +515,6 @@ define(function(require, exports, module) {
         initPush: function(){
             console.info('Registering for PushNotification');
 
-            // disabled!
-            return;
-
             // Disable Push in debug mode
             if(App.Prod != true){
                 console.error('Development mode');
@@ -424,6 +526,8 @@ define(function(require, exports, module) {
                     // alert('android push');
 
                     App.Data.pushNotification.register(function(result){
+
+                        // Utils.Notification.Toast('Registered for Push Notifications');
                         console.log('Push Setup OK');
                         // alert('Push Setup OK');
                         // alert('success w/ Push Notifications');
@@ -431,13 +535,15 @@ define(function(require, exports, module) {
                         // App.Utils.Notification.debug.temporary('Push Setup OK'); // not actually ok, not registering, nothing sending to it
 
                     }, function(err){
-                        alert('failed Push Notifications');
+                        window.setTimeout(function(){
+                            Utils.Notification.Alert('failed Push Notifications');
+                        },2000);
                         // App.Utils.Notification.debug.temporary('Failed Push Notification Setup');
                         console.error(err);
                         // alert(err);
                     }, 
                     {
-                        "senderID": "303243217649", //"312360250527",
+                        "senderID": App.Credentials.push_notification_sender_id, //"312360250527",
                         "ecb": "onNotificationGCM"
                     });
                 } else if (device.platform.toLowerCase() == 'ios') {
@@ -479,7 +585,7 @@ define(function(require, exports, module) {
                 // txt+="Error description: " + err.message + "\n\n"; 
                 // alert(txt); 
                 // alert('Push Error2');
-                if(App.Data.usePg){
+                if(App.usePg){
                     console.error('Push Error 2');
                 }
                 
