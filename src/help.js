@@ -4,7 +4,7 @@ define(function(require) {
 
     // Extras
     // var _ = require('underscore');
-    var Utils = require('utils');
+    // var Utils = require('utils');
 
     return {
         launch: function(key){
