@@ -18,6 +18,7 @@ define(function(require, exports, module) {
     module.exports = function(App){
 
         var RouterContext = this;
+        var Popovers = 0;
 
         // Replacing history events
 
