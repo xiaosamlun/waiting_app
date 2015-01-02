@@ -80,7 +80,7 @@ define(function(require, exports, module) {
         // this._eventInput.on('menuToggle', this.menuToggle.bind(this))
 
 
-        // window.setTimeout(function(){
+        // Timer.setTimeout(function(){
         //     KnowPlayerId.resolve("529c02f00705435badb1dff5");
         // },3000);
 
@@ -109,7 +109,7 @@ define(function(require, exports, module) {
         this.header._eventOutput.on('more',function(){
             // rewrite the event
             // this._eventOutput.emit('menutoggle');
-            // App.history.navigate('player/add');
+            // App.history.navigate('player/add', {trigger: true});
         });
         this.header.navBar.title.on('click',function(){
             // rewrite the event
@@ -200,7 +200,7 @@ define(function(require, exports, module) {
         temp.pipe(this.contentScrollView);
         temp.on('click', (function(){
             this._eventOutput.emit("menuToggle");
-            App.history.navigate('player/' + Model.get('_id'));
+            App.history.navigate('player/' + Model.get('_id'), {trigger: true});
         }).bind(this));
         temp.on('swipe', (function(){
             this._eventOutput.emit("menuToggle");
@@ -242,7 +242,7 @@ define(function(require, exports, module) {
                         // this.sideView.OpacityModifier.setOpacity(0);
 
                         // Move the content
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // Hide content from a direction
                             // if(goingBack){
@@ -264,7 +264,7 @@ define(function(require, exports, module) {
                         // this.sideView.OpacityModifier.setOpacity(0);
 
                         // Content
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
                             // // Fade header
                             // that.header.StateModifier.setOpacity(0, transitionOptions.outTransition);
 
@@ -279,7 +279,7 @@ define(function(require, exports, module) {
                 break;
             case 'showing':
                 if(this._refreshData){
-                    window.setTimeout(this.refreshData.bind(this), 1000);
+                    Timer.setTimeout(this.refreshData.bind(this), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
@@ -305,7 +305,7 @@ define(function(require, exports, module) {
 
                         // // Header
                         // // - no extra delay
-                        // window.setTimeout(function(){
+                        // Timer.setTimeout(function(){
 
                         //     // Change header opacity
                         //     that.header.StateModifier.setOpacity(1, transitionOptions.outTransition);
@@ -314,7 +314,7 @@ define(function(require, exports, module) {
 
                         // Content
                         // - extra delay for content to be gone
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // // Bring map content back
                             // that.ContentStateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);

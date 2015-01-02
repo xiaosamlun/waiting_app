@@ -13,6 +13,7 @@ define(function(require, exports, module) {
     var StateModifier = require('famous/modifiers/StateModifier');
     var Transitionable     = require('famous/transitions/Transitionable');
     var Transform = require('famous/core/Transform');
+    var Easing = require('famous/transitions/Easing');
     var Matrix = require('famous/core/Transform');
     var RenderNode         = require('famous/core/RenderNode')
 
@@ -167,26 +168,96 @@ define(function(require, exports, module) {
         var listOptions = [
         
             {
+                type: 'spacer',
+            },
+            
+            {
                 type: 'header',
                 text: 'Connections'
             },
 
             {
-                title: 'New Friend',
-                desc: 'Every time you befriend someone',
-                scheme_key: 'new_friend'
+                title: 'New Connection',
+                desc: 'Every time you make a connection',
+                scheme_key: 'new_connection'
             },
+
+            {
+                type: 'spacer',
+            },
+            
+            // {
+            //     type: 'header',
+            //     text: 'Choices'
+            // },
+
+            // {
+            //     title: 'Invited to Choice',
+            //     desc: 'Using the "Ask Friend\s Privately" share option',
+            //     scheme_key: 'new_choice'
+            // },
+
+            (function(){
+                return App.Credentials.admin_emails.indexOf(App.Data.User.get('email')) === -1 ? null : {
+                    type: 'testbutton',
+                    text: 'Test Push',
+                    click: function(){
+                        // Trigger a Push Notification Test
+                        Utils.Notification.Toast('Sending Push Test request to server');
+                        $.ajax({
+                            url: App.Credentials.server_root + 'user/testpush',
+                            method: 'post',
+                            error: function(){
+                                Utils.Notification.Toast('Failed triggering Push Notification');
+                            },
+                            success: function(){
+                                Utils.Notification.Toast('Push Notification in 5 seconds');
+                            }
+                        });
+                    }
+                }
+            })(),
 
         ];
 
         this.model_views = [];
 
         listOptions.forEach(function(Info){
+             if(!Info){
+                // skipping null/undefined entries
+                return;
+             }
 
-            // Just a spacer/header/separator?
+            // Test Button
+            if(Info.type && Info.type == 'testbutton'){
+                var testButton = new Surface({
+                    content: Info.text,
+                    wrap: '<div class="outward-button"></div>',
+                    size: [undefined, 32],
+                    classes: ['button-outwards-default','testbutton-button']
+                });
+                testButton.on('click', Info.click);
+                testButton.pipe(that.contentScrollView);
+                that.contentScrollView.Views.push(testButton);
+                return;
+            }
+
+            // Header separator
             if(Info.type && Info.type == 'header'){
                 var separator = new Surface({
                     content: Info.text,
+                    size: [undefined, 32],
+                    classes: ['push-list-separator-default']
+                });
+                separator.pipe(that.contentScrollView);
+                that.contentScrollView.Views.push(separator);
+                return;
+            }
+
+            // Spacer separator
+            if(Info.type && Info.type == 'spacer'){
+                var separator = new Surface({
+                    content: '',
                     size: [undefined, 32],
                     classes: ['push-list-separator-default']
                 });
@@ -222,8 +293,10 @@ define(function(require, exports, module) {
             });
             pushOpt.Left.pipe(that.contentScrollView);
 
+            pushOpt.ToggleView = new RenderNode(new StateModifier({size:[70,30]}));
+
             pushOpt.Toggle = new ToggleButton({
-                size: [40, 40],
+                size: [70, 30],
                 content: '',
                 classes: ['text-center'],
                 onClasses: ['push-toggle', 'circle-toggle', 'toggle-on'],
@@ -234,9 +307,48 @@ define(function(require, exports, module) {
             });
             pushOpt.Toggle.pipe(that.contentScrollView);
 
+            pushOpt.ToggleButton = new Surface({
+                size: [26,26],
+                classes: ['push-toggle-top-button']
+            });
+            pushOpt.ToggleButton.on('click', function(){
+                // choose opposite
+                var val = that.model.get('scheme.' + Info.scheme_key);
+                if(val){
+                    pushOpt.Toggle.deselect() 
+                } else {
+                    pushOpt.Toggle.select() 
+                }
+            });
+            var TRANSITION = { duration: 350, curve: Easing.outQuad };
+            var state = new Transitionable(0);
+            var isToggled = false;
+            var toggleModifier = new Modifier({
+                // toggle between 0 and right x-position
+                transform: function() {
+                    var xPos = 2 + state.get() * (70 - 30);
+                    return Transform.translate(xPos, 0, 0);
+                }
+            });
+            // Toggle state between 0 and 1
+            function moveButton() {
+                // Halts current animation if active
+                if(state.isActive()) state.halt();
+                // Sets end transition state
+                if(isToggled) state.set(1, TRANSITION);
+                else state.set(0, TRANSITION);
+
+                isToggled = !isToggled;
+            }
+
+            pushOpt.ToggleView.add(pushOpt.Toggle);
+            pushOpt.ToggleView.add(Utils.Z(1)).add(toggleModifier).add(pushOpt.ToggleButton);
+
             // Handle toggle button click
             pushOpt.Toggle.on('select', function(m){
                 console.log('select, saving');
+                isToggled = true;
+                moveButton();
                 if(that.model.get('scheme.' + Info.scheme_key) !== true){
                     var data = {};
                     data['scheme.' + Info.scheme_key] = true;
@@ -245,6 +357,8 @@ define(function(require, exports, module) {
             });
             pushOpt.Toggle.on('deselect', function(){
                 console.log('deselect, saving');
+                isToggled = false;
+                moveButton();
                 if(that.model.get('scheme.' + Info.scheme_key) !== false){
                     var data = {};
                     data['scheme.' + Info.scheme_key] = false;
@@ -266,7 +380,7 @@ define(function(require, exports, module) {
 
             pushOpt.Layout.sequenceFrom([
                 pushOpt.Left,
-                pushOpt.Toggle,
+                pushOpt.ToggleView,
                 pushOpt.Right
             ]);
 
@@ -357,7 +471,7 @@ define(function(require, exports, module) {
                             // that.header.StateModifier.setOpacity(0, transitionOptions.outTransition);
 
                             // Slide content down
-                            // that.layout.content.StateModifier.setTransform(Transform.translate(0,window.innerHeight,0), transitionOptions.outTransition);
+                            that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth * (goingBack ? 1.5:-1.5),0,0), transitionOptions.outTransition);
 
                         }, delayShowing);
 
@@ -377,12 +491,24 @@ define(function(require, exports, module) {
                         // No animation by default
                         transitionOptions.inTransform = Transform.identity;
 
+                        // // Default header opacity
+                        // that.header.StateModifier.setOpacity(0);
+
+                        // // Default position
+                        // if(goingBack){
+                        //     that.ContentStateModifier.setTransform(Transform.translate(window.innerWidth * -1,0,0));
+                        // } else {
+                        //     that.ContentStateModifier.setTransform(Transform.translate(window.innerWidth + 100,0,0));
+                        // }
+                        that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth * (goingBack ? -1.5:1.5), 0, 0));
+
+
                         // Content
                         // - extra delay for content to be gone
                         Timer.setTimeout(function(){
 
                             // Bring map content back
-                            // that.layout.content.StateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);
+                            that.layout.content.StateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);
 
                         }, delayShowing + transitionOptions.outTransition.duration);
 

@@ -35,10 +35,10 @@ define(function(require, exports, module) {
     // // Side menu of options
     // var GameMenuView      = require('views/Game/GameMenu');
 
-    // // Models
-    // var GameModel = require('models/game');
-    // var PlayerModel = require('models/player');
-    // var MediaModel = require('models/media');
+    // Models
+    var GameModel = require('models/game');
+    var PlayerModel = require('models/player');
+    var MediaModel = require('models/media');
 
     function PageView(params) {
         var that = this;
@@ -74,6 +74,85 @@ define(function(require, exports, module) {
         this.layout.content.add(this.contentView);
         this.add(this.layout);
 
+        return;
+
+
+        // Models
+
+        // Game
+        this.model = new GameModel.Game({
+            _id: params.args[0]
+        });
+        this.model.fetch({prefill: true});
+
+        // Media
+        this.media_collection = new MediaModel.MediaCollection({
+            game_id: params.args[0]
+        });
+        this.media_collection.fetch({prefill: true});
+
+        // create the layout
+        this.layout = new HeaderFooterLayout({
+            headerSize: App.Defaults.Header.size,
+            footerSize: 60
+        });
+
+
+        this.createHeader();
+        // this.createContent();
+        // this.createBlankFooter();
+
+            
+        // Create the mainTransforms for shifting the entire view over on menu open
+        this.mainTransform = new Modifier({
+            transform: Transform.identity
+        });
+        this.mainTransitionable = new Transitionable(0);
+        this.mainTransform.transformFrom(function() {
+            // Called every frame of the animation
+            return Transform.translate(this.mainTransitionable.get() * -1, 0, 0);
+        }.bind(this));
+
+        // Create the menu that swings out
+        this.sideView = new GameMenuView({
+            model: this.model
+        });
+        this.sideView.OpacityModifier = new StateModifier();
+
+
+        // Wait for model to get data, and then render the content
+        this.model.populated().then(function(){
+
+            // that.update_counts();
+
+            // // Now listen for changes
+            // that.model.on('change', that.update_counts, that);
+
+            switch(that.model.get('sport_id.result_type')){
+                case '1v1':
+                    that.create1v1();
+                    break;
+
+                case 'free-for-all':
+                    that.createFreeForAll();
+                    break;
+
+                default:
+                    console.log(that.model.toJSON());
+                    throw "error";
+                    alert("Unable to handle other types (1v2, teams, etc.) yet");
+                    debugger;
+                    return;
+            }
+
+        });
+
+        // Attach the main transform and the comboNode to the renderTree
+        this.add(this.mainTransform).add(this.layout);
+
+        // // Attach the main transform and the comboNode to the renderTree
+        // this.add(this.layout);
+
     }
 
     PageView.prototype = Object.create(View.prototype);
@@ -99,7 +178,7 @@ define(function(require, exports, module) {
         });
         this.header._eventOutput.on('more',function(){
             // if(that.model.get('CarPermission.coowner')){
-            //     App.history.navigate('car/permission/' + that.model.get('_id'));
+            //     App.history.navigate('car/permission/' + that.model.get('_id'), {trigger: true});
             // }
             // that.menuToggle();
         });
@@ -374,7 +453,7 @@ define(function(require, exports, module) {
             window.plugins.socialsharing.shareViaSMS('www.nemesisapp.net/game/public/' + that.model.get('_id'), null);
         });
 
-        // window.plugins.socialsharing.shareViaSMS('Waiting code: ' + this.model.get('code').toUpperCase(), null);
+        // window.plugins.socialsharing.shareViaSMS('Wehicle code: ' + this.model.get('code').toUpperCase(), null);
 
     };
 
@@ -657,7 +736,7 @@ define(function(require, exports, module) {
                         transitionOptions.outTransform = Transform.identity;
 
                         // Wait for timeout of delay to hide
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // // Fade header
                             // that.header.StateModifier.setOpacity(0, transitionOptions.outTransition);
@@ -678,7 +757,7 @@ define(function(require, exports, module) {
                         // Overwriting and using default identity
                         transitionOptions.outTransform = Transform.identity;
 
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // // Fade header
                             // that.header.StateModifier.setOpacity(0, transitionOptions.outTransition);
@@ -695,7 +774,7 @@ define(function(require, exports, module) {
 
             case 'showing':
                 if(this._refreshData){
-                    window.setTimeout(this.refreshData.bind(this), 1000);
+                    Timer.setTimeout(this.refreshData.bind(this), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
@@ -717,7 +796,7 @@ define(function(require, exports, module) {
                         // that.ContentStateModifier.setTransform(Transform.translate(0, window.innerHeight, 0));
 
                         // Header
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // // Change header opacity
                             // that.header.StateModifier.setOpacity(1, transitionOptions.outTransition);
@@ -727,7 +806,7 @@ define(function(require, exports, module) {
 
                         // Content
                         // - extra delay
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // // Bring content back
                             // that.ContentStateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);
@@ -742,7 +821,7 @@ define(function(require, exports, module) {
                         // // - not the footer
                         // // console.log(transitionOptions.outTransform);
                         // // debugger;
-                        // window.setTimeout(function(){
+                        // Timer.setTimeout(function(){
 
                         //     // Bring map content back
                         //     that.layout.content.StateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);

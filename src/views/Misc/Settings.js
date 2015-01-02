@@ -121,17 +121,17 @@ define(function(require, exports, module) {
         // Sequence
         this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
 
-        // Content bg
-        // - for handling clicks
-        this.contentBg = new Surface({
-            size: [undefined, undefined],
-            properties: {
-                zIndex: "-1"
-            }
-        });
-        this.contentBg.on('click', function(){
-            App.history.back();
-        });
+        // // Content bg
+        // // - for handling clicks
+        // this.contentBg = new Surface({
+        //     size: [undefined, undefined],
+        //     properties: {
+        //         background: 'red'
+        //     }
+        // });
+        // this.contentBg.on('click', function(){
+        //     // App.history.back();
+        // });
 
         // Content
         this.layout.content.StateModifier = new StateModifier({
@@ -144,7 +144,7 @@ define(function(require, exports, module) {
 
 
         // Now add content
-        this.layout.content.add(this.contentBg);
+        // this.layout.content.add(Utils.usePlane('content',-1)).add(this.contentBg);
         this.layout.content.add(this.layout.content.SizeModifier).add(this.layout.content.StateModifier).add(Utils.usePlane('content')).add(this.contentScrollView);
         // this.layout.content.add(this.layout.content.SizeModifier).add(this.layout.content.StateModifier).add(container);
 
@@ -162,11 +162,17 @@ define(function(require, exports, module) {
                 href: 'profile/edit'
             },
 
-            {
-                title: 'Payments',
-                desc: 'Manage cards and bank accounts',
-                href: 'payment_source/list'
-            },
+            // {
+            //     title: 'Payments',
+            //     desc: 'Manage cards, etc.',
+            //     href: 'payment_source/list'
+            // },
+
+            // {
+            //     title: 'Accept Money',
+            //     desc: 'Manage debit accounts',
+            //     href: 'payment_recipient/list'
+            // },
 
             {
                 title: 'Push Notifications',
@@ -197,10 +203,12 @@ define(function(require, exports, module) {
             //     href: 'perks'
             // },
             
-            {
-                title: 'Logout and Exit',
-                desc: 'Buh-bye',
-                href: 'logout'
+            {   
+                type: 'button',
+                text: 'Logout',
+                click: function(){
+                    App.history.navigate('logout', {history: false});
+                }
             }
         ];
 
@@ -210,6 +218,10 @@ define(function(require, exports, module) {
 
                 case 'toggle': 
                     that.createToggleSwitch(setting);
+                    break;
+
+                case 'button':
+                    that.createButton(setting);
                     break;
 
                 default:
@@ -231,7 +243,7 @@ define(function(require, exports, module) {
         }
         var surface = new Surface({
             content: '<div>'+setting.title+'</div>', //<div>'+setting.desc+'</div>',
-            size: [undefined, 60],
+            size: [undefined, true],
             classes: classes
         });
         surface.Setting = setting;
@@ -245,6 +257,27 @@ define(function(require, exports, module) {
             setting.on_create(surface);
         }
         that.contentScrollView.Views.push(surface);
+
+    };
+
+    PageView.prototype.createButton = function(setting){
+        var that = this;
+
+            // Test Button
+        var testButton = new Surface({
+            content: setting.text,
+            wrap: '<div class="outward-button"></div>',
+            size: [undefined, true],
+            classes: ['button-outwards-default','settings-button']
+        });
+        testButton.on('click', setting.click);
+
+        if(setting.on_create){
+            setting.on_create(testButton);
+        }
+
+        testButton.pipe(that.contentScrollView);
+        that.contentScrollView.Views.push(testButton);
 
     };
 
@@ -365,7 +398,7 @@ define(function(require, exports, module) {
                             // that.header.StateModifier.setOpacity(0, transitionOptions.outTransition);
 
                             // Slide content down
-                            that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth * -1,0,0), transitionOptions.outTransition);
+                            that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth * (goingBack ? 1.5:-1.5),0,0), transitionOptions.outTransition);
 
                         }, delayShowing);
 
@@ -375,7 +408,7 @@ define(function(require, exports, module) {
                 break;
             case 'showing':
                 if(this._refreshData){
-                    // window.setTimeout(that.refreshData.bind(that), 1000);
+                    // Timer.setTimeout(that.refreshData.bind(that), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
@@ -394,7 +427,7 @@ define(function(require, exports, module) {
                         // } else {
                         //     that.ContentStateModifier.setTransform(Transform.translate(window.innerWidth + 100,0,0));
                         // }
-                        that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth * -1, 0, 0));
+                        that.layout.content.StateModifier.setTransform(Transform.translate(window.innerWidth * (goingBack ? -1.5:1.5), 0, 0));
 
 
                         // Content

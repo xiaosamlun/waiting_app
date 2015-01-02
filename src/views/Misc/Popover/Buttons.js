@@ -5,11 +5,9 @@ define(function(require, exports, module) {
     var View = require('famous/core/View');
     var ScrollView = require('famous/views/Scrollview');
     var SequentialLayout = require('famous/views/SequentialLayout');
-    var FlexibleLayout = require('famous/views/FlexibleLayout');
     var RenderController = require('famous/views/RenderController');
     var Lightbox = require('famous/views/Lightbox');
     var Surface = require('famous/core/Surface');
-    var InputSurface = require('famous/surfaces/InputSurface');
     var Modifier = require('famous/core/Modifier');
     var StateModifier = require('famous/modifiers/StateModifier');
     var Transitionable     = require('famous/transitions/Transitionable');
@@ -56,8 +54,8 @@ define(function(require, exports, module) {
 
         // Add to new ".passed" options, separate from this.options.App and other root-level arguments/objects
         this.params.passed = _.extend({
-            text: null,
-            button: 'OK'
+            title: null,
+            back_to_default_hint: true
         }, this.modalOptions || {});
 
         // // create the layout
@@ -87,19 +85,23 @@ define(function(require, exports, module) {
         this.lightbox = new Lightbox({
             // inTransition: false
         });
-        
+
+        var frontMod = new StateModifier({
+            transform: Transform.translate(0,0,1.1)
+        });
         this.contentView.add(Utils.usePlane('popover')).add(this.contentView.BgOpacityMod).add(this.contentView.BgSurface);
         // this.contentView.add(frontMod).add(this.lightbox);
 
         this.contentScrollView = new View();
         this.contentScrollView.OriginMod = new StateModifier({
+            align: [0.5, 0.5],
             origin: [0.5, 0.5]
         });
-        this.contentScrollView.SizeMod = new StateModifier({
-            size: [window.innerWidth - 80, true]
+        this.contentScrollView.OuterSizeMod = new StateModifier({
+            size: [Utils.WindowWidth() - 80, true]
         });
         this.contentScrollView.PositionMod = new StateModifier({
-            transform: Transform.translate(0, window.innerHeight, 0)
+            transform: Transform.translate(0, Utils.WindowHeight(), 0)
         });
         this.contentScrollView.ScaleMod = new StateModifier({
             transform: Transform.scale(0.001, 0.001, 0.001)
@@ -116,6 +118,17 @@ define(function(require, exports, module) {
                 this.contentScrollView.SeqLayout = new SequentialLayout(); //App.Defaults.ScrollView);
                 break;
         }
+
+        this.contentScrollView.SizeMod = new Modifier({
+            size: function(){
+                var defaultSize = 200;
+                var newSize = that.contentScrollView.getSize ? (that.contentScrollView.getSize(true) ? that.contentScrollView.getSize(true)[1] : defaultSize) : defaultSize;
+                if(newSize === true){
+                    newSize = defaultSize;
+                }
+                return [undefined, newSize] // default 200 sizing
+            }
+        });
         
         this.contentScrollView.Views = [];
 
@@ -126,7 +139,7 @@ define(function(require, exports, module) {
         this.contentScrollView.SeqLayout.sequenceFrom(this.contentScrollView.Views);
 
         // add sizing and everything
-        this.contentScrollView.add(this.contentScrollView.OriginMod).add(this.contentScrollView.PositionMod).add(this.contentScrollView.ScaleMod).add(this.contentScrollView.SizeMod).add(this.contentScrollView.SeqLayout);
+        this.contentScrollView.add(this.contentScrollView.OuterSizeMod).add(this.contentScrollView.OriginMod).add(this.contentScrollView.PositionMod).add(this.contentScrollView.ScaleMod).add(this.contentScrollView.SeqLayout);
 
         // show the content in the lightbox
         // this.lightbox.show(this.contentScrollView);
@@ -136,12 +149,19 @@ define(function(require, exports, module) {
 
         // Events (background on_cancel)
         this.contentView.BgSurface.on('click', function(){
-            // // close the popover, call on_cancel
-            // that.closePopover();
-            // if(that.params.passed.on_cancel){
-            //     that.params.passed.on_cancel();
-            // }
+            // close the popover, call on_cancel
+            that.closePopover();
+            if(that.params.passed.on_cancel){
+                that.params.passed.on_cancel();
+            }
         });
+
+        // // Content
+        // this.layout.content.StateModifier = new StateModifier();
+        // this.layout.content.add(this.layout.content.StateModifier).add(this.contentScrollView);
+
+        // // Attach layout to the context
+        // this.add(this.layout);
 
     }
 
@@ -151,95 +171,96 @@ define(function(require, exports, module) {
     PageView.prototype.addSurfaces = function(Model) { 
         var that = this;
         ModelIndex = this.contentScrollView.Views.length;
+
+        // Title
         // Text
         // Buttons
 
+        // Title
+        if(this.modalOptions.title){
+
+            this.titleView = new View(); 
+            this.titleView.Surface = new Surface({
+                size: [undefined, 60],
+                content: this.modalOptions.title,
+                classes: ['modal-option-buttons-title-default']
+            });
+            this.titleView.add(this.titleView.Surface);
+            this.titleView.getSize = function(){
+                return [undefined, 60];
+            };
+            this.titleView.Surface.pipe(that.contentScrollView.SeqLayout);
+            this.titleView.Surface.on('click', function(){
+                // debugger;
+                var returnResult = listOption;
+                that.closePopover();
+                // if(that.params.passed.on_choose){
+                    // that.params.passed.on_choose(returnResult);
+                // }
+            });
+            that.contentScrollView.Views.push(this.titleView);
+
+        }
+
         // Text
+        if(this.modalOptions.text){
 
-        this.textView = new View();
-        this.textView.Surface = new Surface({
-            size: [undefined, true],
-            content: this.params.passed.text,
-            classes: ['modal-option-buttons-text-default']
-        });
-        this.textView.add(this.textView.Surface);
-        this.textView.getSize = function(){
-            return [undefined, that.textView.Surface._trueSize ? that.textView.Surface._trueSize[1] : undefined];
-        };
-        this.textView.Surface.pipe(that.contentScrollView.SeqLayout);
-        this.textView.Surface.on('click', function(){
-            
-            that.closePopover();
-            if(that.params.passed.on_done){
-                that.params.passed.on_done();
-            }
+            this.textView = new View();
+            this.textView.Surface = new Surface({
+                size: [undefined, true],
+                content: this.modalOptions.text,
+                classes: ['modal-option-buttons-text-default']
+            });
+            this.textView.add(this.textView.Surface);
+            this.textView.getSize = function(){
+                return [undefined, that.textView.Surface._trueSize ? that.textView.Surface._trueSize[1] : undefined];
+            };
+            this.textView.Surface.pipe(that.contentScrollView.SeqLayout);
+            this.textView.Surface.on('click', function(){
+                // debugger;
+                var returnResult = listOption;
+                that.closePopover();
+                // if(that.params.passed.on_choose){
+                    // that.params.passed.on_choose(returnResult);
+                // }
+            });
+            that.contentScrollView.Views.push(this.textView);
 
-        });
-        that.contentScrollView.Views.push(this.textView);
+        }
 
+        // Buttons
+        if(this.modalOptions.buttons){
 
-        // Buttons (FlexibleLayout)
+            this.buttonsView = new View();
 
-        this.buttonsView = new View();
-        this.buttonsView.SizeMod = new StateModifier({
-            size: [undefined, 60]
-        });
-        this.buttonsView.GridLayout = new FlexibleLayout({
-            direction: 0, // x, horizontal
-            ratios: [2, 1]
-        });
-        this.buttonsView.GridLayout.Views = [];
+            _.each(this.modalOptions.buttons, function(buttonInfo){
 
-        // OK (two-thirds)
-        var OKButtonView = new View(); 
-        OKButtonView.Surface = new Surface({
-            size: [undefined, 60],
-            content: '<div class="outward-button">' + this.params.passed.buttonYes + '</div>',
-            classes: ['button-outwards-default'],
-            properties: {
-                backgroundColor: 'white'
-            }
-        });
-        OKButtonView.add(OKButtonView.Surface);
-        OKButtonView.Surface.pipe(that.contentScrollView.SeqLayout);
-        OKButtonView.Surface.on('click', function(){
-            // var value = that.inputView.Surface.getValue();
+                var buttonView = new View(); 
+                buttonView.Surface = new Surface({
+                    size: [undefined, 60],
+                    content: '<div class="outward-button">' + buttonInfo.text + '</div>',
+                    classes: ['button-outwards-default'],
+                    properties: {
+                        backgroundColor: 'white'
+                    }
+                });
+                buttonView.getSize = function(){
+                    return [undefined, 60];
+                };
+                buttonView.add(buttonView.Surface);
+                buttonView.Surface.pipe(that.contentScrollView.SeqLayout);
+                buttonView.Surface.on('click', function(){
+                    
+                    that.closePopover();
+                    if(buttonInfo.success){
+                        buttonInfo.success();
+                    }
 
-            that.closePopover();
-            if(that.params.passed.on_done){
-                that.params.passed.on_done();
-            }
+                });
+                that.contentScrollView.Views.push(buttonView.Surface);
+            });
 
-        });
-        this.buttonsView.GridLayout.Views.push(OKButtonView.Surface);
-
-        // Cancel (one-third)
-        var CancelButtonView = new View(); 
-        CancelButtonView.Surface = new Surface({
-            size: [undefined, 60],
-            content: '<div class="outward-button">' + this.params.passed.buttonNo + '</div>',
-            classes: ['button-outwards-default'],
-            properties: {
-                backgroundColor: 'white'
-            }
-        });
-        CancelButtonView.add(CancelButtonView.Surface);
-        CancelButtonView.Surface.pipe(that.contentScrollView.SeqLayout);
-        CancelButtonView.Surface.on('click', function(){
-            
-            that.closePopover();
-            if(that.params.passed.on_cancel){
-                that.params.passed.on_cancel();
-            }
-
-        });
-        this.buttonsView.GridLayout.Views.push(CancelButtonView.Surface);
-
-        this.buttonsView.GridLayout.sequenceFrom(this.buttonsView.GridLayout.Views);
-
-        this.buttonsView.add(this.buttonsView.SizeMod).add(this.buttonsView.GridLayout);
-
-        that.contentScrollView.Views.push(this.buttonsView);
+        }
 
     };
 

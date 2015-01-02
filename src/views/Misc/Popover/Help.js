@@ -8,7 +8,6 @@ define(function(require, exports, module) {
     var RenderController = require('famous/views/RenderController');
     var Lightbox = require('famous/views/Lightbox');
     var Surface = require('famous/core/Surface');
-    var InputSurface = require('famous/surfaces/InputSurface');
     var Modifier = require('famous/core/Modifier');
     var StateModifier = require('famous/modifiers/StateModifier');
     var Transitionable     = require('famous/transitions/Transitionable');
@@ -35,7 +34,7 @@ define(function(require, exports, module) {
     var _ = require('underscore');
     var $ = require('jquery');
 
-    // // Models
+    // Models
     // var PlayerModel = require('models/player');
 
     function PageView(params) {
@@ -43,20 +42,20 @@ define(function(require, exports, module) {
         View.apply(this, arguments);
         this.params = params;
 
-        if(!App.Cache.OptionModal){
+        if(!App.Cache.HelpPopoverModal){
             window.location = '';
             return;
         }
 
-        this.modalOptions = App.Cache.OptionModal;
+        this.modalOptions = App.Cache.HelpPopoverModal;
 
         // Expecting there to be a max of about 10 modal options
         // - params.title is optional
 
         // Add to new ".passed" options, separate from this.options.App and other root-level arguments/objects
         this.params.passed = _.extend({
-            text: null,
-            button: 'OK'
+            title: null,
+            body: ''
         }, this.modalOptions || {});
 
         // // create the layout
@@ -64,7 +63,7 @@ define(function(require, exports, module) {
         //     headerSize: App.Defaults.Header.size,
         //     footerSize: App.Defaults.Footer.size
         // });
-
+    
         // this.createHeader();
 
         // Background
@@ -86,123 +85,64 @@ define(function(require, exports, module) {
         this.lightbox = new Lightbox({
             // inTransition: false
         });
-        
-        this.contentView.add(Utils.usePlane('popover')).add(this.contentView.BgOpacityMod).add(this.contentView.BgSurface);
+
+        var frontMod = new StateModifier({
+            transform: Transform.inFront
+        });
+        this.contentView.add(this.contentView.BgOpacityMod).add(this.contentView.BgSurface);
         // this.contentView.add(frontMod).add(this.lightbox);
 
         this.contentScrollView = new View();
         this.contentScrollView.OriginMod = new StateModifier({
+            align: [0.5, 0.5],
             origin: [0.5, 0.5]
         });
         this.contentScrollView.SizeMod = new StateModifier({
-            size: [window.innerWidth - 80, true]
+            size: [Utils.WindowWidth() - 80, 200]
         });
         this.contentScrollView.PositionMod = new StateModifier({
-            transform: Transform.translate(0, window.innerHeight, 0)
+            transform: Transform.translate(0, Utils.WindowHeight(), 0)
         });
         this.contentScrollView.ScaleMod = new StateModifier({
             transform: Transform.scale(0.001, 0.001, 0.001)
         });
-
-        // ScrollView or SequentialLayout
-        switch(this.modalOptions.type){
-            case 'scroll':
-                this.contentScrollView.SeqLayout = new ScrollView(); //App.Defaults.ScrollView);
-                this.contentScrollView.SizeMod.setSize([window.innerWidth - 80, window.innerHeight - 40]);
-                break
-            case 'static':
-            default:
-                this.contentScrollView.SeqLayout = new SequentialLayout(); //App.Defaults.ScrollView);
-                break;
-        }
+        this.contentScrollView.SeqLayout = new SequentialLayout(); //App.Defaults.ScrollView);
         
         this.contentScrollView.Views = [];
+        this.contentScrollView.SeqLayout.sequenceFrom(this.contentScrollView.Views);
 
         // Add Surfaces
         this.addSurfaces();
-
-        // sequenceFrom
-        this.contentScrollView.SeqLayout.sequenceFrom(this.contentScrollView.Views);
 
         // add sizing and everything
         this.contentScrollView.add(this.contentScrollView.OriginMod).add(this.contentScrollView.PositionMod).add(this.contentScrollView.ScaleMod).add(this.contentScrollView.SizeMod).add(this.contentScrollView.SeqLayout);
 
         // show the content in the lightbox
         // this.lightbox.show(this.contentScrollView);
-        this.contentView.add(Utils.usePlane('popover',1)).add(this.contentScrollView);
+        this.contentView.add(frontMod).add(this.contentScrollView);
         this.add(this.contentView);
 
 
         // Events (background on_cancel)
         this.contentView.BgSurface.on('click', function(){
-            // // close the popover, call on_cancel
-            // that.closePopover();
-            // if(that.params.passed.on_cancel){
-            //     that.params.passed.on_cancel();
-            // }
+            // close the popover, call on_cancel
+            that.closePopover();
+            if(that.params.passed.on_done){
+                that.params.passed.on_done();
+            }
         });
+
+        // // Content
+        // this.layout.content.StateModifier = new StateModifier();
+        // this.layout.content.add(this.layout.content.StateModifier).add(this.contentScrollView);
+
+        // // Attach layout to the context
+        // this.add(this.layout);
 
     }
 
     PageView.prototype = Object.create(View.prototype);
     PageView.prototype.constructor = PageView;
-
-    PageView.prototype.addSurfaces = function(Model) { 
-        var that = this;
-        ModelIndex = this.contentScrollView.Views.length;
-        // Text
-        // Buttons
-
-        // Text
-
-        this.textView = new View();
-        this.textView.Surface = new Surface({
-            size: [undefined, true],
-            content: this.params.passed.text,
-            classes: ['modal-option-buttons-text-default']
-        });
-        this.textView.add(this.textView.Surface);
-        this.textView.getSize = function(){
-            return [undefined, that.textView.Surface._trueSize ? that.textView.Surface._trueSize[1] : undefined];
-        };
-        this.textView.Surface.pipe(that.contentScrollView.SeqLayout);
-        this.textView.Surface.on('click', function(){
-            
-            that.closePopover();
-            if(that.params.passed.on_done){
-                that.params.passed.on_done();
-            }
-
-        });
-        that.contentScrollView.Views.push(this.textView);
-
-        // Button
-        var buttonView = new View(); 
-        buttonView.Surface = new Surface({
-            size: [undefined, 60],
-            content: '<div class="outward-button">' + this.params.passed.button + '</div>',
-            classes: ['button-outwards-default'],
-            properties: {
-                backgroundColor: 'white'
-            }
-        });
-        buttonView.getSize = function(){
-            return [undefined, 60];
-        };
-        buttonView.add(buttonView.Surface);
-        buttonView.Surface.pipe(that.contentScrollView.SeqLayout);
-        buttonView.Surface.on('click', function(){
-            
-            that.closePopover();
-            if(that.params.passed.on_done){
-                that.params.passed.on_done();
-            }
-
-
-        });
-        that.contentScrollView.Views.push(buttonView.Surface);
-
-    };
 
     PageView.prototype.backbuttonHandler = function(){
         var that = this;
@@ -210,7 +150,7 @@ define(function(require, exports, module) {
         // alert('back button pressed for popover');
         this.closePopover();
         // if(that.params.passed.on_cancel){
-        that.params.passed.on_cancel();
+        that.params.passed.on_done();
         // }
     };
 
@@ -226,11 +166,86 @@ define(function(require, exports, module) {
         Timer.setTimeout(function(){
 
             def.resolve(); // 
-            App.Views.Popover.hideIf(that); // actually hide the popover
+            App.Views.Popover.hide(); // actually hide the popover
 
         }, delay);
 
         return def.promise();
+    };
+
+    PageView.prototype.createHeader = function(){
+        var that = this;
+        
+        // create the header
+        this.header = new StandardHeader({
+            content: this.params.passed.title,
+            classes: ["normal-header"],
+            backClasses: ["normal-header"],
+            moreContent: false
+        }); 
+        this.header._eventOutput.on('back',function(){
+            // App.history.back();//.history.go(-1);
+            
+            if(that.params.passed.on_done){
+                that.params.passed.on_done();
+            }
+        });
+        this.header.pipe(this._eventInput);
+        this._eventOutput.on('inOutTransition', function(args){
+            this.header.inOutTransition.apply(this.header, args);
+        })
+
+        // Attach header to the layout        
+        this.layout.header.add(this.header);
+
+    };
+
+    PageView.prototype.addSurfaces = function(Model) { 
+        var that = this;
+        ModelIndex = this.contentScrollView.Views.length;
+
+        // Adding a header kinda and a body
+
+        // title
+        this.titleView = new View(); 
+        this.titleView.Surface = new Surface({
+            size: [undefined, true],
+            content: this.params.passed.title,
+            classes: ['modal-option-help-popover-title-default']
+        });
+        this.titleView.getSize = function(){
+            return [undefined, that.titleView.Surface._trueSize ? that.titleView.Surface._trueSize[1] : 60];
+        };
+        this.titleView.add(this.titleView.Surface);
+        this.titleView.Surface.pipe(that.contentScrollView);
+        this.titleView.Surface.on('click', function(){
+            // debugger;
+            // var returnResult = listOption;
+            that.closePopover();
+            that.params.passed.on_done();
+        });
+        that.contentScrollView.Views.push(this.titleView);
+
+        // body
+        this.bodyView = new View(); 
+        this.bodyView.Surface = new Surface({
+            size: [undefined, true],
+            content: this.params.passed.body,
+            classes: ['modal-option-help-popover-body-default']
+        });
+        this.bodyView.getSize = function(){
+            return [undefined, that.bodyView.Surface._trueSize ? that.bodyView.Surface._trueSize[1] : 60];
+        };
+        this.bodyView.add(this.bodyView.Surface);
+        this.bodyView.Surface.pipe(that.contentScrollView);
+        this.bodyView.Surface.on('click', function(){
+            // debugger;
+            // var returnResult = listOption;
+            that.closePopover();
+            that.params.passed.on_done();
+        });
+        that.contentScrollView.Views.push(this.bodyView);
+
     };
 
     PageView.prototype.inOutTransitionPopover = function(direction){
@@ -244,7 +259,7 @@ define(function(require, exports, module) {
             case 'hiding':
 
                 // Fade out the background
-                delay = 350;
+                delay = 1000;
 
                 that.contentView.BgOpacityMod.setOpacity(0, {
                     duration: 350,
@@ -274,11 +289,11 @@ define(function(require, exports, module) {
 
 
                 that.contentScrollView.PositionMod.setTransform(Transform.translate(0,0,0),{
-                    duration: 250,
+                    duration: 450,
                     curve: 'easeOut'
                 });
                 that.contentScrollView.ScaleMod.setTransform(Transform.scale(1,1,1),{
-                    duration: 250,
+                    duration: 450,
                     curve: 'easeOut'
                 });
                 // that.contentView.BgOpacityMod.setOpacity(0);

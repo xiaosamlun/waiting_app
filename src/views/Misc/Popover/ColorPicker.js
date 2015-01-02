@@ -15,7 +15,14 @@ define(function(require, exports, module) {
     var Matrix = require('famous/core/Transform');
     var RenderNode         = require('famous/core/RenderNode')
 
+    var CanvasSurface    = require("famous/surfaces/CanvasSurface");
     var ContainerSurface    = require("famous/surfaces/ContainerSurface");
+
+    // Mouse/touch
+    var GenericSync = require('famous/inputs/GenericSync');
+    var MouseSync = require('famous/inputs/MouseSync');
+    var TouchSync = require('famous/inputs/TouchSync');
+    GenericSync.register({'mouse': MouseSync, 'touch': TouchSync});
 
     var Utility = require('famous/utilities/Utility');
     var Timer = require('famous/utilities/Timer');
@@ -26,6 +33,8 @@ define(function(require, exports, module) {
     var NavigationBar = require('famous/widgets/NavigationBar');
     var GridLayout = require("famous/views/GridLayout");
 
+    var BoxLayout = require('famous-boxlayout');
+
     // Views
     var StandardHeader = require('views/common/StandardHeader');
 
@@ -33,8 +42,9 @@ define(function(require, exports, module) {
     var Utils = require('utils');
     var _ = require('underscore');
     var $ = require('jquery');
+    var tinycolor = require('lib2/tinycolor');
 
-    // // Models
+    // Models
     // var PlayerModel = require('models/player');
 
     function PageView(params) {
@@ -42,29 +52,22 @@ define(function(require, exports, module) {
         View.apply(this, arguments);
         this.params = params;
 
-        if(!App.Cache.OptionModal){
+        if(!App.Cache.ColorPickerOptions){
             window.location = '';
             return;
         }
 
-        this.modalOptions = App.Cache.OptionModal;
+        this.modalOptions = App.Cache.ColorPickerOptions;
 
         // Expecting there to be a max of about 10 modal options
         // - params.title is optional
 
         // Add to new ".passed" options, separate from this.options.App and other root-level arguments/objects
         this.params.passed = _.extend({
-            title: null,
-            back_to_default_hint: true
+            color: '#0f0f0f'
         }, this.modalOptions || {});
 
-        // // create the layout
-        // this.layout = new HeaderFooterLayout({
-        //     headerSize: App.Defaults.Header.size,
-        //     footerSize: App.Defaults.Footer.size
-        // });
-
-        // this.createHeader();
+        this.chosen_color = this.params.passed.color;
 
         // Background
 
@@ -86,52 +89,38 @@ define(function(require, exports, module) {
             // inTransition: false
         });
 
-        var frontMod = new StateModifier({
-            transform: Transform.inFront
-        });
         this.contentView.add(this.contentView.BgOpacityMod).add(this.contentView.BgSurface);
         // this.contentView.add(frontMod).add(this.lightbox);
 
         this.contentScrollView = new View();
         this.contentScrollView.OriginMod = new StateModifier({
+            align: [0.5, 0.5],
             origin: [0.5, 0.5]
         });
         this.contentScrollView.SizeMod = new StateModifier({
-            size: [window.innerWidth - 80, true]
+            size: [Utils.WindowWidth() - 80, 200]
         });
         this.contentScrollView.PositionMod = new StateModifier({
-            transform: Transform.translate(0, window.innerHeight, 0)
+            transform: Transform.translate(0, Utils.WindowHeight(), 0)
         });
         this.contentScrollView.ScaleMod = new StateModifier({
             transform: Transform.scale(0.001, 0.001, 0.001)
         });
-
-        // ScrollView or SequentialLayout
-        switch(this.modalOptions.type){
-            case 'scroll':
-                this.contentScrollView.SeqLayout = new ScrollView(); //App.Defaults.ScrollView);
-                this.contentScrollView.SizeMod.setSize([window.innerWidth - 80, window.innerHeight - 40]);
-                break
-            case 'static':
-            default:
-                this.contentScrollView.SeqLayout = new SequentialLayout(); //App.Defaults.ScrollView);
-                break;
-        }
+        this.contentScrollView.SeqLayout = new SequentialLayout(); //App.Defaults.ScrollView);
         
         this.contentScrollView.Views = [];
 
         // Add Surfaces
         this.addSurfaces();
 
-        // sequenceFrom
         this.contentScrollView.SeqLayout.sequenceFrom(this.contentScrollView.Views);
 
         // add sizing and everything
-        this.contentScrollView.add(this.contentScrollView.OriginMod).add(this.contentScrollView.PositionMod).add(this.contentScrollView.ScaleMod).add(this.contentScrollView.SizeMod).add(this.contentScrollView.SeqLayout);
+        this.contentScrollView.add(this.contentScrollView.OriginMod).add(this.contentScrollView.SizeMod).add(this.contentScrollView.SeqLayout);
 
         // show the content in the lightbox
         // this.lightbox.show(this.contentScrollView);
-        this.contentView.add(frontMod).add(this.contentScrollView);
+        this.contentView.add(this.contentScrollView.PositionMod).add(Utils.usePlane('popover',10)).add(this.contentScrollView);
         this.add(this.contentView);
 
 
@@ -161,9 +150,9 @@ define(function(require, exports, module) {
         // Back button pressed
         // alert('back button pressed for popover');
         this.closePopover();
-        // if(that.params.passed.on_cancel){
-        that.params.passed.on_cancel();
-        // }
+        if(that.params.passed.on_cancel){
+            that.params.passed.on_cancel();
+        }
     };
 
     PageView.prototype.closePopover = function(){
@@ -185,66 +174,150 @@ define(function(require, exports, module) {
         return def.promise();
     };
 
-    PageView.prototype.createHeader = function(){
+    PageView.prototype.addSurfaces = function() { 
         var that = this;
-        
-        // create the header
-        this.header = new StandardHeader({
-            content: this.params.passed.title,
-            classes: ["normal-header"],
-            backClasses: ["normal-header"],
-            moreContent: false
-        }); 
-        this.header._eventOutput.on('back',function(){
-            // App.history.back();//.history.go(-1);
-            
-            if(that.params.passed.on_cancel){
-                that.params.passed.on_cancel();
-            }
-        });
-        this.header.pipe(this._eventInput);
-        this._eventOutput.on('inOutTransition', function(args){
-            this.header.inOutTransition.apply(this.header, args);
-        })
 
-        // Attach header to the layout        
-        this.layout.header.add(this.header);
+
+        this.addColorPicker();
+
+        this.addColorPicked();
+
 
     };
 
-    PageView.prototype.addSurfaces = function(Model) { 
+    PageView.prototype.addColorPicker = function() { 
         var that = this;
-        ModelIndex = this.contentScrollView.Views.length;
 
-        _.each(this.modalOptions.list, function(listOption){
-
-            var optionSurface = new View(); 
-            optionSurface.Surface = new Surface({
-                size: [undefined, true],
-                content: listOption.text,
-                classes: listOption.classes || ['modal-option-list-default']
-            });
-            optionSurface.getSize = function(){
-                return [undefined, optionSurface.Surface._trueSize ? optionSurface.Surface._trueSize[1] : 60];
-            };
-            optionSurface.add(optionSurface.Surface);
-            optionSurface.Surface.pipe(that.contentScrollView.SeqLayout);
-            optionSurface.Surface.on('click', function(){
-                // debugger;
-                var returnResult = listOption;
-                that.closePopover();
-                if(returnResult.success){
-                    returnResult.success(listOption);
-                    return;
-                }
-                if(that.params.passed.on_choose){
-                    that.params.passed.on_choose(returnResult);
-                }
-            });
-            that.contentScrollView.Views.push(optionSurface);
-
-            // that.playerScrollView.sequenceFrom(that.playerScrollSurfaces);
+        this.colorCanvas = new CanvasSurface({
+            canvasSize: [300, 300]
         });
+
+
+        // // create canvas and context objects
+        // var canvas = document.getElementById('picker');
+        this.colorCanvas.on('deploy', function(){
+            // debugger;
+        });
+
+        var ctx = this.colorCanvas.getContext('2d');
+
+        // drawing active image
+        var image = new Image();
+        image.onload = function () {
+            // console.log(image);
+            // ctx.drawImage(image, 0, 0); // draw the image on the canvas
+            this.loaded = true;
+            ctx.drawImage(image, 10, 10); // draw the image on the canvas
+        }
+        // image.src = 'https://dl.dropboxusercontent.com/u/6673634/colorwheel3.png';
+        var image_src = 'https://dl.dropboxusercontent.com/u/6673634/colorwheel3.png';
+        image_src = 'img/colorwheel3.png';
+        image.src = 'img/colorwheel3.png';
+
+        // this.colorCanvas.render = function render() {
+            
+        //     // console.log('render canvas');
+        //     var ctx = this.getContext('2d');
+
+        //     // // drawing active image
+        //     // var image = new Image();
+        //     // image.onload = function () {
+        //     //     ctx.drawImage(image, 0, 0); // draw the image on the canvas
+        //     // }
+        //     // image.src = 'https://dl.dropboxusercontent.com/u/6673634/colorwheel3.png';
+
+        //     // if(image.loaded){
+        //     //     ctx.drawImage(image, 10, 10); // draw the image on the canvas
+        //     // }
+
+        //     return this.id;
+        // };
+
+        // Create Image for the user to click on
+        this.imageSurface = new Surface({
+            content: '<img src="'+image_src+'" />',
+            size: [300, 300]
+        });
+        this.imageSurface.View = new ContainerSurface({
+            size: [300,300]
+        });
+        this.imageSurface.View.add(this.imageSurface);
+        
+        this.imageSurface.sync = new GenericSync(['mouse', 'touch']);
+        this.imageSurface.pipe(this.imageSurface.sync);
+
+        var updateSurface = function(e){
+            console.log(e.clientX,e.clientY);
+            console.log(that.imageSurface._element);
+
+            //Convert the mouse position to a Point
+            var mousePoint = new WebKitPoint(e.clientX, e.clientY)
+
+            //Convert the mouse point into node coordinates using WebKit
+            var nodeCoords = webkitConvertPointFromPageToNode(that.imageSurface._element, mousePoint)
+
+            // var offsets = recursiveOffsetLeftAndTop(that.imageSurface._element);
+            console.log(nodeCoords.x, nodeCoords.y);
+
+            // get current pixel
+            var imageData = ctx.getImageData(nodeCoords.x, nodeCoords.y, 1, 1);
+            var pixel = imageData.data;
+
+            // update preview color
+            var pixelColor = "rgb("+pixel[0]+", "+pixel[1]+", "+pixel[2]+")";
+            
+            that.chosenColorSurface.setProperties({
+                background: pixelColor,
+                color: tinycolor.mostReadable(pixelColor, ["#000", "#fff"]).toHexString()
+            });
+
+            that.chosen_color = tinycolor(pixelColor).toHexString();
+        };
+
+        this.imageSurface.sync.on('update', updateSurface);
+        this.imageSurface.sync.on('end', updateSurface);
+
+        this.contentScrollView.Views.push(this.imageSurface);
+
+        // // Create gradient
+        // var grd = ctx.createRadialGradient(75,50,5,90,60,100);
+        // grd.addColorStop(0,"red");
+        // grd.addColorStop(1,"white");
+
+        // // Fill with gradient
+        // ctx.fillStyle = grd;
+        // ctx.fillRect(10,10,150,80);
+
+        // that.contentScrollView.Views.push(this.colorCanvas);
+
+    };
+
+    PageView.prototype.addColorPicked = function() { 
+        var that = this;
+
+        this.chosenColorSurface = new Surface({
+            content: 'Ready',
+            size: [undefined, 40],
+            classes: ['color-picker-ready-default'],
+            properties: {
+                background: this.params.passed.color,
+                color: tinycolor.mostReadable(this.params.color, ["#000", "#fff"]).toHexString()
+            }
+        });
+        this.chosenColorSurface.on('click', function(){
+            that.closePopover();
+            if(that.params.passed.on_done){
+                that.params.passed.on_done(that.chosen_color);
+            }
+        });
+
+        // Build Margins
+        var boxLayout = new BoxLayout({ 
+            margins: [10] 
+        });
+        boxLayout.middleAdd(this.chosenColorSurface);
+
+        this.contentScrollView.Views.push(boxLayout);
 
     };
 
@@ -259,16 +332,16 @@ define(function(require, exports, module) {
             case 'hiding':
 
                 // Fade out the background
-                delay = 350;
+                delay = 1000;
 
                 that.contentView.BgOpacityMod.setOpacity(0, {
                     duration: 350,
                     curve: 'easeOut'
                 });
 
-                that.contentScrollView.PositionMod.setTransform(Transform.translate(0,-1 * window.innerHeight,0),{
-                    duration: 250,
-                    curve: 'easeIn' //Easing.inElastic
+                that.contentScrollView.PositionMod.setTransform(Transform.translate(0,window.innerHeight,0),{
+                    duration: 450,
+                    curve: 'easeOut'
                 });
                 // that.contentScrollView.ScaleMod.setTransform(Transform.scale(1,1,1),{
                 //     duration: 750,
@@ -289,12 +362,12 @@ define(function(require, exports, module) {
 
 
                 that.contentScrollView.PositionMod.setTransform(Transform.translate(0,0,0),{
-                    duration: 250,
-                    curve: 'easeOut'
+                    duration: 450,
+                    curve: 'easeIn'
                 });
                 that.contentScrollView.ScaleMod.setTransform(Transform.scale(1,1,1),{
-                    duration: 250,
-                    curve: 'easeOut'
+                    duration: 450,
+                    curve: 'easeIn'
                 });
                 // that.contentView.BgOpacityMod.setOpacity(0);
                 // that.contentView.BgOpacityMod.setOpacity(0.4, {
