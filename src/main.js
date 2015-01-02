@@ -450,71 +450,56 @@ define(function(require, exports, module) {
                 App.Views.MainFooter.Tabs = new StandardTabBar();  
                 var tmpTabs = App.Views.MainFooter.Tabs;
 
-                tmpTabs.defineSection('contests', {
-                    content: '<div><i class="icon ion-android-lightbulb"></i><div><span class="ellipsis-all">Choices</span></div></div>',
+                tmpTabs.defineSection('home', {
+                    content: '<i class="icon ion-home"></i><div><span class="ellipsis-all">'+App.t('footer.waiting')+'</span></div>',
                     onClasses: ['footer-tabbar-default', 'on'],
                     offClasses: ['footer-tabbar-default', 'off']
                 });
-                // tmpTabs.defineSection('invoices', {
-                //     content: '<i class="icon ion-social-usd"></i><div><span class="ellipsis-all">Invoices</span></div>',
-                //     onClasses: ['footer-tabbar-default', 'on'],
-                //     offClasses: ['footer-tabbar-default', 'off']
-                // });
-                // tmpTabs.defineSection('updates', {
-                //     content: '<i class="icon ion-android-sort"></i><div><span class="ellipsis-all">Updates</span></div>',
-                //     onClasses: ['footer-tabbar-default', 'on'],
-                //     offClasses: ['footer-tabbar-default', 'off']
-                // });
-                // tmpTabs.defineSection('messages', {
-                //     content: '<i class="icon ion-android-inbox"></i><div><span class="ellipsis-all">Msgs</span></div>',
-                //     onClasses: ['footer-tabbar-default', 'on'],
-                //     offClasses: ['footer-tabbar-default', 'off']
-                // });
+                tmpTabs.defineSection('messages', {
+                    content: '<i class="icon ion-android-inbox"></i><div><span class="ellipsis-all">'+App.t('footer.messages')+'</span></div>',
+                    onClasses: ['footer-tabbar-default', 'on'],
+                    offClasses: ['footer-tabbar-default', 'off']
+                });
                 tmpTabs.defineSection('profiles', {
-                    content: '<div><i class="icon ion-person"></i><div><span class="ellipsis-all">Profile</span></div></div>',
+                    content: '<i class="icon ion-person"></i><div><span class="ellipsis-all">'+App.t('footer.profiles')+'</span></div>',
                     onClasses: ['footer-tabbar-default', 'on'],
                     offClasses: ['footer-tabbar-default', 'off']
                 });
+                tmpTabs.defineSection('friends', {
+                    content: '<i class="icon ion-android-friends"></i><div><span class="ellipsis-all">'+App.t('footer.friends')+'</span></div>',
+                    onClasses: ['footer-tabbar-default', 'on'],
+                    offClasses: ['footer-tabbar-default', 'off']
+                });
+
+
 
                 tmpTabs.on('select', function(result, eventTriggered){
-                    console.log(eventTriggered);
-                    console.log(result);
+                    console.error(eventTriggered);
+                    console.error(result);
                     switch(result.id){
                         
-                        // case 'contests':
-                        //     App.history.navigate('contest/list');
-                        //     break;
+                        case 'home':
+                            App.history.navigate('user/waiting');
+                            break;
 
-                        // case 'profiles':
-                        //     // display the "last" profile we looked at
-                        //     if(App.history.findLastTag('user')){
-                        //         // found a tag to go back to
-                        //         App.history.backTo('user');
-                        //     } else {
-                        //         // show the default user
-                        //         if(App.Data.User.hasFetched){
-                        //             App.history.navigate('user/' + App.Data.User.get('_id'));
-                        //             return;
-                        //         }
-                        //         App.history.navigate('user',{history: false});
-                        //     }
-                        //     break;
+                        case 'profiles':
+                            App.history.navigate('user',{history: false});
+                            break;
 
-                        // case 'updates':
-                        //     App.history.navigate('actions/all');
-                        //     break;
+                        case 'messages':
+                            App.history.navigate('inbox');
+                            break;
 
-                        // case 'messages':
-                        //     App.history.navigate('inbox');
-                        //     break;
+                        case 'friends':
+                            App.history.navigate('friend/list');
+                            break;
 
                         default:
-                            console.error('none chosen');
-                            return;
+                            alert('none chosen');
+                            break;
                     }
                 });
-
-
+                
                 // Attach header to the layout 
                 App.Views.MainFooter.originMod = new StateModifier({
                     origin: [0.5, 1],
@@ -547,8 +532,8 @@ define(function(require, exports, module) {
                     App.Views.MainFooter.positionMod.setTransform(Transform.translate(0,1000,0), transition);
                 };
 
-                // // Add to maincontext
-                // App.MainView.add(Utils.usePlane('mainfooter')).add(App.Views.MainFooter);
+                // Add to maincontext
+                App.MainView.add(Utils.usePlane('mainfooter')).add(App.Views.MainFooter);
 
             };
             createMainFooter();
