@@ -357,7 +357,7 @@ define(function(require, exports, module) {
         // Events
         temp.pipe(this.contentScrollView);
         temp.on('click', (function(){
-            App.history.navigate('profile/' + Model.get('_id'));
+            App.history.navigate('profile/' + Model.get('_id'), {trigger: true});
         }).bind(this));
         // temp.on('swipe', (function(){
         //     this._eventOutput.emit("menuToggle");
@@ -402,7 +402,7 @@ define(function(require, exports, module) {
                         that.ContentStateModifier.setOpacity(1);
 
                         // Content
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
                             // // Fade header
                             // that.header.StateModifier.setOpacity(0, transitionOptions.outTransition);
 
@@ -417,7 +417,7 @@ define(function(require, exports, module) {
                 break;
             case 'showing':
                 if(this._refreshData){
-                    window.setTimeout(this.refreshData.bind(this), 1000);
+                    Timer.setTimeout(this.refreshData.bind(this), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
@@ -446,7 +446,7 @@ define(function(require, exports, module) {
 
                         // // Header
                         // // - no extra delay
-                        // window.setTimeout(function(){
+                        // Timer.setTimeout(function(){
 
                         //     // Change header opacity
                         //     that.header.StateModifier.setOpacity(1, transitionOptions.outTransition);
@@ -455,7 +455,7 @@ define(function(require, exports, module) {
 
                         // Content
                         // - extra delay for content to be gone
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // Bring content back
                             that.ContentStateModifier.setOpacity(1, transitionOptions.inTransition);
