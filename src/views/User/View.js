@@ -69,7 +69,40 @@ define(function(require, exports, module) {
         View.apply(this, arguments);
         this.options = options;
 
-        this.user_id = this.options.args[0];
+        this.profile_id = this.options.args[0];
+        var profile_id = this.profile_id;
+
+        App.history.modifyLast({
+            tag: 'user'
+        });
+
+        // // Are we getting a profile_id, or do we need to get the current user's profile_id?
+        // this.KnowProfileId = $.Deferred();
+        // var profile_id; 
+        // if(this.options.args.length > 0 && this.options.args[0]){
+        //     // It is set
+        //     // - resolve now
+        //     profile_id = this.options.args[0];
+        // } else {
+        //     // Trying to go to the ond "Dash" (the current user)
+        //     // Sometimes we don't immediately know the current owner's ID
+        //     // this.KnowProfileId = $.Deferred();
+        //     this.profile_id = App.Data.User.get('_id'); //localStorage.getItem('home_profile_id');
+        //     // this.profile_id = profile_id && profile_id.length == 24 ? profile_id : false;
+        // }
+
+        // // If profile_id is set, then use it, otherwise get the user's profile_id)
+        // if(this.profile_id){
+        //     // Resolve the KnowProfileId right away
+        //     // - might use it later in a Deferred context
+        //     this.KnowProfileId.resolve(this.profile_id);
+        // } else {
+        //     // Determine my user._id
+        //     App.Data.User.populated().then(function(){
+        //         that.profile_id = App.Data.User.get('_id');
+        //         that.KnowProfileId.resolve(App.Data.User.get('_id'));
+        //     });
+        // }
 
         // create the layout
         this.layout = new HeaderFooterLayout({
@@ -77,35 +110,52 @@ define(function(require, exports, module) {
             footerSize: 60
         });
 
+
         this.createContent();
         this.createHeader();
         
         // Attach the main transform and the comboNode to the renderTree
         this.add(this.layout);
 
-        // Models
+        this.loadModels();
+
+    }
+
+    PageView.prototype = Object.create(View.prototype);
+    PageView.prototype.constructor = PageView;
+
+
+    PageView.prototype.loadModels = function(){
+        var that = this;
+
 
         // Get Profile (Me)
-        this.model = new UserModel.User({
-            user_id: this.user_id
+        that.model = new UserModel.User({
+            profile_id: this.profile_id
         });
-        this.model.fetch({prefill: true});
+        that.model.fetch({prefill: true});
+
+        if(this.profile_id == App.Data.User.get('_id')){
+            App.Events.on('user_updated', function(){
+                that.model.fetch();
+            });
+        }
 
         // Get Friend relationship
-        this.friend_model = new FriendModel.Friend({
-            friend_id: this.user_id
+        that.friend_model = new FriendModel.Friend({
+            friend_id: this.profile_id
         });
-        this.friend_model.fetch({prefill: true});
+        that.friend_model.fetch({prefill: true});
 
         // Listen for 'showing' events
-        this._eventInput.on('inOutTransition', function(args){
+        that._eventInput.on('inOutTransition', function(args){
             // 0 = direction
             if(args[0] == 'showing'){
                 that.model.fetch();
             }
         });
 
-        this.model.populated().then(function(){
+        that.model.populated().then(function(){
 
             // Show user information
             that.contentLightbox.show(that.contentScrollView);
@@ -153,11 +203,7 @@ define(function(require, exports, module) {
 
         });
 
-    }
-
-    PageView.prototype = Object.create(View.prototype);
-    PageView.prototype.constructor = PageView;
-
+    };
 
     PageView.prototype.createHeader = function(){
         var that = this;
@@ -192,7 +238,6 @@ define(function(require, exports, module) {
         this.headerContent.Settings.on('click', function(){
             App.history.navigate('settings');
         });
-
         // message
         this.headerContent.Message = new Surface({
             content: '<i class="icon ion-ios7-chatboxes"></i>',
@@ -204,6 +249,66 @@ define(function(require, exports, module) {
         });
         this.headerContent.Message.on('click', function(){
             App.history.navigate('inbox/' + that.profile_id);
+        });
+
+        // quick invite
+        this.headerContent.Invite = new Surface({
+            content: '<i class="icon ion-ios7-chatboxes"></i>',
+            size: [60, undefined],
+            classes: ['header-tab-icon-text-big']
+        });
+        this.headerContent.Invite.on('longtap', function(){
+            Utils.Help('User/View/Message');
+        });
+        this.headerContent.Invite.on('click', function(){
+            // Fetch an Invite Code and send it to somebody
+
+            // If looking at somebody else, then send THEM an invite code
+            // - v2...
+
+            Utils.Notification.Toast('Fetching Code');
+
+            // Create Model
+            var newRCode = new RelationshipCodeModel.RelationshipCode({
+                modelType: 'add_friend'
+            })
+
+            // Wait for model to be populated before loading Surfaces
+            newRCode.populated().then(function(){
+
+                Utils.Popover.Buttons({
+                    title: 'Unique Friend Invite Code',
+                    text: 'Give the unique code <strong>'+S(newRCode.get('code'))+'</strong> to another OddJob user who you want to connect with.',
+                    buttons: [{
+                        text: 'Send via SMS',
+                        success: function(){
+                            var sentence = "Try out Choice! I'm on it now. "+App.Credentials.public_url+"/i/" + newRCode.get('code');
+                            window.plugins.socialsharing.shareViaSMS(sentence, '', function(msg) {console.log('ok: ' + msg)}, function(msg) {Utils.Notification.Toast('error: ' + msg)})
+                        }
+                    },{
+                        text: 'Send via Email',
+                        success: function(){
+                            // https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin
+                            var sentence = "Try out Choice! I'm on it now. "+App.Credentials.public_url+".com/i/" + newRCode.get('code');
+                            window.plugins.socialsharing.shareViaEmail(sentence, 'Join me on OddJob!', null, null, null, null, function(msg) {console.log('ok: ' + msg)}, function(msg) {Utils.Notification.Toast('error: ' + msg)})
+                        }
+                    },{
+                        text: 'Copy to Clipboard',
+                        success: function(){
+                            Utils.Clipboard.copyTo('Try out Choice at '+App.Credentials.public_url+'.com/i/' + newRCode.get('code'));
+                        }
+                    }]
+                });
+
+                // var nada = prompt('Code has been copied','get handy at handyapp.com/i/' + newRCode.get('code'));
+
+                // var sentence = "get handy! I'm on it now. handyapp.com/i/" + newRCode.get('code');
+                // console.log(sentence);
+                // window.plugins.socialsharing.shareViaSMS(sentence, phone_number, function(msg) {console.log('ok: ' + msg)}, function(msg) {Utils.Notification.Toast('error: ' + msg)})
+
+            });
+            newRCode.fetch();
+
         });
 
         // - search (always visible)
@@ -233,7 +338,7 @@ define(function(require, exports, module) {
 
         // - Connections
         this.headerContent.Friends = new Surface({
-            content: '<i class="icon ion-android-friends"></i>',
+            content: '<i class="icon ion-android-social"></i>',
             size: [App.Defaults.Header.Icon.w, undefined],
             classes: ['header-tab-icon-text-big']
         });
@@ -265,7 +370,7 @@ define(function(require, exports, module) {
 
         // create the header
         this.header = new StandardHeader({
-            content: '', //App.Data.User.get('email').split('@')[0].split('+')[0],
+            content: 'User Profile', //App.Data.User.get('email').split('@')[0].split('+')[0],
             classes: ["normal-header", "profile-header"],
             backClasses: ["normal-header"],
             moreClasses: ["normal-header"],
@@ -283,10 +388,24 @@ define(function(require, exports, module) {
             // backContent: false
         }); 
         this.header._eventOutput.on('back',function(){
+            // prevent back if previous page is the "user" finder
+            if(App.history.backPageInfo()[0] == 'user'){
+                return;
+            }
             App.history.back();
             // App.history.navigate('game/add',{history: false});
         });
         this.header.navBar.title.on('click',function(){
+            // prevent back if previous page is the "user" finder
+            if(App.history.backPageInfo()[0] == 'user'){
+                console.log(App.history.data);
+                console.log(App.history.backPageInfo());
+                debugger;
+                return;
+            }
+            // debugger;
+            console.log(App.history.data);
+            // debugger;
             App.history.back();
 
             // // rewrite the event
@@ -328,13 +447,22 @@ define(function(require, exports, module) {
         this.profileTop = new SequentialLayout();
         this.profileTop.Views = [];
 
+        // Very Top Spacer
+        this.profileTop.topSpacer4 = new Surface({
+            content: '',
+            size: [undefined, 20]
+        });
+        this.profileTop.topSpacer4.pipe(this.contentScrollView);
+        this.profileTop.Views.push(this.profileTop.topSpacer4);
+
         // Profile Image
         this.profileTop.ProfileImage = new View();
         this.profileTop.ProfileImage.getSize = function(){
             return [undefined,140];
         };
         this.profileTop.ProfileImage.OriginMod = new StateModifier({
-            origin: [0.5, 0.5],
+            align: [0.5, 0.5],
+            origin: [0.5, 0.5]
             // size: [undefined, 100]
         });
         this.profileTop.ProfileImage.SizeMod = new StateModifier({
@@ -356,7 +484,7 @@ define(function(require, exports, module) {
             if(that.is_me){
                 // Launch options for photo
 
-                // Utils.Notification.Toast('Tap "Edit Your Profile"');
+                Utils.Popover.Alert('Click the Settings Icon (<i class="icon ion-gear-a"></i>) and the menu item to Edit your Profile','OK');
 
                 // Slide to the change screen for the user
                 // that.previousPage = window.location.hash;
@@ -455,7 +583,7 @@ define(function(require, exports, module) {
             // size: [undefined,80],
             // classes: ['ellipsis'],
             properties: {
-                backgroundColor: 'white',
+                // backgroundColor: 'white',
                 color: '#333',
                 fontSize: "24px",
                 lineHeight: "40px",
@@ -540,7 +668,7 @@ define(function(require, exports, module) {
         // this.profileTop.Views.push(this.profileBio);
 
 
-        this.contentScrollView.Views.push(this.profileBio);
+        // this.contentScrollView.Views.push(this.profileBio);
 
 
 
@@ -623,145 +751,145 @@ define(function(require, exports, module) {
         this.contentScrollView.Views.push(this.profileMiddle.Layout);
 
 
-        // // Send Invoice
-        // this.profileInvoice = new View();
-        // this.profileInvoice.Layout = new RenderController();
-        // this.profileInvoice.Layout.getSize = function(){
-        //     if(this._showing == -1){
-        //         return [undefined, 1]; // 0 causes error
-        //     }
-        //     try {
-        //         var s = this._renderables[this._showing].getSize(true);
-        //         if(s){
-        //             this.lastSize = [undefined, s[1]];
-        //             return [undefined, s[1]];
-        //         }
-        //     }catch(err){}
-        //     // Last Size?
-        //     if(this.lastSize){
-        //         return this.lastSize;
-        //     }
-        //     return [undefined, true];
-        // };
+        // Send Invoice
+        this.profileInvoice = new View();
+        this.profileInvoice.Layout = new RenderController();
+        this.profileInvoice.Layout.getSize = function(){
+            if(this._showing == -1){
+                return [undefined, 1]; // 0 causes error
+            }
+            try {
+                var s = this._renderables[this._showing].getSize(true);
+                if(s){
+                    this.lastSize = [undefined, s[1]];
+                    return [undefined, s[1]];
+                }
+            }catch(err){}
+            // Last Size?
+            if(this.lastSize){
+                return this.lastSize;
+            }
+            return [undefined, true];
+        };
 
-        // // - Send an Invoice
-        // this.profileInvoice.SendInvoice = new View();
-        // this.profileInvoice.SendInvoice.StateModifier = new StateModifier({
-        //     // origin: [0, 0]
-        // });
-        // this.profileInvoice.SendInvoice.Surface = new Surface({
-        //     content: '<div class="outward-button with-icon"><i class="icon ion-card"></i> &nbsp; Send Invoice</div>',
-        //     size: [undefined, 60],
-        //     classes: ['button-outwards-default']
-        // });
-        // this.profileInvoice.SendInvoice.Surface.pipe(this.contentScrollView);
-        // this.profileInvoice.SendInvoice.Surface.on('click', function(){
-        //     // App.history.navigate('profile/edit');
+        // - Send an Invoice
+        this.profileInvoice.SendInvoice = new View();
+        this.profileInvoice.SendInvoice.StateModifier = new StateModifier({
+            // origin: [0, 0]
+        });
+        this.profileInvoice.SendInvoice.Surface = new Surface({
+            content: '<div class="outward-button with-icon"><i class="icon ion-card"></i> &nbsp; Send Invoice</div>',
+            size: [undefined, 60],
+            classes: ['button-outwards-default']
+        });
+        this.profileInvoice.SendInvoice.Surface.pipe(this.contentScrollView);
+        this.profileInvoice.SendInvoice.Surface.on('click', function(){
+            // App.history.navigate('profile/edit');
 
-        //     Timer.setTimeout(function(){
+            Timer.setTimeout(function(){
 
-        //         var a = prompt('Amount');
-        //         if(!a){
-        //             return;
-        //         }
-        //         var p = prompt('Details');
-        //         if(p && p.trim() != ''){
+                var a = prompt('Amount');
+                if(!a){
+                    return;
+                }
+                var p = prompt('Details');
+                if(p && p.trim() != ''){
 
-        //             Utils.Notification.Toast('Create a new Invoice!');
+                    Utils.Notification.Toast('Create a new Invoice!');
 
-        //             var newModel = new InvoiceModel.Invoice({
-        //                 friend_id: that.model.get('_id'),
-        //                 amount: a,
-        //                 details: p
-        //             });
+                    var newModel = new InvoiceModel.Invoice({
+                        friend_id: that.model.get('_id'),
+                        amount: a,
+                        details: p
+                    });
 
-        //             newModel.save()
-        //             .then(function(){
-        //                 // that.AllView.collection.fetch();
-        //                 App.history.navigate('invoice/list');
-        //             });
+                    newModel.save()
+                    .then(function(){
+                        // that.AllView.collection.fetch();
+                        App.history.navigate('invoice/list');
+                    });
 
-        //         }
+                }
 
-        //     },200);
+            },200);
 
-        // });
-        // this.profileInvoice.SendInvoice.add(this.profileInvoice.SendInvoice.StateModifier).add(this.profileInvoice.SendInvoice.Surface);
+        });
+        this.profileInvoice.SendInvoice.add(this.profileInvoice.SendInvoice.StateModifier).add(this.profileInvoice.SendInvoice.Surface);
 
         // this.contentScrollView.Views.push(this.profileInvoice.Layout);
 
 
-        // // Recommend this person
-        // // - must be a Friend
-        // this.recommendView = new View();
-        // this.recommendView.Layout = new RenderController();
-        // this.recommendView.Layout.getSize = function(){
-        //     if(this._showing == -1){
-        //         return [undefined, 1]; // 0 causes error
-        //     }
-        //     try {
-        //         var s = this._renderables[this._showing].getSize(true);
-        //         if(s){
-        //             this.lastSize = [undefined, s[1]];
-        //             return [undefined, s[1]];
-        //         }
-        //     }catch(err){}
-        //     // Last Size?
-        //     if(this.lastSize){
-        //         return this.lastSize;
-        //     }
-        //     return [undefined, true];
-        // };
+        // Recommend this person
+        // - must be a Friend
+        this.recommendView = new View();
+        this.recommendView.Layout = new RenderController();
+        this.recommendView.Layout.getSize = function(){
+            if(this._showing == -1){
+                return [undefined, 1]; // 0 causes error
+            }
+            try {
+                var s = this._renderables[this._showing].getSize(true);
+                if(s){
+                    this.lastSize = [undefined, s[1]];
+                    return [undefined, s[1]];
+                }
+            }catch(err){}
+            // Last Size?
+            if(this.lastSize){
+                return this.lastSize;
+            }
+            return [undefined, true];
+        };
 
-        // // Buttons for recommendation
-        // this.recommendView.NotRecommended = new View();
-        // this.recommendView.NotRecommended.StateModifier = new StateModifier({
-        //     // origin: [0, 0]
-        // });
-        // this.recommendView.NotRecommended.Surface = new Surface({
-        //     content: '<div class="outward-button with-icon"><i class="icon ion-thumbsup"></i> &nbsp; Recommend</div>',
-        //     size: [undefined, 60],
-        //     classes: ['button-outwards-default']
-        // });
-        // this.recommendView.NotRecommended.Surface.pipe(this.contentScrollView);
-        // this.recommendView.NotRecommended.Surface.on('click', function(){
-        //     that.friend_model.save({
-        //         recommend: true
-        //     },{
-        //         patch: true
-        //     }).then(function(){
-        //         that.friend_model.fetch();
-        //     });
-        // });
-        // this.recommendView.NotRecommended.add(this.recommendView.NotRecommended.StateModifier).add(this.recommendView.NotRecommended.Surface);
+        // Buttons for recommendation
+        this.recommendView.NotRecommended = new View();
+        this.recommendView.NotRecommended.StateModifier = new StateModifier({
+            // origin: [0, 0]
+        });
+        this.recommendView.NotRecommended.Surface = new Surface({
+            content: '<div class="outward-button with-icon"><i class="icon ion-thumbsup"></i> &nbsp; Recommend</div>',
+            size: [undefined, 60],
+            classes: ['button-outwards-default']
+        });
+        this.recommendView.NotRecommended.Surface.pipe(this.contentScrollView);
+        this.recommendView.NotRecommended.Surface.on('click', function(){
+            that.friend_model.save({
+                recommend: true
+            },{
+                patch: true
+            }).then(function(){
+                that.friend_model.fetch();
+            });
+        });
+        this.recommendView.NotRecommended.add(this.recommendView.NotRecommended.StateModifier).add(this.recommendView.NotRecommended.Surface);
 
 
-        // // Buttons for removing a recommendation
-        // this.recommendView.Recommended = new View();
-        // this.recommendView.Recommended.StateModifier = new StateModifier({
-        //     // origin: [0, 0]
-        // });
-        // this.recommendView.Recommended.Surface = new Surface({
-        //     content: '<div><span class="ellipsis-all"><i class="icon ion-thumbsup"></i> Recommended By You!</span></div>',
-        //     size: [undefined, 60],
-        //     classes: ['is-recommended-button-default']
-        // });
-        // this.recommendView.Recommended.getSize = function(){
-        //     return [undefined, that.recommendView.Recommended.Surface._trueSize ? that.recommendView.Recommended.Surface._trueSize[1] : 60];
-        // }
-        // this.recommendView.Recommended.Surface.pipe(this.contentScrollView);
-        // this.recommendView.Recommended.Surface.on('click', function(){
-        //     that.friend_model.save({
-        //         recommend: false
-        //     },{
-        //         patch: true
-        //     }).then(function(){
-        //         that.friend_model.fetch();
-        //     });
-        // });
-        // this.recommendView.Recommended.add(this.recommendView.Recommended.StateModifier).add(this.recommendView.Recommended.Surface);
+        // Buttons for removing a recommendation
+        this.recommendView.Recommended = new View();
+        this.recommendView.Recommended.StateModifier = new StateModifier({
+            // origin: [0, 0]
+        });
+        this.recommendView.Recommended.Surface = new Surface({
+            content: '<div class="outward-button with-icon ellipsis-all"><i class="icon ion-thumbsup"></i> Recommended By You!</div>',
+            size: [undefined, 60],
+            classes: ['is-recommended-button-default','button-outwards-default']
+        });
+        this.recommendView.Recommended.getSize = function(){
+            return [undefined, that.recommendView.Recommended.Surface._trueSize ? that.recommendView.Recommended.Surface._trueSize[1] : 60];
+        }
+        this.recommendView.Recommended.Surface.pipe(this.contentScrollView);
+        this.recommendView.Recommended.Surface.on('click', function(){
+            that.friend_model.save({
+                recommend: false
+            },{
+                patch: true
+            }).then(function(){
+                that.friend_model.fetch();
+            });
+        });
+        this.recommendView.Recommended.add(this.recommendView.Recommended.StateModifier).add(this.recommendView.Recommended.Surface);
 
-        // this.contentScrollView.Views.push(this.recommendView.Layout);
+        this.contentScrollView.Views.push(this.recommendView.Layout);
 
 
 
@@ -774,24 +902,28 @@ define(function(require, exports, module) {
 
         this.contentLightbox = new RenderController();
         this.loadingUser = new View();
-        this.loadingUser.StateModifier = new StateModifier({
+        this.loadingUser.SizeMod = new StateModifier({
+            size: [undefined, undefined]
+        });
+        this.loadingUser.OriginMod = new StateModifier({
+            align: [0.5, 0.5],
             origin: [0.5, 0.5]
         });
         this.loadingUser.Surface = new Surface({
             content: '<i class="icon ion-loading-c"></i>',
-            size: [true, true],
+            size: [undefined, undefined],
             properties: {
                 fontSize: "40px",
                 textAlign: "center",
                 color: "#444",
-                lineHeight: "50px"
+                lineHeight: "100px"
             }
         });
-        this.loadingUser.add(this.loadingUser.StateModifier).add(this.loadingUser.Surface);
+        this.loadingUser.add(this.loadingUser.SizeMod).add(this.loadingUser.OriginMod).add(this.loadingUser.Surface);
         this.contentLightbox.show(this.loadingUser);
 
         // this.layout.content.add(this.ContentStateModifier).add(this.mainNode);
-        this.layout.content.add(this.ContentStateModifier).add(Utils.usePlane('content')).add(this.contentLightbox);
+        this.layout.content.add(this.ContentStateModifier).add(this.contentLightbox);
 
     };
 
@@ -903,14 +1035,14 @@ define(function(require, exports, module) {
                 this.profileMeta.Layout.hide();
             }
 
-            // // Send Invoice
-            // // - must be connected
-            // if(that.is_me !== true){
-            //     console.log(App.Data.UserFriends.toJSON());
-            //     this.profileInvoice.Layout.show(this.profileInvoice.SendInvoice);
-            // } else {
-            //     this.profileInvoice.Layout.hide();
-            // }
+            // Send Invoice
+            // - must be connected
+            if(that.is_me !== true){
+                console.log(App.Data.UserFriends.toJSON());
+                this.profileInvoice.Layout.show(this.profileInvoice.SendInvoice);
+            } else {
+                this.profileInvoice.Layout.hide();
+            }
 
             // // username (header)
             // if(that.model.get('username') !== false){
@@ -928,13 +1060,14 @@ define(function(require, exports, module) {
             if(that.is_me === true){
                 // no back button
                 // - show settings
+                that.headerContent.Middle.Lightbox.hide();
                 that.headerContent.Right.Lightbox.show(that.headerContent.Settings);
-                // that.headerContent.Middle.Lightbox.show(that.headerContent.Friends);
 
             } else {
 
                 
-                that.headerContent.Right.Lightbox.show(that.headerContent.Message);
+                // that.headerContent.Right.Lightbox.show(that.headerContent.Message);
+                that.headerContent.Right.Lightbox.hide();
                 that.headerContent.Middle.Lightbox.hide();
 
                 // that.header.navBar.back.setSize([20,undefined]);
@@ -955,19 +1088,31 @@ define(function(require, exports, module) {
         // Everything ready
         if(this.model != undefined && this.model.hasFetched && this.friend_model != undefined && this.friend_model.get('_id')){
 
-            // Recommended this person already?
-            // - must be connected
-            if(that.is_me !== true){
-                if(that.friend_model.get('recommend') === true){
-                    this.recommendView.Layout.show(this.recommendView.Recommended);
-                } else {
-                    this.recommendView.Layout.show(this.recommendView.NotRecommended);
-                }
-            } else {
-                this.recommendView.Layout.hide();
-            }
+            // // Recommended this person already?
+            // // - must be connected
+            // if(that.is_me !== true){
+            //     if(that.friend_model.get('recommend') === true){
+            //         this.recommendView.Layout.show(this.recommendView.Recommended);
+            //     } else {
+            //         this.recommendView.Layout.show(this.recommendView.NotRecommended);
+            //     }
+            // } else {
+            //     this.recommendView.Layout.hide();
+            // }
+            this.recommendView.Layout.hide();
 
         }
+
+
+    };
+
+    PageView.prototype.backbuttonHandler = function(){
+
+        // prevent back if previous page is the "user" finder
+        if(App.history.backPageInfo()[0] == 'user'){
+            return;
+        }
+        App.history.back();
 
     };
 
@@ -993,7 +1138,7 @@ define(function(require, exports, module) {
                             // that.header.StateModifier.setOpacity(0, transitionOptions.outTransition);
 
                             // Slide left
-                            that.ContentStateModifier.setTransform(Transform.translate((window.innerWidth * -1) - 100,0,0), transitionOptions.outTransition);
+                            that.ContentStateModifier.setTransform(Transform.translate((window.innerWidth * (goingBack ? 1.5 : -1.5)),0,0), transitionOptions.outTransition);
 
                         }, delayShowing);
 
@@ -1025,8 +1170,8 @@ define(function(require, exports, module) {
                         // } else {
                         //     that.ContentStateModifier.setTransform(Transform.translate(window.innerWidth + 100,0,0));
                         // }
-                        that.ContentStateModifier.setOpacity(0);
-                        that.ContentStateModifier.setTransform(Transform.translate(0,0,0));
+
+                        that.ContentStateModifier.setTransform(Transform.translate((window.innerWidth * (goingBack ? -1.5 : 1.5)),0,0));
 
                         // // Header
                         // // - no extra delay
@@ -1041,10 +1186,10 @@ define(function(require, exports, module) {
                         // - extra delay for content to be gone
                         Timer.setTimeout(function(){
 
-                            // Bring map content back
-                            that.ContentStateModifier.setOpacity(1, transitionOptions.inTransition);
+                            that.ContentStateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.outTransition);
 
                         }, delayShowing + transitionOptions.outTransition.duration);
+
 
                         break;
                 }
