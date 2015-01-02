@@ -1,3 +1,4 @@
+/*globals define*/
 define(function(require, exports, module) {
     
     var Lightbox          = require('famous/views/Lightbox');
@@ -10,9 +11,11 @@ define(function(require, exports, module) {
 
     module.exports = function(App){
 
-        // Replacing history events
-
         var HistoryContext = this;
+
+        // var historyObj = {};
+
+        // Replacing history events
 
         var historyObj = {};
         historyObj.data = [];
@@ -20,6 +23,7 @@ define(function(require, exports, module) {
         historyObj.navigate = function(path, opts, back, reloadCurrent){
 
             console.log('historyObj.navigate: path:', path, arguments);
+            // console.trace();
 
             opts = opts || {};
 
@@ -43,16 +47,18 @@ define(function(require, exports, module) {
 
                 if(lastArgs === undefined || !lastArgs || lastArgs.length < 1 || lastArgs[0] == ''){
                     // No last arguments exist
+                    // alert('Exiting app');
+                    // Utils.Notification.Toast('Exiting App');
                     console.error('exiting app');
                     historyObj.data = [];
-
-                    // If already displaying the home_route, then don't change the route?
                     historyObj.navigate(App.Credentials.home_route);
                     return;
                 }
 
-                console.log('isGoingBack==true');
+                // debugger;
+
                 historyObj.isGoingBack = true;
+                console.log('isGoingBack==true');
                 historyObj.navigate.apply(HistoryContext, lastArgs);
 
                 return;
@@ -64,13 +70,13 @@ define(function(require, exports, module) {
 
                 // pop it out from the array, it'll get popped back in
                 var lastArgs = historyObj.data.pop();
-                console.log('lastArgs is now', lastArgs);
+                console.log('lastArgs', lastArgs);
 
                 if(lastArgs === undefined || !lastArgs || lastArgs.length < 1 || lastArgs[0] == ''){
                     // No last arguments exist
                     // Utils.Notification.Toast('Exiting App');
                     console.error('Exiting app, reloadCurrent failed');
-                    historyObj.navigate('controller/view');
+                    historyObj.navigate(App.Credentials.home_route);
                     return;
                 }
 
@@ -117,6 +123,7 @@ define(function(require, exports, module) {
 
             Backbone.history.navigate(path, {trigger: true, replace: true});
 
+
         };
         historyObj.back = function(opts){
             historyObj.navigate(null, opts, true);
@@ -129,6 +136,7 @@ define(function(require, exports, module) {
         historyObj.backTo = function(tag, opts){
             // erase a bunch of history, until we reach that tag
             // - erase it, then visit it
+            // debugger;
             historyObj.eraseUntilTag(tag, false);
 
             var lastArgs = historyObj.data.pop(); // get last
@@ -155,6 +163,22 @@ define(function(require, exports, module) {
             // historyObj.data.reverse();
 
             // historyObj.navigate.apply(RouterContext, lastArgs);
+        };
+        historyObj.backPageInfo = function(numToErase){
+            // Return details/tags for the "back" page
+
+            var info = ['']; // default path/route argument is _blank_
+
+            // Remove the "current entry"
+            // - reload the last one (after pop'ing it out too)
+            try {
+                info = historyObj.data[historyObj.data.length - 2];
+            }catch(err){
+                // probably no history
+            }
+
+            return info;
+
         };
         historyObj.eraseLast = function(numToErase){
             numToErase = numToErase || 1;
@@ -196,6 +220,40 @@ define(function(require, exports, module) {
             // });
 
             // historyObj.data.reverse();
+        };
+        historyObj.findLastTag = function(tag){
+            // Find if a tag exists in the history
+
+            var tmp = _.clone(historyObj.data);
+            tmp.reverse();
+
+            var continueSearching = true;
+            var foundTag = _.filter(tmp, function(args){
+                // check options for tag that matches
+                if(continueSearching !== true){
+                    return true;
+                }
+                if(args.length < 2){
+                    return false;
+                }
+                if(!args[1].tag){
+                    return false;
+                }
+                if(typeof args[1].tag == "string" && args[1].tag != tag){
+                    return false
+                }
+                if(typeof args[1].tag === typeof [] && args[1].tag.indexOf(tag) === -1){
+                    return false;
+                }
+                console.log('FOUND tag in eraseUntilTag');
+                // debugger;
+                // debugger;
+                continueSearching = false;
+                return true;
+
+            });
+
+            return foundTag.length > 0;
         };
         historyObj.eraseUntilTag = function(tag, eraseLast){
             // Erase entries up until the last tag
@@ -294,6 +352,21 @@ define(function(require, exports, module) {
 
         // Keyboard
         App.Events.on('KeyboardShowHide', function(showing){
+
+            // Popover
+            try {
+                if(typeof App.Views.Popover.CurrentPopover.keyboardHandler == "function"){
+                    console.log('launching keyboardHandler with True');
+                    App.Views.Popover.CurrentPopover.keyboardHandler.apply(App.Views.Popover.CurrentPopover, [showing]);
+                    return;
+                } else {
+                    console.log('no keyboardHandler handler in CurrentPopover');
+                }
+            } catch(err){
+                console.error(err);
+            }
+
+            // Normal PageView
             try {
                 if(typeof App.Views.currentPageView.keyboardHandler == "function"){
                     console.log('launching keyboardHandler with True');
@@ -312,9 +385,25 @@ define(function(require, exports, module) {
         App.Events.on('backbutton', function(){
             // Backbutton handler?
             // - otherwise, initiate a "back" on the App.Navigate
+
+
+            // Popover
+            try {
+                if(typeof App.Views.Popover.CurrentPopover.backbuttonHandler == "function"){
+                    console.log('launching Popover.backbuttonHander');
+                    App.Views.Popover.CurrentPopover.backbuttonHandler.apply(App.Views.Popover.CurrentPopover);
+                    return;
+                } else {
+                    console.log('no backbutton handler in CurrentPopover');
+                }
+            } catch(err){
+                console.error(err);
+            }
+
+            // Normal PageView
             try {
                 if(typeof App.Views.currentPageView.backbuttonHandler == "function"){
-                    console.log('launching backbuttonHanderl');
+                    console.log('launching Normal PageView.backbuttonHander');
                     App.Views.currentPageView.backbuttonHandler.apply(App.Views.currentPageView);
                     return;
                 } else {
@@ -331,7 +420,6 @@ define(function(require, exports, module) {
 
 
         // Resume
-        // - launches history.back, unless a backbuttonHandler is set on the currently displayed View
         App.Events.on('resume', function(){
             // Resume handler?
             try {
@@ -348,7 +436,6 @@ define(function(require, exports, module) {
         });
 
         // Pause
-        // - this is the same as submit???
         App.Events.on('pause', function(){
             // Pause handler?
             try {
@@ -363,9 +450,9 @@ define(function(require, exports, module) {
                 console.error(err);
             }
         });
-
+        
         // Firebase update (update content on page)
-        App.Events.on('firebase.child_added', function(snapshot){
+        App.Events.on('firebase.child_changed', function(snapshot){
 
             // var newPost = snapshot.val();
 
