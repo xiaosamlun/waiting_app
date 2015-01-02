@@ -5,23 +5,6 @@ define(function (require) {
     var $ = require('jquery-adapter'),
         _ = require('underscore');
 
-    // var leaflet = require('lib2/leaflet/leaflet');
-    // // require('lib2/leaflet/leaflet.label');
-    // require('lib2/leaflet/leaflet.iconlabel');
-    // require('lib2/leaflet/tile.stamen');
-
-    var leaflet = require('lib2/leaflet/leaflet');
-    require('lib2/leaflet/leaflet.label');
-    require('lib2/leaflet/leaflet.iconlabel');
-    require('lib2/leaflet/tile.stamen');
-
-    var MapView = require('famous-map/MapView');
-    var MapModifier = require('famous-map/MapModifier');
-    var MapStateModifier = require('famous-map/MapStateModifier');
-    var MapUtility = require('famous-map/MapUtility');
-    var MapPositionTransitionable = require('famous-map/MapPositionTransitionable');
-    var MapTransition = require('famous-map/MapTransition');
-
     var Modifier = require('famous/core/Modifier');
     var ImageSurface = require('famous/surfaces/ImageSurface');
 
@@ -37,6 +20,13 @@ define(function (require) {
     var tinycolor = require('lib2/tinycolor');
 
     var Utils = {
+
+        WindowWidth: function(){
+            return window.innerWidth > App.Credentials.max_width ? App.Credentials.max_width : window.innerWidth;
+        },
+        WindowHeight: function(){
+            return window.innerHeight > App.Credentials.max_height ? App.Credentials.max_height : window.innerHeight;
+        },
 
         CheckFlag: function(flag){
             // returns promise
@@ -71,12 +61,50 @@ define(function (require) {
                 data: tmpData,
                 error: function(){
                     Utils.Notification.Toast('Failed Flag');
-                    debugger;
+                    console.error('Failed Flag:',flag);
+                    // debugger;
                 },
                 success: function(){
                     // awesome
                 }
             });
+        },
+
+        Websocket: {
+            init: function(){
+                // Initialize the Firebase connection
+                // - not authenticating
+                App.Websocket = new Firebase(App.Credentials.firebase_url);
+            },
+
+            login: function(token){
+                // Authenticate the user against our existing Firebase
+                App.Websocket.authWithCustomToken(token, function(error, result) {
+                    if (error) {
+                        console.error("Firebase Login Failed!", error);
+                    } else {
+                        console.log("Authenticated to firebase channel successfully with payload:", result.auth);
+                        console.log("Auth expires at:", new Date(result.expires * 1000));
+
+                        // Connect to this user's firebase channel
+                        App.Websocket.LastUser = App.Websocket.child('users/' + App.Data.User.get('_id'))
+                        App.Websocket.LastUser.on('child_changed', function (snapshot) {
+                            App.Events.trigger('firebase.child_changed', snapshot);
+                        });
+
+                    }
+                });
+            },
+
+            logout: function(){
+                // Stop listening on this user's channel
+                if(App.Websocket.LastUser){
+                    App.Websocket.LastUser.off();
+                }
+                // de-authenticate
+                App.Websocket.unauth();
+            }
+
         },
 
         QuickModel: function(ModelName, id, model_file){
@@ -289,20 +317,23 @@ define(function (require) {
 
                 return def.promise();
             },
-            Prompt: function(text, defaultValue, button, buttonCancel){ // use callback pattern instead?
+            Prompt: function(text, defaultValue, button, buttonCancel, type, placeholder){ // use callback pattern instead?
 
                 var def = $.Deferred();
 
                 defaultValue = defaultValue || '';
                 button = button || 'OK';
                 buttonCancel = buttonCancel || 'X';
+                type = type || 'text';
 
                 // default options
                 var opts = {
                     text: text,
                     defaultValue: defaultValue,
+                    placeholder: placeholder,
                     button: button,
                     buttonCancel: buttonCancel,
+                    type: type,
                 };
 
                 opts.on_done = function(value){
@@ -349,6 +380,60 @@ define(function (require) {
                 // Change history (must)
                 App.history.navigate('popover/colorpicker', {history: false});
             },
+            Currency: function(opts){ // use callback pattern instead?
+
+                var def = $.Deferred();
+
+                // defaults
+                opts = _.defaults(opts, {
+                    title: null
+                });
+
+                opts.on_done = function(value){
+                    def.resolve(value);
+                };
+                opts.on_cancel = function(){
+                    def.resolve(false);
+                };
+
+                // Options and details
+                App.Cache.OptionModal = opts;
+
+                // Change history (must)
+                App.history.navigate('popover/currency', {history: false});
+
+                return def.promise();
+            },
+            
+            Share: function(options){
+                // default sharing optoins
+
+                var def = $.Deferred();
+
+                // default options
+                var opts = {
+                    details: options,
+                    type: 'static'
+                };
+
+                opts.on_done = function(){
+                    def.resolve(true);
+                };
+                opts.on_cancel = function(){
+                    def.resolve(false);
+                };
+
+                // Options and details
+                App.Cache.OptionModal = opts;
+
+                // Change history (must)
+                var lastHref = window.location.hash;
+                console.log(lastHref);
+                App.history.navigate('popover/share', {history: false});
+                // App.history.navigate(lastHref, {trigger: false, history: false});
+
+                return def.promise();
+            },
         },
 
         Help: function(key){
@@ -367,13 +452,20 @@ define(function (require) {
 
         },
 
+        Z: function(amount){ // nudge
+            // "nudge" the z-plane a bit
+            // console.log(amount / 1000000.0);
+            return new StateModifier({transform: Transform.translate(0,0,amount / 1000000.0)})
+        },
+
         usePlane: function(plane_name, add, returnValue){
             // return new StateModifier();
-
+            // console.log(plane_name);
             add = add || 0;
             if(!App.Planes[plane_name]){
-                // key doesn't exist, use 'content'
+                // key doesn't exist, just nudging by some amount (using the Utils.Z function basically)
                 plane_name = 'content';
+                // return Utils.Z(add);
             }
             // console.log(App.Planes[plane_name] + add);
             // console.log(0.001 + (App.Planes[plane_name] + add)/1000000);
@@ -387,7 +479,12 @@ define(function (require) {
 
         },
 
+        toJSONandBack: function(obj){
+            return JSON.parse(JSON.stringify(obj));
+        },
+
         bindSize: function(emitter, tmpView, tmpSurface){
+            // not really using this function...
             var oldSize = null;
             tmpView.getSize = function(){
                 // console.log(tmpSurface._size);
@@ -410,14 +507,80 @@ define(function (require) {
                 console.log('url');
                 console.log(url);
 
-                var urlhost = 'ulu://',
-
+                var urlhost = App.Credentials.launch_key,
                     n = url.indexOf(urlhost),
                     pathname = url.substring(n + urlhost.length),
                     splitPath = pathname.split('/');
 
                 switch(splitPath[0]){
+
+                    case 'u':
+                        Utils.Notification.Toast('Viewing user');
+
+                        App.history.navigate('user/' + splitPath[1]);
+                        break;
+
                     case 'i':
+
+                        Utils.Popover.Buttons({
+                            title: 'Opened URL Options',
+                            text: 'Choose from the following options',
+                            buttons: [{
+                                text: 'Make Connection',
+                                success: function(){
+
+                                    Utils.Notification.Toast('Creating Connection');
+
+                                    // Check the invite code against the server
+                                    // - creates the necessary relationship also
+                                    $.ajax({
+                                        url: Credentials.server_root + 'friend/connect',
+                                        method: 'post',
+                                        data: {
+                                            from: 'url', // if on the Player Edit / LinkUp page, we'd be using 'linkup'
+                                            friend_id: splitPath[1]
+                                        },
+                                        success: function(response){
+                                            if(response.code != 200){
+                                                if(response.msg){
+                                                    Utils.Popover.Alert(response.msg);
+                                                    return;
+                                                }
+                                                Utils.Popover.Alert('Failed to create connection, please try again');
+                                                return false;
+                                            }
+
+                                            // Relationship has been created
+                                            // - either just added to a player
+                                            //      - simply go look at it
+                                            // - or am the Owner of a player now
+                                            //      - go edit the player
+
+                                            if(response.type == 'friend'){
+                                                Utils.Notification.Toast('You have successfully added a friend!');
+
+                                                // Update list of players
+                                                App.Data.User.fetch();
+
+                                                // App.history.back();
+
+                                                return;
+                                            }
+
+                                        },
+                                        error: function(err){
+                                            Utils.Popover.Alert('Failed to create connection, please try again');
+                                            return;
+                                        }
+                                    });
+
+                                }
+                            }]
+                        });
+
+                        break;
+
+                    case 'old_i':
                         Utils.Notification.Toast('Accepting a Friend Invite!');
 
                         var code = splitPath[1];
@@ -521,13 +684,13 @@ define(function (require) {
                         console.log('Success init gaPlugin');
                     }, function(){
                         // error
-                        if(App.Data.usePg){
+                        if(App.usePg){
                             console.error('Failed init gaPlugin');
                             Utils.Notification.Toast('Failed init gaPlugin');
                         }
                     }, Credentials.GoogleAnalytics, 30);
                 }catch(err){
-                    if(App.Data.usePg){
+                    if(App.usePg){
                         console.error(err);
                     }
                     return false;
@@ -548,7 +711,7 @@ define(function (require) {
                         // console.error('ganalyticserror');
                     }, 'waiting.app/' + pageRoute);
                 }catch(err){
-                    if(App.Data.usePg){
+                    if(App.usePg){
                         console.error('Utils.Analytics.trackPage');
                         console.error(err);
                         debugger;
@@ -565,12 +728,12 @@ define(function (require) {
                 quality : 80,
                 destinationType : Camera.DestinationType.FILE_URI,
                 sourceType : null, //Camera.PictureSourceType.CAMERA,
-                allowEdit : true,
+                allowEdit : false,
                 encodingType: Camera.EncodingType.JPEG,
-                targetWidth: 1000,
-                targetHeight: 1000,
+                // targetWidth: 1000,
+                // targetHeight: 1000,
                 popoverOptions: CameraPopoverOptions,
-                saveToPhotoAlbum: false 
+                saveToPhotoAlbum: opts.saveToPhotoAlbum || true
               };
 
             switch(camera_type_short){
@@ -856,55 +1019,60 @@ define(function (require) {
          
         },
 
-        PairingCode: (function (undefined) {
-            var ns = {
-                alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
-                checkSalt : "grass",
-                decode: function(inStr, nPos) {
-                    var val = this.alphabet.indexOf(inStr.charAt(nPos).toUpperCase());
-                    if (val == -1) throw "Decoding error";
-                    return val;
-                },
-                CalculateCheckDigit : function(inStr ) {
-                    if(inStr.length!=5)
-                        throw "Invalid length";
-                    var arrDecode = new Uint8Array(5);
-                    arrDecode[0] = this.decode(inStr,0);
-                    arrDecode[1] = this.decode(inStr,1);
-                    arrDecode[2] = this.decode(inStr,2);
-                    arrDecode[3] = this.decode(inStr,3);
-                    arrDecode[4] = this.decode(inStr,4);
-                    var arrBytes = CryptoJS.lib.WordArray.create(arrDecode);
-                    var arrSalt  = CryptoJS.enc.Latin1.parse( this.checkSalt );
-                    arrSalt.concat(arrBytes);
-                    var arrSha1 = CryptoJS.SHA1(arrSalt);
-                    var strHash = arrSha1.toString();
-                    var firstByte = strHash.charAt(0) + strHash.charAt(1);
-                    var value = parseInt(firstByte,16) & 0x1F;
-                    var letter = this.alphabet.charAt(value);
-                    return letter;
-                }
-            };
-
-            return ns;
-        }()),
-
 
         logout: function(){
             
-            // Reset caches
+            // Clear Push Notification for relevant platform
+            if(App.usePg){
+                var clearPushObj = {};
+                clearPushObj[App.Config.devicePlatform] = {};
+                App.Data.User.set(clearPushObj);
+                App.Data.User.save(); // update the user
+            }
+
+            // Reset caches and views
             App.Cache = {};
-            App.Cache = _.defaults({},App.DefaultCache);
-            // console.log(App.Cache);
+            App.Cache = {
+                ModelReplacers: {},
+                RoutesByHash: {}
+            }
+
             App.Data = {
                 User: null,
                 Players: null // preloaded
             };
 
+            // Logout and remove Google Plus OAuth token
+            if(window.plugins && window.plugins.googleplus){
+                window.plugins.googleplus.logout(
+                    function (msg) {
+                      console.log(msg);
+                    }
+                );
+                window.plugins.googleplus.disconnect(
+                    function (msg) {
+                        console.log('disconnected account too.', msg);
+                    }
+                );
+            }
+
+            // Logout of Facebook
+            if(window.plugins && window.plugins.googleplus){
+                facebookConnectPlugin.logout(function(){
+                    console.log('Signed out of facebook');
+                },
+                function(){
+                    console.log('Failed signing out of facebook');
+                });
+            }
+
+            // Clear websockets
+            Utils.Websocket.logout();
+
             // Maintain some localStorage (temporary, during development)
             // - address
             var doSave = true; // toggle for on/off
-            var it = ['address_street','address_street2','address_city','address_state','address_zipcode'];
+            var it = [];
             var saved = [];
             it.forEach(function(k){
                 saved.push({
@@ -956,6 +1124,10 @@ define(function (require) {
             // window.location = window.location.href.split('#')[0] + '#landing';
 
             return true;
+        },
+
+        ConvertLinks: function(text){
+            return text.replace(/(?:(https?\:\/\/[^\s]+))/m, '<a href="#nothing" onclick="visitLink(event, this, \'$1\');">$1</a>'); 
         },
 
         slugToCamel: function (slug) {
@@ -1223,17 +1395,56 @@ define(function (require) {
             console.log(payload);
 
             switch(payload.type){
-                case 'new_friend':
+
+                case 'testpush':
+                    // Popup a "got the Push" alert box
+                    Utils.Popover.Alert('Received Test Push Notification','OK');
+                    break;
+
+                case 'new_connection':
+                    // Already on page?
+                    var viewUrl = 'gift/list/' + payload.id; //'user/' + payload.id;
+                    if(App.Cache.currentPageViewPath == viewUrl ){
+                        return;
+                    }
                     Utils.Popover.Buttons({
-                        title: 'New Friend!',
+                        title: 'New Connection',
                         buttons: [
                             {
-                                text: 'OK'
+                                text: 'View',
+                                success: function(){
+                                    App.history.navigate(viewUrl);
+                                }
                             }
                         ]
                     });
                     
                     break;
+
+
+                case 'new_message_connected':
+                case 'new_message_unconnected':
+                    // Already on the page?
+                    var viewUrl = 'inbox/' + payload.from_user_id;
+                    if(App.Cache.currentPageViewPath == viewUrl ){
+                        return;
+                    }
+                    Utils.Popover.Buttons({
+                        title: 'New Message',
+                        text: payload.text,
+                        buttons: [
+                            {
+                                text: 'View',
+                                success: function(){
+                                    App.history.navigate(viewUrl);
+                                }
+                            }
+                        ]
+                    });
+                    
+                    break;
+
+
                 default:
                     Utils.Notification.Toast('Updates Available');
                     // alert('Unknown type');
@@ -1536,216 +1747,6 @@ define(function (require) {
                 return isNaN(tmp) ? '--' : parseInt(tmp, 10).toString();
             }
             return isNaN(tmp) ? '--' : tmp;
-        },
-
-        secondsToDriveTime: function(seconds){
-            // 1:23
-            var time_string = '',
-                min_string = '';
-
-            // console.log('diff: ', diff);
-
-            var day_diff    = Math.floor(seconds / (60 * 60 * 24)),
-                hour_diff   = Math.floor(seconds / (60 * 60)),
-                min_diff    = Math.ceil(seconds / (60));
-
-            hour_diff = hour_diff - (day_diff * 24);
-            min_diff = min_diff - (hour_diff * 60) - (day_diff * 60 * 24);
-            // console.log(min_diff);
-            // if(hour_diff > 0){
-            //     time_string += hour_diff + 'h ';
-            // }
-
-            // if(hour_diff > 0){
-            //     time_string += hour_diff + 'h ';
-            // }
-            if(day_diff > 0){
-                time_string += day_diff.toString() + 'd ';
-            }
-
-            time_string += hour_diff.toString() + ':';
-
-            min_string = min_diff.toString();
-            if(min_diff < 10){
-                min_string = '0' + min_diff.toString();
-            }
-
-            time_string += min_string;
-            
-            return time_string;
-        },
-
-        displayTripListDate: function(carvoyant_datetime, short_or_long){
-            // return Today, Yesterday, or the actual date
-            var date_string = '';
-            var m;
-            try {
-                if(carvoyant_datetime.length == 20){
-                    m = moment(carvoyant_datetime, "YYYYMMDD HHmmss Z"); // 20131106T230554+0000
-                } else {
-                    m = moment(carvoyant_datetime);
-                }
-            } catch(err){
-                return "";
-            }
-            
-            if(!m.isValid()){
-                return "Unknown"
-            }
-
-            var now = moment().startOf('day');
-
-            if(now.diff(m.startOf('day'), 'days') == 0){
-                return "Today";
-            }
-            if(now.diff(m.startOf('day'), 'days') == 1){
-                return "Yesterday";
-            }
-
-            if(short_or_long == "long"){
-                return m.format("MMMM Do");
-            } else {
-                return m.format("MMM Do");
-            }
-        },
-
-        displayTripListTime: function(carvoyant_datetime){
-            // return "3:40pm" or similar
-            var date_string = '';
-            var m;
-            try {
-                if(carvoyant_datetime.length == 20){
-                    m = moment(carvoyant_datetime, "YYYYMMDD HHmmss Z"); // 20131106T230554+0000
-                } else {
-                    m = moment(carvoyant_datetime);
-                }
-            } catch(err){
-                return "";
-            }
-            
-            if(!m.isValid()){
-                return "Unknown"
-            }
-            var tmp_format = m.format("h:mma");
-            // console.log(tmp_format);
-            // console.log(tmp_format.substr(0,tmp_format.length - 1));
-            return tmp_format.substr(0,tmp_format.length - 1); // like remove the "m" in "am" or "pm"
-        },
-
-        tripAddresses: function(trip){
-            // Return new addresses we should be using
-            // - should overwrite the existing trip?
-            var tmp = [],
-                ignore = [
-                    'USA','AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
-                ];
-
-            var start_gps_address = trip.start_gps_address,
-                end_gps_address = trip.end_gps_address;
-
-            // Get the correctly formatted address
-            if(trip.start_gps_addresses_formatted && trip.start_gps_addresses_formatted.length > 0){
-                start_gps_address = trip.start_gps_addresses_formatted[0];
-            }
-
-            if(start_gps_address){
-                tmp = start_gps_address.split(',');
-                tmp = _.filter(tmp,function(t){
-                    // console.log(t);
-                    if(ignore.indexOf($.trim(t.toUpperCase())) !== -1){
-                        // found it
-                        return false;
-                    }
-                    return true;
-                });
-                trip.start_gps_address = tmp.join(',');
-            }
-
-
-            if(trip.end_gps_addresses_formatted && trip.end_gps_addresses_formatted.length > 0){
-                end_gps_address = trip.end_gps_addresses_formatted[0];
-            }
-
-            if(end_gps_address){
-                tmp = end_gps_address.split(',');
-                tmp = _.filter(tmp,function(t){
-                    // console.log(t);
-                    if(ignore.indexOf($.trim(t.toUpperCase())) !== -1){
-                        // found it
-                        return false;
-                    }
-                    return true;
-                });
-                trip.end_gps_address = tmp.join(',');
-            }
-
-            return trip;
-
-        },
-
-        getGoogleMapsStaticUrlForTrip : function(tripLegs, width, height){
-            // Putting a label for each leg of the trip
-            // - only the beginning of the trip has the "start"
-            // - unless the GPS has moved a ton? (we could do haversine)
-
-            if(tripLegs.length < 1){
-                console.log('Empty legs');
-                return '';
-            }
-
-            var letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
-
-            var markers = [],
-                paths = [];
-            for(var index in tripLegs){
-                
-                // console.log(tripLegs[index]); // trip object
-                var start_gps = JSON.parse(tripLegs[index].start_gps),
-                    end_gps = JSON.parse(tripLegs[index].end_gps),
-                    label = '';
-
-                index = parseInt(index, 10);
-
-                if(index == 0){
-                    // add the start_gps position and label
-                    markers.push('markers=' + 'color:green%7Clabel:A%7C' + start_gps.latitude + ',' + start_gps.longitude);
-                }
-
-                // Only adding the end_gps position and label
-                // - don't add the end if it is the last one (it is "Home" now)
-                if(index != tripLegs.length-1){
-                    // Only handles 26 legs (cuz 26 characters)
-                    label = letters[index+1].toUpperCase();
-                    markers.push('markers=' + 'color:blue%7Clabel:'+label+'%7C' + end_gps.latitude + ',' + end_gps.longitude);
-                } else {
-                    // This is the last one
-                    // - just color it differently
-                    label = letters[index+1].toUpperCase();
-                    markers.push('markers=' + 'color:red%7Clabel:'+label+'%7C' + end_gps.latitude + ',' + end_gps.longitude);
-                }
-
-                paths.push('path=color:blue%7Cweight:1%7C' + start_gps.latitude + ',' + start_gps.longitude + '%7C' + end_gps.latitude + ',' + end_gps.longitude);
-
-                // Last one?
-                // - show "End"
-                // - ALWAYS ending at home anyways...
-                // - so we don't have this in here on purpose. 
-
-
-            }
-
-            width = width || $('body').width();
-            height = height || 200;
-            if(width > 400){width = 400;}
-
-            markers = markers.reverse(); // trying to get "H" to always show
-
-            var maps_url = "http://maps.googleapis.com/maps/api/staticmap?size="+width+"x" + height + "&maptype=roadmap&sensor=false&visual_refresh=true&" + markers.join('&') + '&' + paths.join('&');
-
-            // console.log('Map URL');
-            // console.log(maps_url);
-
-            return maps_url;
         },
 
         isElementInViewport: function(el) {
