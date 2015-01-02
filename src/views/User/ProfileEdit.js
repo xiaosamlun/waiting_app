@@ -30,9 +30,11 @@ define(function(require, exports, module) {
     var Easing = require('famous/transitions/Easing');
 
     // Views
+    var StandardPageView = require('views/common/StandardPageView');
     var StandardHeader = require('views/common/StandardHeader');
-    // var TextAreaSurface = require('views/common/TextAreaSurface');
-    var TextAreaSurface = require('famous/surfaces/TextareaSurface');
+    var FormHelper = require('views/common/FormHelper');
+
+    var BoxLayout = require('famous-boxlayout');
     
     var EventHandler = require('famous/core/EventHandler');
 
@@ -47,6 +49,10 @@ define(function(require, exports, module) {
 
         this._showing = false;
 
+        // Model
+        this.model = App.Data.User;
+        this.images_uploading = 0;
+
         // create the layout
         this.layout = new HeaderFooterLayout({
             headerSize: App.Defaults.Header.size,
@@ -58,9 +64,6 @@ define(function(require, exports, module) {
         
         // Attach to render tree
         this.add(this.layout);
-
-        // Model
-        this.model = App.Data.User;
 
         // // Fetch
         // this.model.fetch({prefill: true});
@@ -104,27 +107,23 @@ define(function(require, exports, module) {
         })
 
         // Attach header to the layout        
-        this.layout.header.add(this.header);
+        this.layout.header.add(Utils.usePlane('header',100)).add(this.header);
 
     };
 
     PageView.prototype.createContent = function(){
         var that = this;
         
-        // create the scrollView of content
-        this.contentScrollView = new ScrollView(App.Defaults.ScrollView);
-        this.contentScrollView.Views = [];
-
-        // link endpoints of layout to widgets
-
-        // Sequence
-        this.contentScrollView.sequenceFrom(this.contentScrollView.Views);
+        this.form = new FormHelper({
+            type: 'form',
+            scroll: true
+        });
 
         // Content Modifiers
         this.layout.content.StateModifier = new StateModifier();
 
         // Now add content
-        this.layout.content.add(this.layout.content.StateModifier).add(this.contentScrollView);
+        this.layout.content.add(this.layout.content.StateModifier).add(Utils.usePlane('content')).add(this.form);
 
 
     };
@@ -133,7 +132,6 @@ define(function(require, exports, module) {
         var that = this;
 
         // Build Surfaces
-        // - add to scrollView
 
         // Profile photo
         // Profile Image
@@ -142,6 +140,7 @@ define(function(require, exports, module) {
             size: [undefined, 120]
         });
         this.ProfileImage.OriginMod = new StateModifier({
+            align: [0.5, 0.5],
             origin: [0.5, 0.5]
         });
         this.ProfileImage.Surface = new ImageSurface({
@@ -154,14 +153,15 @@ define(function(require, exports, module) {
         });
 
         // update via model
-        that.model.on('sync', function(){
+        this.model.on('sync', function(){
             if(that.model.get('profilephoto.urls')){
                 that.ProfileImage.Surface.setContent(that.model.get('profilephoto.urls.thumb300x300'));
-            } else {
-                that.ProfileImage.Surface.setContent('img/generic-profile.png');
             }
+            // else {
+            //     that.ProfileImage.Surface.setContent('img/generic-profile.png');
+            // }
         });
-        that.model.trigger('sync');
+        this.model.trigger('sync');
 
         this.ProfileImage.add(this.ProfileImage.SizeMod).add(this.ProfileImage.OriginMod).add(this.ProfileImage.Surface);
         this.ProfileImage.Surface.on('click', function(){
@@ -204,50 +204,108 @@ define(function(require, exports, module) {
             });
 
         });
-        this.ProfileImage.pipe(this.contentScrollView);
-        this.contentScrollView.Views.push(this.ProfileImage);
+        this.ProfileImage.Surface.pipe(this.form._formScrollView);
 
 
-        // Name
-        this.inputNameSurface = new InputSurface({
+        this.inputName = new FormHelper({
+
+            margins: [10,10],
+
+            form: this.form,
             name: 'name',
             placeholder: 'Name',
             type: 'text',
-            size: [undefined, 50],
             value: this.model.get('profile.name')
         });
-        this.inputNameSurface.pipe(this.contentScrollView);
-        this.inputNameSurface.View = new View();
-        this.inputNameSurface.View.StateModifier = new StateModifier();
-        this.inputNameSurface.View.add(this.inputNameSurface.View.StateModifier).add(this.inputNameSurface);
-        this.contentScrollView.Views.push(this.inputNameSurface.View);
 
-        // Bio
-        this.inputBioSurface = new TextAreaSurface({
+        this.inputBio = new FormHelper({
+
+            margins: [10,10],
+            size: [undefined, 200],
+
+            form: this.form,
             name: 'bio',
-            placeholder: 'A little about yourself',
-            type: 'text',
-            size: [undefined, window.innerHeight / 3],
+            placeholder: 'Enter your public message',
+            type: 'textarea',
             value: this.model.get('profile.bio')
         });
-        this.inputBioSurface.pipe(this.contentScrollView);
-        this.inputBioSurface.View = new View();
-        this.inputBioSurface.View.StateModifier = new StateModifier();
-        this.inputBioSurface.View.add(this.inputBioSurface.View.StateModifier).add(this.inputBioSurface);
-        this.contentScrollView.Views.push(this.inputBioSurface.View);
 
-        this.submitButtonSurface = new Surface({
-            content: 'Save Profile',
-            size: [undefined, 60],
-            classes: ['form-button-submit-default']
+        this.submitButton = new FormHelper({
+            form: this.form,
+            type: 'submit',
+            value: 'Save Profile',
+            margins: [10,10],
+            click: this.save_profile.bind(this)
         });
-        this.submitButtonSurface.View = new View();
-        this.submitButtonSurface.View.StateModifier = new StateModifier();
-        this.submitButtonSurface.View.add(this.submitButtonSurface.View.StateModifier).add(this.submitButtonSurface);
-        this.contentScrollView.Views.push(this.submitButtonSurface.View);
+        this.submitButton.default = 'Save Profile';
 
-        // Events for surfaces
-        this.submitButtonSurface.on('click', this.save_profile.bind(this));
+
+        this.form.addInputsToForm([
+            this.ProfileImage,
+            this.inputName,
+            // this.inputBio,
+            this.submitButton
+        ]);
+
+
+        return;
+
+
+
+
+
+
+
+
+
+
+
+        // // Build Surfaces
+        // // - add to scrollView
+
+        // this.contentScrollView.Views.push(this.ProfileImage);
+
+
+        // // Name
+        // this.inputNameSurface = new InputSurface({
+        //     name: 'name',
+        //     placeholder: 'Name',
+        //     type: 'text',
+        //     size: [undefined, 50],
+        //     value: this.model.get('profile.name')
+        // });
+        // this.inputNameSurface.pipe(this.contentScrollView);
+        // this.inputNameSurface.View = new View();
+        // this.inputNameSurface.View.StateModifier = new StateModifier();
+        // this.inputNameSurface.View.add(this.inputNameSurface.View.StateModifier).add(this.inputNameSurface);
+        // this.contentScrollView.Views.push(this.inputNameSurface.View);
+
+        // // Bio
+        // this.inputBioSurface = new TextAreaSurface({
+        //     name: 'bio',
+        //     placeholder: 'A little about yourself',
+        //     type: 'text',
+        //     size: [undefined, window.innerHeight / 3],
+        //     value: this.model.get('profile.bio')
+        // });
+        // this.inputBioSurface.pipe(this.contentScrollView);
+        // this.inputBioSurface.View = new View();
+        // this.inputBioSurface.View.StateModifier = new StateModifier();
+        // this.inputBioSurface.View.add(this.inputBioSurface.View.StateModifier).add(this.inputBioSurface);
+        // this.contentScrollView.Views.push(this.inputBioSurface.View);
+
+        // this.submitButtonSurface = new Surface({
+        //     content: 'Save Profile',
+        //     size: [undefined, 60],
+        //     classes: ['form-button-submit-default']
+        // });
+        // this.submitButtonSurface.View = new View();
+        // this.submitButtonSurface.View.StateModifier = new StateModifier();
+        // this.submitButtonSurface.View.add(this.submitButtonSurface.View.StateModifier).add(this.submitButtonSurface);
+        // this.contentScrollView.Views.push(this.submitButtonSurface.View);
+
+        // // Events for surfaces
+        // this.submitButtonSurface.on('click', this.save_profile.bind(this));
 
 
     };
@@ -255,16 +313,21 @@ define(function(require, exports, module) {
     PageView.prototype.save_profile = function(ev){
         var that = this;
 
+        if(this.checking){
+            return;
+        }
+        this.checking = true;
+
         // validate name
-        var name = $.trim(this.inputNameSurface.getValue().toString());
+        var name = $.trim(this.inputName.getValue().toString());
         if(name.length === 0){
             return;
         }
 
-        var bio = $.trim(this.inputBioSurface.getValue().toString());
+        var bio = $.trim(this.inputBio.getValue().toString());
 
         // Disable submit
-        this.submitButtonSurface.setSize([0,0]);
+        this.submitButton.setContent('Saving...');
 
         // Get elements to save
         this.model.save({
@@ -272,10 +335,20 @@ define(function(require, exports, module) {
             profile_bio: bio
         },{
             patch: true,
+            error: function(){
+                that.checking = false;
+                that.submitButton.setContent('Save Profile');
+
+                Utils.Notification.Toast('Failed Updating Profile');
+            },
             success: function(response){
-                // console.log(response);
-                // debugger;
+
+                that.checking = false;
+                that.submitButton.setContent('Save Profile');
                 that.model.fetch();
+
+                App.Events.trigger('user_updated');
+
                 App.history.back();
             }
         });
@@ -295,7 +368,7 @@ define(function(require, exports, module) {
 
         //         // Redirect to the new user
         //         // that.$('.back-button').trigger('click');
-        //         App.history.navigate('driver/' + newModel._id);
+        //         App.history.navigate('driver/' + newModel._id, {trigger: true});
                 
 
         //     });
@@ -305,6 +378,12 @@ define(function(require, exports, module) {
 
     PageView.prototype.uploadProfileImage = function(imageURI){
         var that = this;
+
+        // Set the image right away, so they know they took a valid picture!
+        Timer.setTimeout(function(){
+            that.ProfileImage.Surface.setContent(imageURI);
+            // tmpView.Surface.setContent('<div class="taken">Image Taken!</div>');
+        },250);
 
         Utils.Notification.Toast('Uploading');
 
@@ -317,6 +396,10 @@ define(function(require, exports, module) {
                 "description": "Uploaded from my phone testing 234970897"
             }
         });
+
+        // Status
+        this.submitButton.setContent('Uploading Photo');
+        this.images_uploading += 1;
 
         var ft = new FileTransfer(),
             options = new FileUploadOptions();
@@ -341,7 +424,10 @@ define(function(require, exports, module) {
                 // console.log(progressEvent.loaded);
                 // console.log(progressEvent.total);
                 console.log((progressEvent.loaded / progressEvent.total) * 100);
-                Utils.Notification.Toast((Math.floor((progressEvent.loaded / progressEvent.total) * 1000) / 10).toString() + '%');
+
+                that.submitButton.setContent('Uploading Photo: ' + (Math.floor((progressEvent.loaded / progressEvent.total) * 1000) / 10).toString() + '%');
+
+                // Utils.Notification.Toast((Math.floor((progressEvent.loaded / progressEvent.total) * 1000) / 10).toString() + '%');
             } else {
                 // Not sure what is going on here...
                 // loadingStatus.increment();
@@ -354,7 +440,14 @@ define(function(require, exports, module) {
                 // alert('complete');
                 // alert('upload succeeded');
                 Utils.Notification.Toast('Upload succeeded');
-                Utils.Notification.Toast('~30 seconds to process');
+                // Utils.Notification.Toast('~30 seconds to process');
+
+                that.images_uploading -= 1;
+                if(that.images_uploading == 0){
+                    that.submitButton.setContent(that.submitButton.default);
+                }
+
+                App.Events.trigger('user_updated');
 
                 // update collection
                 Timer.setTimeout(function(){
@@ -363,9 +456,14 @@ define(function(require, exports, module) {
 
             },
             function (e) {
-                alert("Upload failed");
+                console.error(e);
                 Utils.Notification.Toast('Upload failed');
-                // Utils.Notification.Toast(e);
+
+                that.images_uploading -= 1;
+                if(that.images_uploading == 0){
+                    that.submitButton.setContent(that.submitButton.default);
+                }
+
             }, options);
     };
 
@@ -384,7 +482,7 @@ define(function(require, exports, module) {
                         transitionOptions.outTransform = Transform.identity;
 
                         // Hide/move elements
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // Slide content left
                             that.layout.content.StateModifier.setTransform(Transform.translate(0,window.innerHeight,0), transitionOptions.outTransition);
@@ -398,7 +496,7 @@ define(function(require, exports, module) {
             case 'showing':
                 this._showing = true;
                 if(this._refreshData){
-                    // window.setTimeout(that.refreshData.bind(that), 1000);
+                    // Timer.setTimeout(that.refreshData.bind(that), 1000);
                 }
                 this._refreshData = true;
                 switch(otherViewName){
@@ -421,20 +519,20 @@ define(function(require, exports, module) {
 
                         // Content
                         // - extra delay for other content to be gone
-                        window.setTimeout(function(){
+                        Timer.setTimeout(function(){
 
                             // // Bring content back
                             // that.layout.content.StateModifier.setTransform(Transform.translate(0,0,0), transitionOptions.inTransition);
 
                             // Bring in button surfaces individually
-                            that.contentScrollView.Views.forEach(function(surf, index){
-                                // window.setTimeout(function(){
+                            // that.contentScrollView.Views.forEach(function(surf, index){
+                                // Timer.setTimeout(function(){
                                 //     surf.StateModifier.setTransform(Transform.translate(0,0,0), {
                                 //         duration: 750,
                                 //         curve: Easing.inOutElastic
                                 //     });
                                 // }, index * 50);
-                            });
+                            // });
 
                         }, delayShowing); // + transitionOptions.outTransition.duration);
 
