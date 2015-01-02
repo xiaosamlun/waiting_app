@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget 
     id="com.waiting.app.pub" 
-    version="0.0.1.15" 
+    version="0.1.0" 
     xmlns="http://www.w3.org/ns/widgets" 
     xmlns:gap="http://phonegap.com/ns/1.0" 
     xmlns:android="http://schemas.android.com/apk/res/android" 
@@ -9,9 +9,9 @@
 
     <name>Waiting</name>
     <description>
-        Let us make an app
+        Start a project
     </description>
-    <author email="nicholas.a.reed@gmail.com" href="http://cordova.io">
+    <author email="nichk@famousmobileapps.com" href="http://famousmobileapps.com">
         Nicholas Reed
     </author>
     <content src="index.html" />
@@ -21,7 +21,7 @@
     <gap:platform name="ios" />
     <gap:platform name="android" />
 
-    <preference name="phonegap-version" value="3.5.0" />
+    <preference name="phonegap-version" value="3.6.3" />
 
     <!-- Android SDK Version -->
     <preference name="android-minSdkVersion" value="14" />
@@ -35,6 +35,7 @@
     <preference name="disallowOverscroll" value="true" />
     <preference name="webviewbounce" value="false" />
     <preference name="exit-on-suspend" value="false" />
+    <preference name="KeepRunning" value="true" />
     <preference name="detect-data-types" value="false" />
 
     <preference name="StatusBarOverlaysWebView" value="true" />
@@ -44,9 +45,11 @@
     <preference name="AutoHideSplashScreen" value="false" />
     <preference name="splashscreen" value="splash.png" /> <!-- Android -->
 
-    <preference name="URL_SCHEME" value="http" />
-    <preference name="URL_HOST" value="famousmobileapps.com" />
 
+    <!-- name="com.acme.app.pub" -->
+    <gap:url-scheme role="None"> 
+      <scheme>waiting</scheme>
+    </gap:url-scheme>
 
     <gap:plugin name="org.apache.cordova.device" />
     <gap:plugin name="org.apache.cordova.console" />
@@ -54,7 +57,7 @@
     <gap:plugin name="org.apache.cordova.file" />
     <gap:plugin name="org.apache.cordova.file-transfer" />
     <gap:plugin name="org.apache.cordova.camera" />
-    <!-- <gap:plugin name="co.mwater.foregroundcameraplugin" version="0.1.1" /> -->
+    <!-- <gap:plugin name="co.mwater.foregroundcameraplugin" version="0.1.1" /> --> <!-- Not needed if not using CROP or EDIT in image -->
     <gap:plugin name="org.apache.cordova.inappbrowser" />
     <gap:plugin name="org.apache.cordova.geolocation" />
     <gap:plugin name="org.apache.cordova.globalization" />
@@ -63,8 +66,8 @@
     <gap:plugin name="com.phonegap.plugins.barcodescanner" />
     <gap:plugin name="com.verso.cordova.clipboard" />
     <gap:plugin name="org.apache.cordova.splashscreen" />
+    <gap:plugin name="com.chariotsolutions.nfc.plugin" version="0.5.1" />
 
-    <!-- <gap:plugin name="com.plugin.datepicker" /> -->
     <gap:plugin name="nl.x-services.plugins.socialsharing" />
     <gap:plugin name="info.asankan.phonegap.smsplugin" />
     <gap:plugin name="nl.x-services.plugins.toast" />
@@ -75,16 +78,17 @@
 
     <gap:plugin name="com.adobe.plugins.gaplugin" />
 
+    <gap:plugin name="nl.x-services.plugins.googleplus" version="1.0.8" source="plugins.cordova.io"/>
 
-    <!-- Android SingleInstance LaunchMode -->
-    <!-- <gap:config-file platform="android" parent="/manifest/application">
-        <activity android:launchMode="singleInstance" />
-    </gap:config-file> -->
-
-    
-    <gap:plugin name="nl.x-services.plugins.launchmyapp">
-        <param name="URL_SCHEME" value="waitingapp" />
+    <gap:plugin name="nickreed.com.phonegap.plugins.facebookconnect" version="0.9.1" source="plugins.cordova.io">
+        <param name="APP_ID" value="1576585215910001" />
+        <param name="APP_NAME" value="Waiting" />
     </gap:plugin>
+
+    <!-- Keyboard setting for Android -->
+    <gap:config-file platform="android" parent="/manifest/application">
+        <activity android:windowSoftInputMode="adjustResize" />
+    </gap:config-file>
 
 
     <feature name="SplashScreen">
@@ -158,76 +162,17 @@
     </feature>
 
 
+    <!-- Icons -->
+
     <!-- Android -->
-    <icon src="res/icon/android/icon.png" gap:platform="android" />
+    <icon src="icon.png" gap:platform="android" />
 
-    <!-- ios 7+ -->
-    <!-- iPhone / iPod Touch  -->
-    <icon src="res/icon/ios/icon-60.png" gap:platform="ios" width="60" height="60" />
-    <icon src="res/icon/ios/icon-60@2x.png" gap:platform="ios" width="120" height="120" />
+    <!-- iOS -->
+    <icon src="icon.png" gap:platform="ios" />
 
-    <!-- iPad -->
-    <icon src="res/icon/ios/icon-76.png" gap:platform="ios" width="76" height="76" />
-    <icon src="res/icon/ios/icon-76@2x.png" gap:platform="ios" width="152" height="152" />
-
-    <!-- Settings Icon -->
-    <icon src="res/icon/ios/icon-small.png" gap:platform="ios" width="29" height="29" />
-    <icon src="res/icon/ios/icon-small@2x.png" gap:platform="ios" width="58" height="58" />
-
-    <!-- Spotlight Icon -->
-    <icon src="res/icon/ios/icon-40.png" gap:platform="ios" width="40" height="40" />
-    <icon src="res/icon/ios/icon-40@2x.png" gap:platform="ios" width="80" height="80" />
-
-    <!-- ios 6 -->
-    <!-- iPhone / iPod Touch -->
-    <icon src="res/icon/ios/icon-57.png" gap:platform="ios" width="57" height="57" />
-    <icon src="res/icon/ios/icon@2x.png" gap:platform="ios" width="114" height="114" />
-
-    <!-- iPad -->
-    <icon src="res/icon/ios/icon-72.png" gap:platform="ios" width="72" height="72" />
-    <icon src="res/icon/ios/icon-72@2x.png" gap:platform="ios" width="144" height="144" />
-
-    <!-- iPad Spotlight and Settings Icon -->
-    <icon src="res/icon/ios/icon-50.png" gap:platform="ios" width="50" height="50" />
-    <icon src="res/icon/ios/icon-50@2x.png" gap:platform="ios" width="100" height="100" />
-
-
+    <!-- Splash Screens -->
     <gap:splash src="splash.png" />
-    <gap:splash src="splash/ios/Default_iphone5.png" gap:platform="ios" width="640" height="1136" />
-
-    <!-- https://www.flickr.com/photos/florianric/7263382550/in/photolist-c4QJzC-74Svtz-74SYKK-73H5zK-4C8BH6-73c2Gi-8UosBX-71fvWr-uTeUc-4e17zw-4dW8tR-4e197s-4dW9UM-4e16eb-4dW7GK-4dW94V-4dW7pv-4dW6Ve-4dW7Bn-4e17dh-4e16q7-4dW9a4-4e18n3-4dW7iD-f9gCni-4e1851-4dW6oz-4dW9fP-4e18Es-4dW7Zv-4dW7MH-4dW71c-4e17SU-4e19Gq-4e16Pb-4e15YC-4dW6CK-4dW9Bx-4e18t1-4dW9xa-4dW6bP-4dW9kr-4dW9He-4dW86g-4e17Yo-f9gHFx-5DZhEa-4BZsQJ-Bd4jF-9bvnA1/ -->
-
-    <!--<gap:config-file target="AndroidManifest.xml" parent="/*/application/activity">-->
-    <!-- <gap:config-file platform="android" parent="/manifest/application" overwrite="false">
-        <activity android:label="@string/app_name" android:name=".waiting">
-          <intent-filter>
-            <action android:name="android.intent.action.VIEW" />
-            <category android:name="android.intent.category.DEFAULT" />
-            <category android:name="android.intent.category.BROWSABLE" />
-            <data android:scheme="http" android:host="waitingapp.com" />
-          </intent-filter>
-      </activity>
-    </gap:config-file> -->
-
-    <!-- <gap:plugin name="com.machenmusik.plugins.launchmyapp" version="3.1.2">
-        <param name="URL_SCHEME" value="waiting" />
-        <param name="HTTP_HOST" value="waitingapp.com" />
-        <param name="HTTP_PATHPREFIX" value="/" />
-        <param name="HTTPS_HOST" value="waitingapp.com" />
-        <param name="HTTPS_PATHPREFIX" value="/" />
-    </gap:plugin> -->
-
-
-
-    <!-- Hide Status Bar iOS -->
-    <!--
-    <gap:config-file platform="ios" parent="UIStatusBarHidden">
-        <true/>
-    </gap:config-file>
-    <gap:config-file platform="ios" parent="UIViewControllerBasedStatusBarAppearance">
-        <false/>
-    </gap:config-file>
-    -->
+    <gap:splash src="splash_640x960.png"  width="640" height="960" />
 
 
 </widget>
