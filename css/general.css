@@ -1111,7 +1111,7 @@ input[type="submit"].form-button-submit-default.cancel-button {
 }
 .footer-tabbar-default i {
   font-size: 28px;
-  line-height: 30px;
+  line-height: 36px;
 }
 .footer-tabbar-default i.big-icon {
   font-size: 40px;
@@ -1132,10 +1132,10 @@ input[type="submit"].form-button-submit-default.cancel-button {
 }
 
 .footer-tabbar-default > div {
-  margin-top: 4px;
+  /*margin-top: 4px;*/
   display: inline-block;
 
-  border: 1px solid #9d9d9d;
+  /*border: 1px solid #9d9d9d;*/
 
   height: 52px;
   width: 94%;
@@ -1144,7 +1144,7 @@ input[type="submit"].form-button-submit-default.cancel-button {
 }
 
 .footer-tabbar-default.on > div {
-  border: 1px solid #206D9A;
+  /*border: 1px solid #206D9A;*/
 }
 
 
