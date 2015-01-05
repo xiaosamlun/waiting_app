@@ -483,7 +483,18 @@ define(function(require, exports, module) {
                             break;
 
                         case 'profiles':
-                            App.history.navigate('user',{history: false});
+                            // display the "last" profile we looked at
+                            if(App.history.findLastTag('user')){
+                                // found a tag to go back to
+                                App.history.backTo('user');
+                            } else {
+                                // show the default user
+                                if(App.Data.User.hasFetched){
+                                    App.history.navigate('user/' + App.Data.User.get('_id'));
+                                    return;
+                                }
+                                App.history.navigate('user',{history: false});
+                            }
                             break;
 
                         case 'messages':
