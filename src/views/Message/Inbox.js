@@ -239,22 +239,22 @@ define(function(require, exports, module) {
         // });
 
         this.TopTabs.Bar.defineSection('by_user', {
-            content: '<i class="icon ion-ios7-checkmark-outline"></i><div>By User</div>',
+            content: '<i class="icon ion-ios-checkmark-outline"></i><div>By User</div>',
             onClasses: ['inbox-tabbar-default', 'on'],
             offClasses: ['inbox-tabbar-default', 'off']
         });
         this.TopTabs.Bar.defineSection('all', {
-            content: '<i class="icon ion-ios7-checkmark-outline"></i><div>All</div>',
+            content: '<i class="icon ion-ios-checkmark-outline"></i><div>All</div>',
             onClasses: ['inbox-tabbar-default', 'on'],
             offClasses: ['inbox-tabbar-default', 'off']
         });
         this.TopTabs.Bar.defineSection('sent', {
-            content: '<i class="icon ion-ios7-checkmark-outline"></i><div>Sent</div>',
+            content: '<i class="icon ion-ios-checkmark-outline"></i><div>Sent</div>',
             onClasses: ['inbox-tabbar-default', 'on'],
             offClasses: ['inbox-tabbar-default', 'off']
         });
         this.TopTabs.Bar.defineSection('received', {
-            content: '<i class="icon ion-ios7-checkmark-outline"></i><div>Received</div>',
+            content: '<i class="icon ion-ios-checkmark-outline"></i><div>Received</div>',
             onClasses: ['inbox-tabbar-default', 'on'],
             offClasses: ['inbox-tabbar-default', 'off']
         });

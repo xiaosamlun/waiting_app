@@ -72,7 +72,7 @@ define(function(require, exports, module) {
         // Get a code
         this.headerContent = new View();
         this.headerContent.CopyCode = new Surface({
-            content: '<i class="icon ion-ios7-copy-outline">',
+            content: '<i class="icon ion-ios-copy-outline">',
             size: [60, undefined],
             classes: ['header-tab-icon-text-big']
         });

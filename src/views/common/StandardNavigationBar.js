@@ -266,7 +266,7 @@ define(function(require, exports, module) {
         size: [undefined, 60],
         backClasses: ['back'],
         // backContent: '&#x25c0;',
-        backContent: '<i class="icon ion-android-arrow-back"></i>',
+        backContent: '<i class="icon ion-ios-arrow-back"></i>',
         classes: ['navigation'],
         content: '',
         moreClasses: ['more'],

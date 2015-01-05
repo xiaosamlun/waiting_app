@@ -60,7 +60,7 @@ define(function(require, exports, module) {
             origin: [0, 0.5]
         });
         this.contentView.Surface = new Surface({
-            content: '<i class="icon ion-ios7-search"></i><div>Coming Soon!</div><div>Schedule games, recruit players, <br />join leagues, and discover new sports</div>',
+            content: '<i class="icon ion-ios-search"></i><div>Coming Soon!</div><div>Schedule games, recruit players, <br />join leagues, and discover new sports</div>',
             size: [undefined, true],
             classes: ['explore-surface-temp'],
             properties: {

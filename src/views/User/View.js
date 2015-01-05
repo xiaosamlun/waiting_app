@@ -240,7 +240,7 @@ define(function(require, exports, module) {
         });
         // message
         this.headerContent.Message = new Surface({
-            content: '<i class="icon ion-ios7-chatboxes"></i>',
+            content: '<i class="icon ion-ios-chatboxes"></i>',
             size: [60, undefined],
             classes: ['header-tab-icon-text-big']
         });
@@ -253,7 +253,7 @@ define(function(require, exports, module) {
 
         // quick invite
         this.headerContent.Invite = new Surface({
-            content: '<i class="icon ion-ios7-chatboxes"></i>',
+            content: '<i class="icon ion-ios-chatboxes"></i>',
             size: [60, undefined],
             classes: ['header-tab-icon-text-big']
         });
@@ -338,7 +338,7 @@ define(function(require, exports, module) {
 
         // - Connections
         this.headerContent.Friends = new Surface({
-            content: '<i class="icon ion-android-social"></i>',
+            content: '<i class="icon ion-android-people"></i>',
             size: [App.Defaults.Header.Icon.w, undefined],
             classes: ['header-tab-icon-text-big']
         });

@@ -82,7 +82,7 @@ define(function(require, exports, module) {
         // Invite somebody
         this.headerContent = new View();
         this.headerContent.Invite = new Surface({
-            content: '<i class="icon ion-ios7-plus-outline"></i><div>Invite</div>',
+            content: '<i class="icon ion-ios-plus-outline"></i><div>Invite</div>',
             size: [60, undefined],
             classes: ['header-tab-icon-text']
         });

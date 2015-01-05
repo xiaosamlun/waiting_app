@@ -273,7 +273,7 @@ define(function(require, exports, module) {
         userView.SeqLayout.Views.push(userView.LeftView);
 
         userView.RightSurface = new Surface({
-            content: '<i class="icon ion-ios7-chatboxes-outline"></i>',
+            content: '<i class="icon ion-ios-chatboxes-outline"></i>',
             size: [80, 95],
             classes: ['matched-list-item-message-default']
         });
