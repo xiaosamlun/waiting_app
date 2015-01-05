@@ -179,6 +179,22 @@
 
 
 
+/* Waiting list */
+
+.waiting-list-top-default {
+  text-align: center;
+
+  font-size: 28px;
+  line-height: 200px;
+
+}
+
+.waiting-list-position-default {
+  text-align: center;
+  line-height: 80px;
+  font-size: 64px;
+}
+
 
 
 
@@ -269,610 +285,9 @@
 
 
 
-/* Gift Add/Create */
-
-.gift-add-summary-details {
-  padding: 0 8px;
-  line-height: 46px;
-  font-size: 18px;
-
-  background: #fafafa;
-}
-
-.gift-add-summary-take-picture {
-  text-align: center;
-
-  font-size: 24px;
-}
-
-.gift-add-summary-take-picture .not-taken {
-
-  width: 36px;
-  height: 36px;
-
-  line-height: 36px;
-
-  background: white;
-
-  -webkit-box-shadow: 0px 2px 1px 0px rgba(0,0,0,0.2);
-  -moz-box-shadow: 0px 2px 1px 0px rgba(0,0,0,0.2);
-  box-shadow: 0px 2px 1px 0px rgba(0,0,0,0.2);
-
-  display: inline-block;
-  padding: 4px;
-
-  border: 1px solid #222;
-
-  border-radius: 50%;
-  -webkit-border-radius: 50%;
-}
-
-.gift-add-image-holder {
-  overflow: hidden;
-}
-
-.gift-add-image-holder-nouploads {
-  text-align: center;
-  line-height: 20px;
-  font-size: 16px;
-}
-
-.gift-add-image-holder.empty-no-image {
-  padding: 0 10px;
-}
-
-
-/* Contest View */
-
-.gift-view-title-default {
-  text-align: center;
-  padding: 25px;
-  color: black;
-}
-
-.gift-view-image-default {
-  text-align: center;
-}
-
-.gift-view-image-default img {
-  width: 100%;
-}
-
-
-/* Gift List */
-
-.user-loading-view {
-  text-align: center;
-  font-size: 36px;
-  line-height: 342px;
-}
-
-.gift-list-profile-name {
-  font-size: 24px;
-  line-height: 28px;
-  padding: 8px;
-}
-
-.gift-list-item-spacertop {
-  height: 16px;
-  padding: 0px 4px;
-}
-
-.gift-list-item-spacertop div {
-  width: 100%;
-  height: 1px;
-  background: #999;
-  opacity: .3;
-}
-
-.gift-list-item-spacerbottom {
-  height: 16px;
-  padding: 0px 4px;
-}
-
-.gift-list-item-spacerbottom div {
-  width: 100%;
-  height: 1px;
-  background: #ddd;
-}
-
-.gift-list-item-user {
-  padding: 8px 8px 0px;
-  line-height: 20px;
-  font-size: 18px;
-  text-align: left;
-}
-
-.gift-list-item-user.is-me {
-  color: #555;
-}
-
-.gift-list-item-user > div {
-  max-width: 100px;
-}
-
-.gift-list-item-title {
-  padding: 0px;
-  padding-left: 8px;
-  line-height: 20px;
-  font-size: 18px;
-  text-align: left;
-  word-wrap: break-word;
-}
-
-.gift-list-item-datetime {
-  padding: 0 10px;;
-  line-height: 14px;
-  font-size: 11px;
-  text-align: left;
-
-  opacity: 0.75;
-}
-
-.gift-list-item-action-isclaimed {
-  text-align: center;
-  line-height: 32px;
-  font-size: 24px;
-  
-  color: #444;
-
-  /*background: white;*/
-
-}
-
-.gift-list-item-action-notclaimed {
-  text-align: center;
-  line-height: 32px;
-  font-size: 24px;
-
-  color: #444;
-
-  /*background: white;*/
-
-}
-
-.gift-list-item-action-ismine {
-  text-align: center;
-  line-height: 32px;
-  font-size: 24px;
-
-  color: #888;
-
-  /*background: white;*/
-
-}
-
-.gift-list-item-else-isclaimed {
-  text-align: center;
-  line-height: 32px;
-  font-size: 24px;
-
-  color: green;
-}
-.gift-list-item-else-isclaimed i {
-  opacity: 0.5;
-}
-
-.gift-list-item-image {
-  padding-top: 10px;
-  text-align: center;
-}
-
-.gift-list-item-image img {
-
-  /*width: 100px;*/
-  /*height: 100px;*/
-
-  /*border: 1px solid #eee;*/
-
-  /*border-radius: 4px;
-  -webkit-border-radius: 4px;*/
-}
-
-.gift-list-item-image-fetching {
-  font-size: 11px;
-  opacity: 0.7;
-  line-height: 40px;
-  text-align: center;
-}
-
-
-.gift-list-item-votes {
-  text-align: left;
-
-  font-size: 34px;
-  line-height: 44px;
-
-  color: white;
-
-}
-
-.gift-list-item-votes > div {
-  display: table;
-  height: 100%;
-  width: 100%;
-}
-
-.gift-list-item-votes > div > div {
-  display: table-cell;
-  height: 100%;
-  width: 100%;
-  vertical-align: bottom;
-
-  padding-left: 4px;
-
-  background: -moz-linear-gradient(top, rgba(125,185,232,0) 0%, rgba(63,93,116,0) 50%, rgba(0,0,0,0.25) 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(125,185,232,0)), color-stop(50%,rgba(63,93,116,0)), color-stop(100%,rgba(0,0,0,0.25)));
-  background: -webkit-linear-gradient(top, rgba(125,185,232,0) 0%,rgba(63,93,116,0) 50%,rgba(0,0,0,0.25) 100%);
-  background: -o-linear-gradient(top, rgba(125,185,232,0) 0%,rgba(63,93,116,0) 50%,rgba(0,0,0,0.25) 100%);
-  background: -ms-linear-gradient(top, rgba(125,185,232,0) 0%,rgba(63,93,116,0) 50%,rgba(0,0,0,0.25) 100%);
-  background: linear-gradient(to bottom, rgba(125,185,232,0) 0%,rgba(63,93,116,0) 50%,rgba(0,0,0,0.25) 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#007db9e8', endColorstr='#40000000',GradientType=0 );
-
-}
-
-.gift-list-item-myvote.voted {
-  padding: 2px;
-}
-
-.gift-list-item-myvote.voted div {
-  background: #16AC00;
-  color: white;
-  text-align: center;
-
-  border-radius: 4px;
-  -webkit-border-radius: 4px;
-}
-
-
-
-
-/* Todo Add */
-
-.todo-add-summary-timeframe-default {
-  padding: 10px;
-}
-
-.todo-add-summary-timeframe-default .set-timeframe {
-  text-align: center;
-  color: black;
-  line-height: 40px;
-  font-size: 16px;
-  background: rgba(0,0,0,0.1);
-}
-
-.todo-add-summary-timeframe-default .set-timeframe span {
-  font-weight: bold;
-}
-
-
-/* Todo item View */
-
-.todo-view-details-bg {
-  background: rgba(29,123,180,0.2);
-  border-bottom: 1px solid #ddd;
-
-  -webkit-border-bottom-right-radius: 2px;
-  -webkit-border-bottom-left-radius: 2px;
-  -moz-border-radius-bottomright: 2px;
-  -moz-border-radius-bottomleft: 2px;
-  border-bottom-right-radius: 2px;
-  border-bottom-left-radius: 2px;
-
-  -webkit-box-shadow: 0px 2px 2px 0px rgba(50, 50, 50, 0.75);
-  -moz-box-shadow:    0px 2px 2px 0px rgba(50, 50, 50, 0.75);
-  box-shadow:         0px 2px 2px 0px rgba(50, 50, 50, 0.75);
-}
-
-.todo-view-title-default {
-  border-top: 1px solid #ddd;
-
-  font-family: Helvetica, sans-serif;
-
-  line-height: 30px;
-  font-size: 16px;
-  padding: 8px 0 0px 10px;
-}
-
-.todo-view-details-default {
-  line-height: 20px;
-  font-size: 14px;
-  padding: 8px 10px; 
-
-  border-bottom: 1px solid #ddd;
-}
-
-.todo-view-tags-default {
-  /*background: blue;*/
-
-  border-bottom: 1px solid #ddd;
-}
-
-.todo-view-tags-default > div {
-  padding: 8px;
-}
-
-.todo-view-tags-default span.label {
-  display: inline-block;
-  padding: 2px 4px;
-  background: red;
-
-  border-radius: 3px;
-  -webkit-border-radius: 3px;
-}
-
-.todo-view-todocontent-add-button-default {
-  padding: 8px;
-  background: rgba(255,255,255,0.8);
-  border-top: 1px solid #eee;
-}
-
-.todo-view-todocontent-add-button-default div {
-  display: inline-block;
-  width: 100%;
-
-  background: #1D7BB4;
-  text-align: center;
-
-  line-height: 40px;
-  font-size: 14px;
-
-  color: white;
-
-  border-radius: 2px;
-  -webkit-border-radius: 2px;
-  
-}
-
-
-.todo-view-assigned-default {
-  padding: 4px 8px 8px 8px;
-  font-size: 14px;
-  line-height: 24px;
-}
-
-
-.todo-view-assigned-default div {
-  display: inline-block;
-  padding: 4px;
-
-  border: 1px solid #444;
-
-  border-radius: 2px;
-  -webkit-border-radius: 2px;
-}
-
-
-.todo-view-assigned-default.notassigned {
-  color: #888;
-}
-
-.todo-view-assigned-default.assigned {
-  font-weight: bold;
-}
-
-
-.todo-view-owner-default {
-  padding: 8px 8px 4px 8px;
-
-  font-size: 14px;
-  line-height: 24px;
-
-}
-
-.todo-view-owner-default div {
-  display: inline-block;
-  padding: 4px;
-
-  border: 1px solid #444;
-
-  border-radius: 2px;
-  -webkit-border-radius: 2px;
-}
-
-.todo-view-owner-default.no_owner {
-  color: #888;
-}
-
-.todo-view-owner-default.has_owner {
-  font-weight: bold;
-}
-
-
-/* Minimized Todo Bar */
-
-.todo-view-minimized-employer-default,
-.todo-view-minimized-assigned-default {
-  text-align: center;
-}
-.todo-view-minimized-employer-default i,
-.todo-view-minimized-assigned-default i {
-  font-size: 24px;
-  line-height: 50px;
-} 
-
-
-/* TodoContent */
-
-.todocontent-image {
-}
-
-.todocontent-image img {
-  width: 100%;
-}
-
-/* List (todo/invoice) Content - TodoContent InvoiceContent */
-
-.list-content-item-default {
-  padding: 8px;
-}
-
-.list-content-item-default > div {
-  padding: 8px;
-  border: 1px solid #999;
-}
-
-.list-content-item-default > div.system-notify {
-  background: #fefefe;
-}
-
-.list-content-item-default > div.mark-complete {
-  background: rgba(46,204,113,0.2);
-}
-
-.list-content-item-default > div.mark-incomplete {
-  background: rgba(231,76,60,0.2);
-}
-
-.list-content-item-default > div.mark-paid {
-  background: rgba(46,204,113,0.2);
-}
-.list-content-item-default > div.mark-paid-by-card {
-  background: rgba(46,204,113,0.2);
-}
-
-.list-content-item-default > div.mark-unpaid {
-  background: rgba(231,76,60,0.2);
-}
-
-
-.list-content-item-default > div > div:nth-child(1) {
-  font-size: 16px;
-  line-height: 20px;
-}
-
-.list-content-item-default > div > div:nth-child(2) {
-  color: #888;
-
-  font-size: 11px;
-  line-height: 13px;
-}
-
-.list-content-item-default div.formatted-datetime {
- color: #888;
-
-  font-size: 11px;
-  line-height: 13px;   
-}
-
-
-
-
-
-
-
-/* Approve / Deny buttons */
-
-.approve-deny-option-button-default {
-  padding: 0px 8px;
-}
-
-.approve-deny-option-button-default div {
-
-  font-weight: bold;
-  color: white;
-
-  line-height: 60px;
-  text-align: center;
-  font-size: 24px;
-
-  border-radius: 8px;
-  -webkit-border-radius: 8px;
-}
-
-.approve-deny-option-button-grayout-default {
-  background: blue;
-}
-
-.approve-option-button-default div {
-  background: #2ECC71;
-
-}
-
-.deny-option-button-default div {
-    
-  background: #E67E22;
-
-}
-
-
-/* Tabs Items */
-
-.tabs-bg-default {
-  font-family: Helvetica, sans-serif;
-  font-weight: bold;
-  text-transform: uppercase;
-
-  background: rgba(255,255,255,0.5);
-  border-top: 1px solid #1f2d2d;
-  border-bottom: 1px solid #1f2d2d;
-}
-
-.tabs-item-default {
-  line-height: 40px;
-  text-align: left;
-  padding-left: 8px;
-}
-
-.tabs-item-default.selected {
-  background: #1f2d2d;
-  color: white;
-}
-
-
-
-/* Todo Filter Tabs Items */
-
-.todo-filter-tabs-bg-default {
-  font-family: Helvetica, sans-serif;
-  font-weight: bold;
-  text-transform: uppercase;
-
-  background: rgba(255,255,255,0.8);
-  border-top: 1px solid #1f2d2d;
-  border-bottom: 1px solid #1f2d2d;
-}
-
-.todo-filter-tabs-item-default {
-  line-height: 40px;
-  text-align: left;
-  padding-left: 8px;
-}
-
-.todo-filter-tabs-item-default.selected {
-  background: #1f2d2d;
-  color: white;
-}
-
-
-/* Todo Filter Tabs Items */
-
-.invoice-filter-tabs-bg-default {
-  font-family: Helvetica, sans-serif;
-  font-weight: bold;
-  text-transform: uppercase;
-  
-  background: rgba(255,255,255,0.5);
-  border-top: 1px solid #000;
-  border-bottom: 1px solid #000;
-}
-
-.invoice-filter-tabs-item-default {
-  line-height: 40px;
-  text-align: left;
-  padding-left: 8px;
-}
-
-.invoice-filter-tabs-item-default.selected {
-  /*background: #1f2d2d;*/
-  background: #000;
-  color: white;
-}
-
-
-
 
 /* Payment Source modal/select */
+
 .modal-option-list-default.card-line-default {
   padding: 10px 8px;
 }
@@ -913,8 +328,6 @@
 
 
 /* Profile */
-
-
 
 /* Searching Usernames / Users */
 
@@ -1290,6 +703,24 @@
 
 /* Messages */
 
+
+.message-text-default {
+  padding: 4px 8px;
+}
+
+.message-text-default span[data-replace-model="Profile"]{
+  font-weight: bold;
+}
+
+.message-text-default span.ago {
+  color: #999;
+}
+
+.message-text-default div.message-other-person {
+  font-size: 11px;
+}
+
+
 .msg-form-bg-surface {
   border-top: 1px solid #dcdcdc;
   background: #f8f8f8;
@@ -1370,6 +801,34 @@ input[type="text"].msg-textinput-smaller {
 
 input[type="submit"].msg-button-smaller {
   line-height: 50px;
+}
+
+
+
+/* List of Contacts */
+
+.contact-list-item-default {
+  line-height: 44px;
+  background: white;
+
+  padding: 0px 8px;
+
+  border-bottom: 1px dashed #ddd;
+}
+
+.contact-list-item-default > div:nth-child(1) {
+  font-size: 36px;
+  line-height: 36px;
+  color: #333;
+
+  padding-top: 10px;
+}
+
+.contact-list-item-default > div:nth-child(2) {
+  font-size: 16px;
+  line-height: 18px;
+  color: #333;
+  padding-left: 4px;
 }
 
 
