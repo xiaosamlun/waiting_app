@@ -456,7 +456,7 @@ define(function(require, exports, module) {
                     offClasses: ['footer-tabbar-default', 'off']
                 });
                 tmpTabs.defineSection('messages', {
-                    content: '<i class="icon ion-android-inbox"></i><div><span class="ellipsis-all">'+App.t('footer.messages')+'</span></div>',
+                    content: '<i class="icon ion-paper-airplane"></i><div><span class="ellipsis-all">'+App.t('footer.messages')+'</span></div>',
                     onClasses: ['footer-tabbar-default', 'on'],
                     offClasses: ['footer-tabbar-default', 'off']
                 });
@@ -466,7 +466,7 @@ define(function(require, exports, module) {
                     offClasses: ['footer-tabbar-default', 'off']
                 });
                 tmpTabs.defineSection('friends', {
-                    content: '<i class="icon ion-android-friends"></i><div><span class="ellipsis-all">'+App.t('footer.friends')+'</span></div>',
+                    content: '<i class="icon ion-person-stalker"></i><div><span class="ellipsis-all">'+App.t('footer.friends')+'</span></div>',
                     onClasses: ['footer-tabbar-default', 'on'],
                     offClasses: ['footer-tabbar-default', 'off']
                 });
@@ -499,7 +499,7 @@ define(function(require, exports, module) {
                             break;
                     }
                 });
-                
+
                 // Attach header to the layout 
                 App.Views.MainFooter.originMod = new StateModifier({
                     origin: [0.5, 1],
