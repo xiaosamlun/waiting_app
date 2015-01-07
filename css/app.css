@@ -284,6 +284,46 @@
 
 
 
+/* Select Friend(s) */
+  
+.friend-list-item-default {
+  /*line-height: 44px;*/
+  background: white;
+
+  padding: 0px 8px;
+
+}
+
+.friend-list-item-default > div:nth-child(1) {
+
+  padding-top: 8px;
+
+  font-size: 28px;
+  line-height: 32px;
+  color: #333;
+}
+
+
+.friend-list-item-default > div:nth-child(2) {
+  font-size: 14px;
+  line-height: 20px;
+  color: #333;
+}
+
+.friend-list-item-default > div:last-child {
+  border-bottom: 1px dashed #ddd;
+}
+
+.friend-list-item-default .last-updated {
+  padding-bottom: 10px;
+  opacity: 0.9;
+}
+
+.friend-list-item-default .last-updated span {
+  opacity: 0.9;
+}
+
+
 
 
 /* Payment Source modal/select */

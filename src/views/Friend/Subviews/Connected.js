@@ -219,7 +219,7 @@ define(function(require, exports, module) {
                 User: Model.toJSON()
              }), //'<div><span class="ellipsis-all">' +name+'</span></div>',
              size: [undefined, true],
-             classes: ['select-friends-list-item-default']
+             classes: ['friend-list-item-default']
         });
         userView.getSize = function(){
             return [undefined, userView.Surface._size ? userView.Surface._size[1] : undefined];

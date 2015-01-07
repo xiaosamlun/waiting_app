@@ -226,7 +226,7 @@ define(function(require, exports, module) {
         });
         this.headerContent.Share.on('click', function(){
 
-            var text = 'Enter a friend\'s email to send them your Wishlist. If they sign up, you\'ll be connected',
+            var text = 'Enter a friend\'s email invite them to '+App.Credentials.app_name+'. If they sign up, you\'ll be connected.',
                 defaultValue = that.lastEmail || '',
                 button = 'Send Invite',
                 buttonCancel = 'Cancel',
