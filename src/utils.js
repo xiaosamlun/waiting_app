@@ -504,10 +504,8 @@ define(function (require) {
             HandleOpenUrl: function(url){
                 // what type of a url are we looking at?
 
-                console.log('url');
-                console.log(url);
-
-                var urlhost = App.Credentials.launch_key,
+                var launch_key = url.split('//')[0],
+                    urlhost = launch_key+'//',
                     n = url.indexOf(urlhost),
                     pathname = url.substring(n + urlhost.length),
                     splitPath = pathname.split('/');
@@ -644,11 +642,8 @@ define(function (require) {
                             ]
                         });
 
-                        // Accept via ajax!
-                        // - as long as logged in...
-
-
                         break;
+
                     default:
                         Utils.Notification.Toast('Unknown URL');
                         // console.log(parsed.pathname.split('/')[0]);
