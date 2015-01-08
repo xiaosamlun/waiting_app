@@ -77,7 +77,7 @@ define(function(require, exports, module) {
         this.arbiter.show(this.onSurface, this.options.inTransition);
 //        this.arbiter.setMode(StandardToggleButton.ON, this.options.inTransition);
         if (!suppressEvent) {
-            this._eventOutput.emit('select',arguments, false);
+            this._eventOutput.emit('select',suppressEvent, false);
         }
     };
 
@@ -95,7 +95,7 @@ define(function(require, exports, module) {
         this.selected = false;
         this.arbiter.show(this.offSurface, this.options.outTransition);
         if (!suppressEvent) {
-            this._eventOutput.emit('deselect',arguments, false);
+            this._eventOutput.emit('deselect',suppressEvent, false);
         }
     };
 
