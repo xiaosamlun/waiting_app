@@ -228,8 +228,7 @@ define(function(require, exports, module) {
         userView.Surface.pipe(that._eventOutput);
         userView.Surface.on('deploy', this.updateCollectionStatus.bind(this));
         userView.Surface.on('click', function(){
-            // App.history.navigate('user/' + Model.get('_id'));
-            App.history.navigate('gift/list/' + Model.get('_id'));
+            App.history.navigate('user/' + Model.get('_id'));
         });
         userView.add(userView.Surface);
 
@@ -243,7 +242,7 @@ define(function(require, exports, module) {
 
         console.info('updateCollectionStatus');
 
-        this.collection.totalResults = this.collection.length; // App.Data.User.get('friends').length;
+        this.collection.totalResults = this.collection.length;
 
         // Update amounts left
         var amount_left = this.collection.totalResults - this.collection.infiniteResults;
