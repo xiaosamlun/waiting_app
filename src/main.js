@@ -794,7 +794,7 @@ define(function(require, exports, module) {
             if(localUser && !initialUrl){
                 // Navigate to my Profiles page
                 Timer.setTimeout(function(){
-                    App.Views.MainFooter.Tabs.select('contests');
+                    App.Views.MainFooter.Tabs.select('home');
                     // App.history.navigate('user/sentence');
                 }, 100);
             }
