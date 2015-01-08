@@ -51,11 +51,12 @@ define(function(require, exports, module) {
         this._invisible = false;
         if (element) this.attach(element);
 
-        var ltSync = new LongTapSync();
-        ltSync.on('longtap', (function(event){
-            this._eventOutput.emit('longtap',event);
-        }).bind(this));
-        this._eventOutput.pipe(ltSync);
+        // var ltSync = new LongTapSync();
+        // ltSync.on('longtap', (function(event){
+        //     this._eventOutput.emit('longtap',event);
+        // }).bind(this));
+        // this._eventOutput.pipe(ltSync);
+        
     }
 
     /**
