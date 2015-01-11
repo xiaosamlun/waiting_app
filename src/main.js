@@ -549,114 +549,25 @@ define(function(require, exports, module) {
             };
             createMainFooter();
 
-            // Splash Page (bloom loading)
-            // - terminated by the 
+            // Splash Page
             var createSplashLoading = function(){
-                // var that = this;
+                // 
                 App.Views.SplashLoading = new RenderController({
-                    inTransition: false,
-                    // outTransition: false,
+                    inTransition: false // want to immediately show our splash image
                 });
-                App.Views.SplashLoading.View = new View();
-                App.Views.SplashLoading.View.SizeMod = new StateModifier({
+                // Splash image same as image used in cordova
+                App.Views.SplashLoading.Image = new ImageSurface({
+                    content: (App.Config.devicePlatform === 'ios') ? 'splash_640x960.png' : 'splash.png',
                     size: [undefined, undefined]
                 });
-                App.Views.SplashLoading.View.OriginMod = new StateModifier({
-                    origin: [0.5,0.5],
-                    align: [0.5,0.5]
-                });
-                var viewNode = App.Views.SplashLoading.View.add(App.Views.SplashLoading.View.SizeMod).add(App.Views.SplashLoading.View.OriginMod);
-                App.Views.SplashLoading.BgSurface = new Surface({
-                    content: '',
-                    size: [undefined, undefined],
-                    classes: ['splash-background-default']
-                });
 
-
-                // spinning logo
-
-                // 0 - innermost
-                App.Views.SplashLoading.Logo = new ImageSurface({
-                    content: 'icon.png',
-                    classes: ['splash-surface-default'],
-                    properties: {
-                        // 'backface-visibility' : 'visible'
-                    },
-                    // content: 'https://dl.dropboxusercontent.com/u/6673634/wehicle_square.svg',
-                    // size: [window.innerWidth, 70]
-                    size: [150, 150]
-                });
-                App.Views.SplashLoading.Logo.useOpacity = 0;
-                var splashOpacity = 0;
-                App.Views.SplashLoading.Logo.StateMod = new StateModifier({
-                    opacity: App.Views.SplashLoading.Logo.useOpacity
-                });
-                App.Views.SplashLoading.Logo.Mod = new Modifier({
-                    opacity: function(){
-                        // splashOpacity += 0.01;
-                        // var through = splashOpacity % 1.20;
-                        // var topOrBottom = (parseInt(splashOpacity / 1.20,10)) % 2;
-                        // if(topOrBottom == 1){
-                        //     through = 1 - through;
-                        // }
-                        // return through;
-                        return 1;
-                    }
-                });
-
-                // App.Views.SplashLoading.hide = function(thisView){
-                //     // if(App.Views.SplashLoading.CurrentPopover === thisView){
-                //         App.Views.SplashLoading.hide();
-                //     // }
-                // };
+                App.Views.SplashLoading.show(App.Views.SplashLoading.Image);
 
                 App.Functions.SplashAction = function(){
-
-                    var durationOfOpacity = 2000;
-
-                    if(App.Views.SplashLoading.Logo.useOpacity != 1){
-                        App.Views.SplashLoading.Logo.useOpacity = 1;
-                    } else {
-                        App.Views.SplashLoading.Logo.useOpacity = 0.1;
-                    }
-                    App.Views.SplashLoading.Logo.StateMod.setOpacity(App.Views.SplashLoading.Logo.useOpacity,{
-                        curve: 'linear',
-                        duration: durationOfOpacity
-                    });
-
-                    Timer.setTimeout(function(){
-                        if(App.Views.SplashLoading._showing != -1){
-                            App.Functions.SplashAction();
-                        }
-                    },durationOfOpacity);
-                    
-                    // rotate it
-                    // Timer.setTimeout(function(){
-                        // App.Views.SplashLoading.Logo.StateMod.setTransform(Transform.rotateY(Math.PI),{
-                        //     duration: 1000,
-                        //     curve: 'linear',
-                        // }, function(){
-                        //     // App.Views.SplashLoading.Logo.StateMod.setTransform(0,{
-                        //     //     duration: 1000,
-                        //     //     curve: 'linear'
-                        //     // });
-                        // });
-                    // },250);
-
-                    // if(1==1){
-                    //     Timer.setTimeout(function(){
-                    //         App.Functions.SplashAction();
-                    //     },3000);
-                    // }
-
+                    // No animation, but could have one!
                 }
 
-                App.Views.SplashLoading.View.add(Utils.usePlane('splashLoading',1)).add(App.Views.SplashLoading.BgSurface);
-                viewNode.add(Utils.usePlane('splashLoading',2)).add(App.Views.SplashLoading.Logo.StateMod).add(App.Views.SplashLoading.Logo.Mod).add(App.Views.SplashLoading.Logo);
-
-                App.Views.SplashLoading.show(App.Views.SplashLoading.View);
-
-                // Even show the splash screen?
+                // Only show the SplashLoading if on a device
                 if(App.usePg){
                     App.MainView.add(Utils.usePlane('splashLoading')).add(App.Views.SplashLoading);
                 }
@@ -751,10 +662,12 @@ define(function(require, exports, module) {
                 try {
                     App.Functions.SplashAction();
 
+                    // Hide the splashscreen if we've messed up
                     Timer.setTimeout(function(){
                         App.Views.SplashLoading.hide();
-                    },1000);
+                    },10 * 1000);
 
+                    // Hide our device-specific splashscreen image
                     if(App.usePg){
                         navigator.splashscreen.hide();
                     }
@@ -830,6 +743,10 @@ define(function(require, exports, module) {
                 error: function(err){
                     console.error('failed login');
                     console.error(err);
+
+                    Utils.Notification.Toast('Failed initial login');
+                    App.history.navigate('logout/force');
+
                     // Utils.Notification.Toast('Failed login');
                     // App.history.navigate('logout/force');
                     // App.history.navigate('');
