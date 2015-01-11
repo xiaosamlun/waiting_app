@@ -557,7 +557,7 @@ define(function(require, exports, module) {
                 });
                 // Splash image same as image used in cordova
                 App.Views.SplashLoading.Image = new ImageSurface({
-                    content: (App.Config.devicePlatform === 'ios') ? 'splash_640x960.png' : 'splash.png',
+                    content: 'res/splash/splash.png',
                     size: [undefined, undefined]
                 });
 

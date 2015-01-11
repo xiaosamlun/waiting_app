@@ -43,7 +43,7 @@
     <preference name="StatusBarStyle" value="lightcontent" />
 
     <preference name="AutoHideSplashScreen" value="false" />
-    <preference name="SplashScreen" value="splash.png" />
+    <preference name="SplashScreen" value="res/splash/splash.png" />
     <preference name="SplashScreenDelay" value="10000" />
 
 
@@ -92,88 +92,18 @@
     </gap:config-file>
 
 
-    <feature name="SplashScreen">
-        <param name="android-package" value="org.apache.cordova.splashscreen.SplashScreen"/>
-        <param name="ios-package" value="CDVSplashScreen"/>
-        <param name="onload" value="true"/>
-    </feature>
-
-    <feature name="StatusBar">
-        <param name="ios-package" value="CDVStatusBar" onload="true" />
-    </feature>
-
-    <feature name="Keyboard">
-        <param name="ios-package" value="IonicKeyboard" onload="true" />
-    </feature>
-
-    <feature name="BarcodeScanner">
-        <param name="ios-package" value="CDVBarcodeScanner" />
-        <param name="android-package" value="com.phonegap.plugins.barcodescanner.BarcodeScanner" />
-    </feature>
-
-    <feature name="SocialSharing">
-      <param name="ios-package" value="SocialSharing" />
-      <param name="android-package" value="nl.xservices.plugins.SocialSharing" />
-    </feature>
-
-    <feature name="Toast">
-      <param name="ios-package" value="Toast" />
-      <param name="android-package" value="nl.xservices.plugins.Toast" />
-    </feature>
-
-    <feature name="Device">
-        <param name="android-package" value="org.apache.cordova.device.Device" />
-    </feature>
-
-    <feature name="Contacts">
-        <param name="android-package" value="org.apache.cordova.contacts.ContactManager"/>
-        <param name="ios-package" value="CDVContacts"/>
-    </feature>
-    
-    <feature name="File">
-        <param name="android-package" value="org.apache.cordova.file.FileUtils" />
-        <param name="ios-package" value="CDVFile" />
-    </feature>
-
-    <feature name="FileTransfer">
-        <param name="android-package" value="org.apache.cordova.filetransfer.FileTransfer" />
-        <param name="ios-package" value="CDVFileTransfer" />
-    </feature>
-
-    <feature name="InAppBrowser">
-        <param name="android-package" value="org.apache.cordova.inappbrowser.InAppBrowser" />
-        <param name="ios-package" value="CDVInAppBrowser" />
-    </feature>
-
-    <feature name="PushPlugin" >
-        <param name="android-package" value="com.plugin.gcm.PushPlugin"/>
-        <param name="ios-package" value="PushPlugin"/>
-    </feature>
-
-    <feature name="DatePickerPlugin">
-        <param name="android-package" value="com.plugin.datepicker.DatePickerPlugin"/>
-    </feature>
-    <feature name="DatePicker">
-        <param name="ios-package" value="DatePicker"/>
-    </feature>
-
-    <feature name="LocalNotification">
-        <param name="android-package" value="de.appplant.cordova.plugin.localnotification.LocalNotification"/>
-        <param name="ios-package" value="APPLocalNotification"/>
-    </feature>
-
-
     <!-- Icons -->
 
     <!-- Android -->
-    <icon src="icon.png" gap:platform="android" />
+    <icon src="res/icon/icon.png" gap:platform="android" />
 
     <!-- iOS -->
-    <icon src="icon.png" gap:platform="ios" />
+    <icon src="res/icon/icon.png" gap:platform="ios" />
 
     <!-- Splash Screens -->
-    <gap:splash src="splash.png" />
-    <gap:splash src="splash_640x960.png"  width="640" height="960" />
+    <gap:splash src="res/splash/splash.png" gap:platform="android" />
+    <gap:splash src="res/splash/splash.png" gap:platform="ios" width="640" height="1136" />
+    <gap:splash src="res/splash/splash_640x960.png" gap:platform="ios" width="640" height="960" />
 
 
 </widget>
