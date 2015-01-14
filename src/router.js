@@ -117,9 +117,6 @@ define(function(require, exports, module) {
 
                 'landing' : function(){
                     // eh, I should be able to cache this route before login, then destroy after login
-                    Timer.setTimeout(function(){
-                        App.Views.SplashLoading.hide();
-                    },3000);
                     defaultRoute('Landing', 'Misc/Landing', arguments, {cache: false});
                 },
 
@@ -137,11 +134,6 @@ define(function(require, exports, module) {
                 },
 
                 'settings/push': function(){
-
-                    Timer.setTimeout(function(){
-                        App.Views.SplashLoading.hide();
-                    },3000);
-
                     defaultRoute('PushDefault', 'Misc/PushDefault', arguments);
                 },
 
@@ -156,23 +148,13 @@ define(function(require, exports, module) {
 
 
 
-                'user' : function(){
-                    
-                    Timer.setTimeout(function(){
-                        App.Views.SplashLoading.hide();
-                    },3000);
-                    
+                'user' : function(){                    
                     App.Views.MainFooter.route_show = true;
                     App.Views.MainFooter.Tabs.select('profiles', false);
                     defaultRoute('UserDefault', 'User/Default', arguments, { cache: false });
                 },
                 
                 'user/waiting' : function(){
-
-                    Timer.setTimeout(function(){
-                        App.Views.SplashLoading.hide();
-                    },3000);
-
                     App.Views.MainFooter.route_show = true;
                     App.Views.MainFooter.Tabs.select('home', false);
                     defaultRoute('UserWaiting', 'User/Waiting', arguments, {cache: true});
@@ -183,21 +165,6 @@ define(function(require, exports, module) {
                     App.Views.MainFooter.Tabs.select('profiles', false);
                     defaultRoute('UserView', 'User/View', arguments);
                 },
-
-                // 'dash(/:id)' : function(){
-
-                //     Timer.setTimeout(function(){
-                //         App.Views.SplashLoading.hide();
-                //     },3000);
-                    
-                //     console.error("DASH");
-                //     App.history.modifyLast({
-                //         tag: 'Dash'
-                //     });
-                //     App.Views.MainFooter.route_show = true;
-                //     App.Views.MainFooter.Tabs.select('profiles', false);
-                //     defaultRoute('Dash', 'User/View', arguments); // used to be Player/Dash
-                // },
 
                 'friend/list' : function(){
 
@@ -530,8 +497,8 @@ define(function(require, exports, module) {
                 // - expecting it to need a second to load, or something
                 Timer.setTimeout(function(){
                     App.MainController.show(PageView);
+                    App.BackboneEvents.trigger('page-show');
                 }, delayShowing);   
-                // console.log('delayshowing: ', delayShowing);
 
                 // Update LastViewName
                 App.Cache.LastViewName = '' + viewName;

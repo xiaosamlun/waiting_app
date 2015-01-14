@@ -162,6 +162,7 @@ define(function(require, exports, module) {
     };
     // Data store
     App = {
+        $: $,
         t: null, // for translation
         Utils: Utils,
         Flags: {},
@@ -171,6 +172,7 @@ define(function(require, exports, module) {
         MainController: null,
         MainView: null,
         Events: new EventHandler(),
+        BackboneEvents: _.extend({}, Backbone.Events),
         Credentials: JSON.parse(require('text!credentials.json')),
         Config: null, // parsed in a few lines, symlinked to src/config.xml
         ConfigImportant: {},
@@ -657,26 +659,18 @@ define(function(require, exports, module) {
             });
 
     
-            // Start Splashscreen
-            Timer.setTimeout(function(){
-                try {
-                    App.Functions.SplashAction();
-
-                    // Hide the splashscreen if we've messed up
-                    Timer.setTimeout(function(){
-                        App.Views.SplashLoading.hide();
-                    },10 * 1000);
-
-                    // Hide our device-specific splashscreen image
+            // Hide device splash screen, start our splash screen animation
+            App.Functions.SplashAction();
+            App.BackboneEvents.once('page-show', function(){
+                Timer.setTimeout(function(){
                     if(App.usePg){
                         navigator.splashscreen.hide();
                     }
-                }catch(err){
-                    alert('failed hiding splash screen');
-                    alert(err);
-                }
-            },500);
-
+                    Timer.setTimeout(function(){
+                        App.Views.SplashLoading.hide();
+                    },500);
+                },100);
+            });
 
 
             // Ajax setup for users
