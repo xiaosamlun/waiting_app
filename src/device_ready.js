@@ -124,6 +124,9 @@ define(function(require, exports, module) {
                 );
             }
 
+            // Google Analytics Plugin
+            Utils.Analytics.init();
+
             // Overwrite console.log and console.info
 
             // console.log('overwrite log');
