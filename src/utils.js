@@ -672,23 +672,31 @@ define(function (require) {
 
         Analytics: {
             init: function(){
-                try {
-                    App.Analytics = window.plugins.gaPlugin;
-                    App.Analytics.init(function(){
-                        // success
-                        console.log('Success init gaPlugin');
-                    }, function(){
-                        // error
+                if(App.usePg){
+                    try {
+                        window.analytics.startTrackerWithId(App.Credentials.GoogleAnalytics_native, function(){
+                            console.log('Succeded on mobile');
+                        }, function(){
+                            Timer.setTimeout(function(){
+                                Utils.Notification.Toast('GA failed on mobile');
+                            }, 10000);
+                        });
+                    }catch(err){
+                        alert('setup error');
                         if(App.usePg){
-                            console.error('Failed init gaPlugin');
-                            Utils.Notification.Toast('Failed init gaPlugin');
+                            console.error(err);
                         }
-                    }, Credentials.GoogleAnalytics, 30);
-                }catch(err){
-                    if(App.usePg){
-                        console.error(err);
+                        return false;
                     }
-                    return false;
+                } else {
+
+                  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                  ga('create', App.Credentials.GoogleAnalytics_web, 'auto');
+                  ga('send', 'pageview');
                 }
 
                 return true;
@@ -698,19 +706,17 @@ define(function (require) {
             trackRoute: function(pageRoute){
                 // needs to wait for Utils.Analytics.init()? (should be init'd)
                 try{
-                    App.Analytics.trackPage(function(){
-                        // success
-                        // console.log('success');
-                    }, function(){
-                        // error
-                        // console.error('ganalyticserror');
-                    }, 'waiting.app/' + pageRoute);
-                }catch(err){
                     if(App.usePg){
-                        console.error('Utils.Analytics.trackPage');
-                        console.error(err);
-                        debugger;
+                        window.analytics.trackView(App.ConfigImportant.AppId + '/' + pageRoute, function(msg){
+                            // alert('Succeeded tracking page');
+                            // alert(msg);
+                        }, function(err){
+                            Utils.Notification.Toast(err);
+                        });
                     }
+                }catch(err){
+                    console.error('Utils.Analytics.trackRoute failure');
+                    console.error(err);
                 }
             }
         },
