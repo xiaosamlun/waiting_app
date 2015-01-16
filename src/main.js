@@ -231,9 +231,6 @@ define(function(require, exports, module) {
         $('.before-loaded-screen').remove();
     },350);
 
-    // Google Analytics Plugin
-    Utils.Analytics.init();
-
     // Config file, symlinked (ln -s) into multiple directories
     var ConfigXml = '';
     try {
