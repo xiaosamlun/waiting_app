@@ -676,6 +676,7 @@ define(function (require) {
                     try {
                         window.analytics.startTrackerWithId(App.Credentials.GoogleAnalytics_native, function(){
                             console.log('Succeded on mobile');
+                            App.Analytics = true;
                         }, function(){
                             Timer.setTimeout(function(){
                                 Utils.Notification.Toast('GA failed on mobile');
@@ -706,7 +707,7 @@ define(function (require) {
             trackRoute: function(pageRoute){
                 // needs to wait for Utils.Analytics.init()? (should be init'd)
                 try{
-                    if(App.usePg){
+                    if(App.usePg && App.Analytics){
                         window.analytics.trackView(App.ConfigImportant.AppId + '/' + pageRoute, function(msg){
                             // alert('Succeeded tracking page');
                             // alert(msg);
