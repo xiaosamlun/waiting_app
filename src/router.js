@@ -338,7 +338,9 @@ define(function(require, exports, module) {
             // Get view based on hash fragment
             // - return cached item
 
-            Utils.Analytics.trackRoute(window.location.hash);
+            if(!App.history.isGoingBack){
+                Utils.Analytics.trackRoute(window.location.hash);
+            }
 
             options = options ? options : {};
             if(args === undefined){
