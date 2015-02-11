@@ -69,9 +69,12 @@ define(function(require, exports, module) {
             // });
         });
 
-        var tmpBackWidth = 20;
+        var tmpBackWidth = this.options.backWidth || 20;
         if(this.options.back){
             this.back = this.options.back;
+            if(this.back === 'default'){
+                this.back = App.Functions.backDefault() // .apply necessary ?
+            }
         } else {
             if(this.options.backContent == false){
                 tmpBackWidth = 1;
