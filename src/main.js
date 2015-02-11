@@ -166,7 +166,16 @@ define(function(require, exports, module) {
         t: null, // for translation
         Utils: Utils,
         Flags: {},
-        Functions: {}, // some global functions, like for Splash
+        Functions: {
+            backDefault: function(){
+                return new Surface({
+                    content: '<i class="icon ion-android-arrow-back"></i>',
+                    wrap: '<div></div>',
+                    size: [60,60],
+                    classes: ['header-backbutton-default']
+                });
+            }
+        },
         KeyboardShowing: false,
         MainContext: null,
         MainController: null,
