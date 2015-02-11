@@ -166,6 +166,8 @@ define(function(require, exports, module) {
     FormHelper.prototype.createInput = function(opts) {
         var that = this;
 
+        console.log(opts);
+
         // Inputs
         var inputSurface = null;
         if(opts.type == 'textarea'){
@@ -269,7 +271,10 @@ define(function(require, exports, module) {
         }
 
         // Build Margins
-        var boxLayout = new BoxLayout({ margins: opts.margins });
+        var boxLayout = new BoxLayout({ 
+            margins: opts.margins,
+            middle: opts.marginsMiddle 
+        });
         boxLayout.middleAdd(inputSurface, {
             container: true
         });
@@ -333,7 +338,7 @@ define(function(require, exports, module) {
         // Submit button
         var submitButtonSurface = new SubmitInputSurface({
             value: opts.value,
-            size: [undefined, true],
+            size: opts.size || [undefined, true],
             classes: opts.classes || ['form-button-submit-default']
         });
         submitButtonSurface.View = new View();
@@ -345,7 +350,10 @@ define(function(require, exports, module) {
         }
 
         // Build Margins
-        var boxLayout = new BoxLayout({ margins: opts.margins });
+        var boxLayout = new BoxLayout({ 
+            margins: opts.margins,
+            middle: opts.marginsMiddle
+        });
         boxLayout.middleAdd(submitButtonSurface);
 
         submitButtonSurface.View.add(submitButtonSurface.View.StateModifier).add(boxLayout);
