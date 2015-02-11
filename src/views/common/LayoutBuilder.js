@@ -174,10 +174,26 @@ define(function(require, exports, module) {
             node.add(returnNode);
         }
 
+        // Background Surface
+        if(options.background){
+            // add a background image that is constrained in size
+            // - expect the background to be a Surface
+            var bgSizeMod = new Modifier({
+                size: function(){
+                    // console.log(node.getSize(true));
+                    return node.getSize(true);
+                }
+            });
+
+            var tmpBackground = new LayoutBuilder(options.background);
+
+            node.add(bgSizeMod).add(tmpBackground);
+        }
+
         // More keys that can be triggered
         // - most used by surfaces (pipe, click, deploy, etc.)
         if(nodeOptions.pipe){
-            if(typeof nodeOptions.pipe === typeof []){
+            if(_.isArray(nodeOptions.pipe) === true){
                 nodeOptions.pipe.forEach(function(pipeTo){
                     originalNode.pipe(pipeTo);
                 });
@@ -412,7 +428,6 @@ define(function(require, exports, module) {
                     if(options.minSize && (options.minSize[1] > useHeight)){
                         useHeight = options.minSize[1];
                     }
-
                     return [options.size[0], useHeight];
                 }
                 
@@ -485,6 +500,41 @@ define(function(require, exports, module) {
         // sequenceFrom
         this.defaultSequenceFrom(options, tmp);
 
+        if(options.size){
+            // Expecting a True in either one
+            // - otherwise, returning undefined for h/w
+
+            // Used for true Height or Width(v2) 
+            // - only allowing horizontal direction for now?
+            var h,w;
+            if(options.direction == 1 && options.size[1] === true){
+
+                tmp.getSize = function(){
+
+                    var useHeight = 0;
+
+                    tmp.Views.forEach(function(v){
+                        // console.log(v);
+                        // console.log(v.getSize());
+                        var h = 0;
+                        try{
+                            h = v.getSize(true)[1];
+                        }catch(err){
+                            console.log('nosize');
+                        }
+                        if(h > useHeight){
+                            useHeight = h;
+                        }
+                    });
+
+                    // console.log(useHeight);
+                    // debugger;
+                    return [undefined, useHeight];
+                }
+                
+            }
+        }
+
         return tmp;
 
     };
@@ -553,6 +603,16 @@ define(function(require, exports, module) {
 
         // sequenceFrom
         this.defaultSequenceFrom(options, tmp, true); // isRenderController=true
+
+        if(options.size){
+            if(_.isFunction(options.size)){
+                tmp.getSize = options.size;
+            } else {
+                tmp.getSize = function(){
+                    return options.size;
+                }
+            }
+        }
 
         // Default to select?
         if(options.default){
