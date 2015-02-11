@@ -82,7 +82,14 @@ define(function(require, exports, module) {
      * @method setContent
      * @param {string} imageUrl
      */
-    ImageSurface.prototype.setContent = function setContent(imageUrl) {
+    ImageSurface.prototype.setContent = function setContent(imageUrlTmp) {
+        var imageUrl = null;
+        if(this.isFunction(imageUrlTmp)){
+            this.contentFunction = imageUrlTmp;
+            imageUrl = imageUrlTmp.apply(this);
+        } else {
+            imageUrl = imageUrlTmp;
+        }
         var urlIndex = urlCache.indexOf(this._imageUrl);
         if (urlIndex !== -1) {
             if (countCache[urlIndex] === 1) {
@@ -105,6 +112,13 @@ define(function(require, exports, module) {
 
         this._imageUrl = imageUrl;
         this._contentDirty = true;
+    };
+
+    ImageSurface.prototype.updateContent = function updateContent() {
+        if(this.isFunction(this.contentFunction)){
+            this.setContent(this.contentFunction.apply(this));
+        }
+        return this;
     };
 
     /**
