@@ -223,7 +223,7 @@ define(function(require, exports, module) {
         return this;
     }
 
-    Surface.prototype.setWrap = function setContent(wrap) {
+    Surface.prototype.setWrap = function setWrap(wrap) {
         if (this.wrap !== wrap) {
             this.wrap = wrap;
             this._contentDirty = true; // just dirty the content
@@ -477,10 +477,12 @@ define(function(require, exports, module) {
      */
     Surface.prototype.deploy = function deploy(target) {
         var tmpContent = this.getContent();
+            content = null;
+
+        if(this.isFunction(tmpContent)){
+            content = tmpContent.apply(this);
+        } else {
             content = tmpContent;
-            // content = null;
-        if(tmpContent instanceof Function){
-            content = tmpContent();
         }
         if (content instanceof Node) {
             while (target.hasChildNodes()) target.removeChild(target.firstChild);
@@ -515,7 +517,9 @@ define(function(require, exports, module) {
     Surface.prototype.recall = function recall(target) {
         var df = document.createDocumentFragment();
         while (target.hasChildNodes()) df.appendChild(target.firstChild);
-        this.setContent(df);
+        if(!this.isFunction(this.content)){
+            this.setContent(df); // NOT setting the content if it is already a function
+        }
     };
 
     /**
@@ -549,6 +553,10 @@ define(function(require, exports, module) {
         this.size = size ? [size[0], size[1]] : null;
         this._sizeDirty = true;
         return this;
+    };
+
+    Surface.prototype.isFunction = function isFunction(obj) {
+      return !!(obj && obj.constructor && obj.call && obj.apply);
     };
 
     module.exports = Surface;
